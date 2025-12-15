@@ -46,60 +46,16 @@ _To be added later._
 
 _To be added later._
 
-## Initial & Current Requirements
+## Summary of Work
 
-- Initial: scaffolded the backend, established Python tooling, installed Django, implemented the basic role system and Docker placeholders, and added an inline landing page that exercises the login/roles APIs.
-- Current (completed): role structure implemented, default roles seeded, registration and token-based login implemented, documentation and report template added.
- - Default roles seeded: the project seeds a Persian-only role set (each role has an English `code` + Persian `name`). The defaults are:
-	 - `system_admin` / مدیر کل سامانه
-	 - `police_chief` / رییس پلیس
-	 - `captain` / کاپیتان
-	 - `sergeant` / گروهبان
-	 - `workshop` / کارگاه
-	 - `police_officer` / مامور پلیس
-	 - `patrol_officer` / افسر گشت
+Implemented key backend and frontend pieces to support a small demo authentication and role-management system. High-level areas completed:
+
+- Project scaffold, environment, and developer tooling (venv, requirements)
+- Authentication: registration and token-based login
+- Role model + admin/API for role management (Persian display names with English codes)
+- Default role seeding and a `reset_data` management command to flush and reseed roles
+- Simple landing pages (register/login/dashboard) that call the backend APIs
+- Documentation updates and basic operational run instructions
+
+See `backend/README.md` for run commands and `REPORT.md`'s changelog for more details.
 	 - `complainant` / شاکی
-	 - `witness` / شاهد
-	 - `criminal` / مجرم
-	 - `suspect` / متهم
-	 - `judge` / قاضی
-	 - `forensic_doctor` / پزشک قانونی
-	 - `base_user` / کاربر پایه
-
- - Registration behavior: when a user registers, they are automatically assigned the default role `base_user` (Persian label `کاربر پایه`). The main superuser can change any user's roles via the admin or API.
-
-## Deployment & Maintenance Notes
-
-- Apply migrations: `python manage.py migrate` (this also seeds the default roles).
- - Apply migrations: `python manage.py migrate` (this also creates schema). To reset data and re-seed the default Persian roles use the management command described below.
-- Create a superuser to manage roles via `/admin/` or via `/api/roles/` endpoints.
-- Run server: `python manage.py runserver` and use the documented API endpoints for registration and login.
-- Visit http://127.0.0.1:8000/ after the server starts to reach the built-in landing page for login and role management.
-
-## Run Instructions (quick)
-
-```powershell
-cd backend
-.\venv\Scripts\Activate.ps1
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-```
-
-## Resetting Data and Re-seeding Roles
-
-A destructive management command `reset_data` is available to flush the entire database and re-seed the Persian default roles. This removes all records including superusers. Use with caution on any environment that is not ephemeral development.
-
-```powershell
-cd backend
-.\venv\Scripts\Activate.ps1
-python manage.py reset_data
-# recreate an admin
-python manage.py createsuperuser
-```
-
-The command seeds the role set listed above; roles are stored with an English `code` and a Persian `name` so they show in Persian throughout the admin and frontend, but programmatic code can rely on the English `code`.
-
----
-
-*Contributions credited to `kousha`.*
