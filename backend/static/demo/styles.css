@@ -1,0 +1,133 @@
+:root {
+  --bg: #f6f7fb;
+  --card: #10131d;
+  --accent: #5fe4c0;
+  --text: #f1f5ff;
+  --muted: #94a2c6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
+  background: linear-gradient(135deg, #0c1132, #111b3c 60%, #151c2d);
+  min-height: 100vh;
+  color: #fdfdfd;
+}
+
+.landing {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 40px 24px 56px;
+}
+
+.card {
+  background: rgba(8, 10, 22, 0.76);
+  border-radius: 24px;
+  padding: 32px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+}
+
+.hero {
+  background: linear-gradient(135deg, rgba(8, 31, 66, 0.95), rgba(8, 12, 27, 0.95));
+}
+
+.tag {
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 3vw + 1rem, 3rem);
+  margin: 0 0 10px;
+}
+
+.subtitle {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.note {
+  margin-top: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+input {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 14px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+input:focus {
+  outline: 2px solid rgba(95, 228, 192, 0.8);
+}
+
+button[type='submit'] {
+  background: var(--accent);
+  color: #0d1220;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 26px;
+  font-weight: 600;
+  margin-top: 14px;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(95, 228, 192, 0.25);
+}
+
+.full {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+}
+
+.result {
+  margin-top: 16px;
+  min-height: 24px;
+  color: var(--muted);
+}
+
+.guidance {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 24px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

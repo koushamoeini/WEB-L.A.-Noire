@@ -1,0 +1,69 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>WP-Project | ثبت‌نام</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}">
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <header class="hero card">
+        <p class="tag">سامانهٔ آثار و پرونده‌ها</p>
+        <h1>ثبت‌نام کاربر عادی</h1>
+        <p class="subtitle">
+          فقط ثبت‌نام در این صفحه انجام می‌شود. پس از ایجاد حساب با شماره تماس، کد ملی، ایمیل، نام و نام
+          خانوادگی همراه رمز عبور، توکن ورود صادر شده و از همان توکن می‌توان با نقش‌های تخصیص داده‌شده به دنیای
+          پشت‌صحنه وارد شد.
+        </p>
+        <p class="note">
+          برای ورود با نقش‌های مدیریتی صرفاً به پنل ادمین بروید؛ گزینه‌های مربوطه در این صفحه نمایش داده نمی‌شوند.
+        </p>
+      </header>
+
+      <section class="card panel">
+        <h2>فرم ثبت‌نام</h2>
+        <form id="registerForm" class="form-grid">
+          <label>
+            نام کاربری
+            <input name="username" required autocomplete="username">
+          </label>
+          <label>
+            ایمیل
+            <input name="email" type="email" autocomplete="email">
+          </label>
+          <label>
+            نام
+            <input name="first_name" autocomplete="given-name">
+          </label>
+          <label>
+            نام خانوادگی
+            <input name="last_name" autocomplete="family-name">
+          </label>
+          <label>
+            شماره تماس
+            <input name="phone" placeholder="مثلاً 09123456789" autocomplete="tel">
+          </label>
+          <label>
+            کد ملی
+            <input name="national_code" placeholder="۱۰ رقم" autocomplete="off">
+          </label>
+          <label>
+            رمز عبور
+            <input name="password" type="password" autocomplete="new-password" required>
+          </label>
+          <div class="full">
+            <button type="submit">ایجاد حساب</button>
+          </div>
+        </form>
+        <div id="registerResult" class="result"></div>
+        <p class="guidance">
+          تمام فیلدها ضروری‌اند و شماره تماس و کد ملی باید یکتا باشند. بعد از موفقیت، توکن در پاسخ می‌آید و با
+          آن می‌توانید به پنل‌های نقش‌دار بروید (برای سطوح مدیریتی به /admin مراجعه کنید).
+        </p>
+      </section>
+    </main>
+    <script src="{% static 'demo/app.js' %}"></script>
+  </body>
+</html>

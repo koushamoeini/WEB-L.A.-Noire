@@ -1,12 +1,14 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, permissions, viewsets
-from rest_framework.decorators import action
+from rest_framework import permissions, status, viewsets
+from rest_framework.authtoken.models import Token
+from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Role
-from .serializers import RoleSerializer, UserRoleSerializer
+from .serializers import RegistrationSerializer, RoleSerializer, UserRoleSerializer
 
 
 class IsSuperUser(permissions.BasePermission):
@@ -17,12 +19,12 @@ class IsSuperUser(permissions.BasePermission):
 class RoleViewSet(viewsets.ModelViewSet):
     queryset = Role.objects.all()
     serializer_class = RoleSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
-        # anyone authenticated can list/ retrieve; only superuser can create/modify
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsSuperUser()]
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
         return [permissions.IsAuthenticated()]
 
 
@@ -38,17 +40,10 @@ class UserRoleUpdate(APIView):
         return Response({'ok': True, 'roles': [r.name for r in user.roles.all()]})
 
 
-from rest_framework import status
-from rest_framework.authtoken.models import Token
-from .serializers import RegistrationSerializer
-from rest_framework.generics import CreateAPIView
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.response import Response
-
-
 class RegisterView(CreateAPIView):
     serializer_class = RegistrationSerializer
     permission_classes = []  # allow any
+    authentication_classes = []
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -59,9 +54,27 @@ class RegisterView(CreateAPIView):
         return Response(data, status=status.HTTP_201_CREATED)
 
 
-class LoginView(ObtainAuthToken):
+class LoginView(APIView):
+    permission_classes = []
+    authentication_classes = []
+
     def post(self, request, *args, **kwargs):
-        resp = super().post(request, *args, **kwargs)
-        token = Token.objects.get(key=resp.data['token'])
-        user = token.user
+        identifier = (request.data.get('identifier') or '').strip()
+        password = request.data.get('password')
+        if not identifier or not password:
+            return Response({'detail': 'نام کاربری/کد ملی/شماره تماس/ایمیل و رمز عبور لازم است.'}, status=status.HTTP_400_BAD_REQUEST)
+        user_model = get_user_model()
+        user = (
+            user_model.objects.filter(
+                Q(username__iexact=identifier)
+                | Q(email__iexact=identifier)
+                | Q(profile__national_code=identifier)
+                | Q(profile__phone=identifier)
+            )
+            .distinct()
+            .first()
+        )
+        if not user or not user.check_password(password):
+            return Response({'detail': 'اطلاعات ورود نامعتبر است.'}, status=status.HTTP_401_UNAUTHORIZED)
+        token, _ = Token.objects.get_or_create(user=user)
         return Response({'token': token.key, 'id': user.pk, 'username': user.username})
