@@ -28,6 +28,7 @@ class RegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     phone = serializers.CharField(write_only=True)
     national_code = serializers.CharField(write_only=True)
+    email = serializers.EmailField()
 
     class Meta:
         model = get_user_model()
@@ -36,8 +37,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
             'username',
             'password',
             'email',
-            'first_name',
-            'last_name',
             'phone',
             'national_code',
         )
@@ -57,6 +56,16 @@ class RegistrationSerializer(serializers.ModelSerializer):
         if UserProfile.objects.filter(national_code=cleaned).exists():
             raise serializers.ValidationError('این کد ملی قبلا ثبت شده است.')
         return cleaned
+
+    def validate_username(self, value):
+        if get_user_model().objects.filter(username__iexact=value).exists():
+            raise serializers.ValidationError('نام کاربری قبلا گرفته شده است.')
+        return value
+
+    def validate_email(self, value):
+        if get_user_model().objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError('ایمیل قبلا ثبت شده است.')
+        return value
 
     def create(self, validated_data):
         User = get_user_model()

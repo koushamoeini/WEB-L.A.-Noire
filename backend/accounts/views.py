@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import CreateAPIView
+from django.shortcuts import redirect
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -53,6 +54,10 @@ class RegisterView(CreateAPIView):
         data = {'id': user.pk, 'username': user.username, 'token': token.key}
         return Response(data, status=status.HTTP_201_CREATED)
 
+    def get(self, request, *args, **kwargs):
+        # Redirect browser GETs to the HTML registration page for convenience
+        return redirect('register')
+
 
 class LoginView(APIView):
     permission_classes = []
@@ -78,3 +83,7 @@ class LoginView(APIView):
             return Response({'detail': 'اطلاعات ورود نامعتبر است.'}, status=status.HTTP_401_UNAUTHORIZED)
         token, _ = Token.objects.get_or_create(user=user)
         return Response({'token': token.key, 'id': user.pk, 'username': user.username})
+
+    def get(self, request, *args, **kwargs):
+        # Redirect browser GETs to the HTML login page for convenience
+        return redirect('login')

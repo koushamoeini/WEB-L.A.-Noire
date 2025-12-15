@@ -29,8 +29,6 @@ registerForm.addEventListener('submit', async (event) => {
     username: formData.username,
     password: formData.password,
     email: formData.email,
-    first_name: formData.first_name,
-    last_name: formData.last_name,
     phone: formData.phone,
     national_code: formData.national_code,
   };

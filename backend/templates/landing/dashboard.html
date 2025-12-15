@@ -1,0 +1,29 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | داشبورد</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card">
+        <div class="panel-header">
+          <h1>داشبورد مدیریتی</h1>
+          <a href="{% url 'landing' %}" class="ghost">بازگشت</a>
+        </div>
+        <p class="subtitle">
+          در حال حاضر این صفحه صرفاً راهنماست. برای اختصاص نقش‌ها و تعریف سطوح جدید لطفاً با حساب ادمین وارد
+          پنل مدیریت شوید و از مسیر /admin/ استفاده کنید تا لیست نقش‌ها و کاربران نمایش داده شود.
+        </p>
+        <ul class="dashboard-list">
+          <li>نقش‌ها تنها توسط مدیر سیستم قابل تغییر هستند.</li>
+          <li>برای اختصاص نقش به کاربر از endpoint /api/users/&lt;id&gt;/roles/ استفاده کنید.</li>
+          <li>کاربران جدید پس از ثبت‌نام خودکار نقش «کاربر عادی» می‌گیرند.</li>
+        </ul>
+      </section>
+    </main>
+  </body>
+</html>

@@ -20,6 +20,9 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('', TemplateView.as_view(template_name='landing/index.html'), name='landing'),
+    path('register/', TemplateView.as_view(template_name='landing/register.html'), name='register'),
+    path('login/', TemplateView.as_view(template_name='landing/login.html'), name='login'),
+    path('dashboard/', TemplateView.as_view(template_name='landing/dashboard.html'), name='dashboard'),
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
 ]

@@ -1,0 +1,51 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | ثبت‌نام</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card panel">
+        <div class="panel-header">
+          <h1>ثبت‌نام کاربر جدید</h1>
+          <a href="{% url 'landing' %}" class="ghost">بازگشت</a>
+        </div>
+        <p class="subtitle">
+          همهٔ فیلدها با دقت پر شوند؛ شماره تماس، کد ملی، ایمیل و نام کاربری باید یکتا باشند. رمز عبور حداقل ۸
+          کاراکتر باشد و پس از ثبت‌نام توکن برای ورود صادر می‌گردد.
+        </p>
+        <form id="registerForm" class="form-grid">
+          <label>
+            نام کاربری
+            <input name="username" required autocomplete="username" />
+          </label>
+          <label>
+            ایمیل
+            <input name="email" type="email" required autocomplete="email" />
+          </label>
+          <label>
+            شماره تماس
+            <input name="phone" placeholder="مثلاً 09123456789" required autocomplete="tel" />
+          </label>
+          <label>
+            کد ملی
+            <input name="national_code" placeholder="۱۰ رقم" required autocomplete="off" />
+          </label>
+          <label>
+            رمز عبور
+            <input name="password" type="password" autocomplete="new-password" required />
+          </label>
+          <div class="full">
+            <button type="submit">ارسال درخواست ثبت‌نام</button>
+          </div>
+        </form>
+        <div id="registerResult" class="result"></div>
+      </section>
+    </main>
+    <script src="{% static 'demo/register.js' %}"></script>
+  </body>
+</html>

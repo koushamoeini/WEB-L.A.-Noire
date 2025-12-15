@@ -1,0 +1,39 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | ورود</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card panel">
+        <div class="panel-header">
+          <h1>ورود کاربران</h1>
+          <a href="{% url 'landing' %}" class="ghost">بازگشت</a>
+        </div>
+        <p class="subtitle">
+          از نام کاربری، کد ملی، شماره تماس یا ایمیل خود به همراه رمز عبور استفاده کنید. در صورت موفقیت توکن ورود
+          برگردانده می‌شود و با آن می‌توانید به داشبوردها بروید.
+        </p>
+        <form id="loginForm" class="form-grid">
+          <label>
+            نام کاربری / کد ملی / شماره تماس / ایمیل
+            <input name="identifier" required autocomplete="username" />
+          </label>
+          <label>
+            رمز عبور
+            <input name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <div class="full">
+            <button type="submit">ورود</button>
+          </div>
+        </form>
+        <div id="loginResult" class="result"></div>
+      </section>
+    </main>
+    <script src="{% static 'demo/login.js' %}"></script>
+  </body>
+</html>
