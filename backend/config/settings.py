@@ -43,6 +43,15 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
 ]
 
+
+# DRF auth: allow token auth for API clients (landing page stores token in localStorage)
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+}
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',

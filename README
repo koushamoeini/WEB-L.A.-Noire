@@ -1,9 +1,6 @@
 WP-Project
 
-Project scaffold with `frontend/` and `backend/` directories.
-
-- `frontend/`: placeholder for frontend application
-- `backend/`: Django backend (see `backend/README.md` for run instructions)
+Django backend with a built-in landing page that exercises the authentication and role APIs. See `backend/README.md` for run instructions.
 
 Full project documentation is in `REPORT.md`.
 

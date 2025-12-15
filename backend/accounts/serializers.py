@@ -7,7 +7,7 @@ from .models import Role, UserProfile
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'code', 'name', 'description']
 
 
 class UserRoleSerializer(serializers.Serializer):
@@ -80,9 +80,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
             phone=phone,
             national_code=national_code,
         )
-        # assign default Persian role 'کاربر عادی' if it exists
+        # assign default Persian role 'کاربر پایه' via english `code='base_user'`
         try:
-            default_role, _ = Role.objects.get_or_create(name='کاربر عادی')
+            default_role, _ = Role.objects.get_or_create(
+                code='base_user', defaults={'name': 'کاربر پایه'}
+            )
             user.roles.add(default_role)
         except Exception:
             pass

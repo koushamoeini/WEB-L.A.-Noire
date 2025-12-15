@@ -6,22 +6,28 @@ class AccountsConfig(AppConfig):
     name = 'accounts'
 
     def ready(self):
-        # Ensure default roles exist on startup. Skip if DB isn't ready yet (migrations).
         try:
             from .models import Role
-            default_names = [
-                'Trainee',
-                'Forensic Doctor',
-                'Police Officer',
-                'Patrol Officer',
-                'Detective',
-                'Sergeant',
-                'Captain',
-                'Police Chief',
+            # default roles: (code, persian name)
+            default_roles = [
+                ('system_admin', 'مدیر کل سامانه'),
+                ('police_chief', 'رییس پلیس'),
+                ('captain', 'کاپیتان'),
+                ('sergeant', 'گروهبان'),
+                ('workshop', 'کارگاه'),
+                ('police_officer', 'مامور پلیس'),
+                ('patrol_officer', 'افسر گشت'),
+                ('trainee', 'کارآموز'),
+                ('complainant', 'شاکی'),
+                ('witness', 'شاهد'),
+                ('criminal', 'مجرم'),
+                ('suspect', 'متهم'),
+                ('judge', 'قاضی'),
+                ('forensic_doctor', 'پزشک قانونی'),
+                ('base_user', 'کاربر پایه'),
             ]
-            for name in default_names:
-                Role.objects.get_or_create(name=name)
+            for code, name in default_roles:
+                Role.objects.get_or_create(code=code, defaults={'name': name})
         except Exception:
-            # OperationalError, ProgrammingError, or others may occur if migrations haven't run yet.
-            # Silently ignore so migrations and test discovery proceed normally.
+
             pass

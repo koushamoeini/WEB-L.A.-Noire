@@ -3,15 +3,16 @@ from django.db import models
 
 
 class Role(models.Model):
-    """Simple Role model. Roles can be assigned to users via a M2M."""
+
+    code = models.CharField(max_length=150, unique=True)
     name = models.CharField(max_length=150, unique=True)
     description = models.TextField(blank=True)
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='roles')
 
     class Meta:
-        ordering = ['name']
+        ordering = ['id']
 
-    def __str__(self) -> str:  # pragma: no cover - trivial
+    def __str__(self) -> str: 
         return self.name
 
 

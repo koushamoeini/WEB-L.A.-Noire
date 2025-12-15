@@ -20,7 +20,7 @@ class IsSuperUser(permissions.BasePermission):
 
 
 class RoleViewSet(viewsets.ModelViewSet):
-    queryset = Role.objects.all()
+    queryset = Role.objects.all().order_by('id')
     serializer_class = RoleSerializer
 
     def get_permissions(self):
@@ -49,7 +49,7 @@ class UserListView(ListAPIView):
     serializer_class = UserReadSerializer
 
     def get_queryset(self):
-        return get_user_model().objects.all()
+        return get_user_model().objects.all().order_by('id')
 
 
 class RegisterView(CreateAPIView):

@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
@@ -10,6 +11,7 @@ class RoleAdmin(admin.ModelAdmin):
     # Show the id and (Persian) name so admins can reference IDs easily
     list_display = ('id', 'name', 'code', 'description')
     search_fields = ('name', 'code')
+    ordering = ('id',)
 
     def has_change_permission(self, request, obj=None):
         # Only superusers can modify roles/role membership
@@ -30,6 +32,35 @@ except Exception:
     pass
 
 
+class UserAdminForm(forms.ModelForm):
+    roles = forms.ModelMultipleChoiceField(
+        queryset=Role.objects.all().order_by('id'),
+        required=False,
+        widget=admin.widgets.FilteredSelectMultiple('Roles', is_stacked=False),
+    )
+
+    class Meta:
+        model = User
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and getattr(self.instance, 'pk', None):
+            self.fields['roles'].initial = self.instance.roles.all()
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        if commit:
+            user.roles.set(self.cleaned_data.get('roles', []))
+        return user
+
+
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
     list_display = ('id', 'username', 'email', 'is_active', 'is_superuser')
+    ordering = ('id',)
+    form = UserAdminForm
+
+    fieldsets = DjangoUserAdmin.fieldsets + (
+        ('Roles', {'fields': ('roles',)}),
+    )

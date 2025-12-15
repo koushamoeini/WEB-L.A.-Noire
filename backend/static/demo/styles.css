@@ -145,8 +145,37 @@ input {
   color: #fff;
 }
 
+select {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 14px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
 input:focus {
   outline: 2px solid rgba(95, 228, 192, 0.8);
+}
+
+select:focus {
+  outline: 2px solid rgba(95, 228, 192, 0.8);
+}
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.inline-form input,
+.inline-form select {
+  min-width: 220px;
+}
+
+.inline-form button[type='submit'] {
+  margin-top: 0;
 }
 
 button[type='submit'] {

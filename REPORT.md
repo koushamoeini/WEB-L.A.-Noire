@@ -57,5 +57,4 @@ Implemented key backend and frontend pieces to support a small demo authenticati
 - Simple landing pages (register/login/dashboard) that call the backend APIs
 - Documentation updates and basic operational run instructions
 
-See `backend/README.md` for run commands and `REPORT.md`'s changelog for more details.
-	 - `complainant` / شاکی
+
