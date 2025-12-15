@@ -80,9 +80,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
             phone=phone,
             national_code=national_code,
         )
-        # assign default role 'User' if it exists
+        # assign default Persian role 'کاربر عادی' if it exists
         try:
-            default_role, _ = Role.objects.get_or_create(name='User')
+            default_role, _ = Role.objects.get_or_create(name='کاربر عادی')
             user.roles.add(default_role)
         except Exception:
             pass

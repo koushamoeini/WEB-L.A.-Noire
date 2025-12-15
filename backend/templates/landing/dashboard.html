@@ -18,6 +18,26 @@
           در حال حاضر این صفحه صرفاً راهنماست. برای اختصاص نقش‌ها و تعریف سطوح جدید لطفاً با حساب ادمین وارد
           پنل مدیریت شوید و از مسیر /admin/ استفاده کنید تا لیست نقش‌ها و کاربران نمایش داده شود.
         </p>
+        <div id="adminArea" class="admin-area" style="display:none; margin-top:18px;">
+          <h2>داشبورد</h2>
+          <p>شما با حساب ادمین وارد شده‌اید — در این بخش میتوانید نقش‌ها و کاربران را توسط شناسه (id) مدیریت کنید.</p>
+          <div>
+            <button id="showRolesBtn">نمایش نقش‌ها</button>
+            <button id="showUsersBtn">نمایش کاربران</button>
+            <ul id="rolesList" style="margin-top:12px; display:none"></ul>
+            <ul id="usersList" style="margin-top:12px; display:none"></ul>
+          </div>
+          <form id="createRoleForm" class="inline-form" style="margin-top:12px;">
+            <input name="name" placeholder="نام نقش (فارسی)" required />
+            <button type="submit">ایجاد نقش</button>
+          </form>
+          <form id="assignRoleForm" class="inline-form" style="margin-top:8px;">
+            <input name="userId" placeholder="شناسه کاربر" required />
+            <input name="roleId" placeholder="شناسه نقش" required />
+            <button type="submit">اختصاص نقش</button>
+          </form>
+          <div id="adminResult" class="result"></div>
+        </div>
         <ul class="dashboard-list">
           <li>نقش‌ها تنها توسط مدیر سیستم قابل تغییر هستند.</li>
           <li>برای اختصاص نقش به کاربر از endpoint /api/users/&lt;id&gt;/roles/ استفاده کنید.</li>
@@ -25,5 +45,14 @@
         </ul>
       </section>
     </main>
+</main>
+    <script>
+      // ensure admin area visibility updates on load (token may be set via login)
+      window.addEventListener('load', () => {
+        const script = document.createElement('script');
+        script.src = "{% static 'demo/dashboard.js' %}";
+        document.body.appendChild(script);
+      });
+    </script>
   </body>
 </html>

@@ -4,14 +4,14 @@ from django.db import migrations
 def create_default_roles(apps, schema_editor):
     Role = apps.get_model('accounts', 'Role')
     default_names = [
-        'Trainee',
-        'Forensic Doctor',
-        'Police Officer',
-        'Patrol Officer',
-        'Detective',
-        'Sergeant',
-        'Captain',
-        'Police Chief',
+        'کارآموز',
+        'پزشک قانونی',
+        'افسر پلیس',
+        'گشت',
+        'کارآگاه',
+        'گروهبان',
+        'کاپیتان',
+        'رییس پلیس',
     ]
     for name in default_names:
         Role.objects.get_or_create(name=name)
@@ -20,14 +20,14 @@ def create_default_roles(apps, schema_editor):
 def reverse_default_roles(apps, schema_editor):
     Role = apps.get_model('accounts', 'Role')
     names = [
-        'Trainee',
-        'Forensic Doctor',
-        'Police Officer',
-        'Patrol Officer',
-        'Detective',
-        'Sergeant',
-        'Captain',
-        'Police Chief',
+        'کارآموز',
+        'پزشک قانونی',
+        'افسر پلیس',
+        'گشت',
+        'کارآگاه',
+        'گروهبان',
+        'کاپیتان',
+        'رییس پلیس',
     ]
     Role.objects.filter(name__in=names).delete()
 

@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 
 from .models import Role
 from .serializers import RegistrationSerializer, RoleSerializer, UserRoleSerializer
+from .serializers_user_read import UserReadSerializer
+from rest_framework.generics import ListAPIView
 
 
 class IsSuperUser(permissions.BasePermission):
@@ -39,6 +41,15 @@ class UserRoleUpdate(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.update(user, serializer.validated_data)
         return Response({'ok': True, 'roles': [r.name for r in user.roles.all()]})
+
+
+class UserListView(ListAPIView):
+    """List users (admin only) with their role ids."""
+    permission_classes = [IsSuperUser]
+    serializer_class = UserReadSerializer
+
+    def get_queryset(self):
+        return get_user_model().objects.all()
 
 
 class RegisterView(CreateAPIView):
@@ -82,7 +93,7 @@ class LoginView(APIView):
         if not user or not user.check_password(password):
             return Response({'detail': 'اطلاعات ورود نامعتبر است.'}, status=status.HTTP_401_UNAUTHORIZED)
         token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'id': user.pk, 'username': user.username})
+        return Response({'token': token.key, 'id': user.pk, 'username': user.username, 'is_superuser': user.is_superuser})
 
     def get(self, request, *args, **kwargs):
         # Redirect browser GETs to the HTML login page for convenience

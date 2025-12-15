@@ -39,8 +39,10 @@ if (loginForm) {
 
     if (response.ok) {
       const body = await response.json();
-      showMessage(`ورود موفقیت‌آمیز؛ توکن: ${body.token}`);
-      event.target.reset();
+      // save token and superuser flag then redirect to dashboard
+      localStorage.setItem('token', body.token);
+      localStorage.setItem('is_superuser', body.is_superuser ? 'true' : 'false');
+      window.location.href = '/dashboard/';
     } else {
       const error = await parseError(response);
       showMessage(error);

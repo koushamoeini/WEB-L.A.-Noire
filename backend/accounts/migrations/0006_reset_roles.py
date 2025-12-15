@@ -5,15 +5,18 @@ def reset_roles(apps, schema_editor):
     Role = apps.get_model('accounts', 'Role')
     Role.objects.all().delete()
     persian_roles = [
-        'کارآموز',
-        'پزشک قانونی',
-        'افسر پلیس',
-        'گشت',
-        'کارآگاه',
-        'گروهبان',
-        'کاپیتان',
+        'مدیر کل سامانه',
         'رییس پلیس',
-        'کاربر عادی',
+        'کاپیتان',
+        'گروهبان',
+        'کارآگاه',
+        'مامور پلیس و افسر گشت',
+        'کارآموز',
+        'شاکی و شاهد',
+        'متهم و مجرم',
+        'قاضی',
+        'پزشک قانونی',
+        'کاربر پایه',
     ]
     for name in persian_roles:
         Role.objects.create(name=name)
