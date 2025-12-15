@@ -36,3 +36,32 @@ class UserRoleUpdate(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.update(user, serializer.validated_data)
         return Response({'ok': True, 'roles': [r.name for r in user.roles.all()]})
+
+
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from .serializers import RegistrationSerializer
+from rest_framework.generics import CreateAPIView
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.response import Response
+
+
+class RegisterView(CreateAPIView):
+    serializer_class = RegistrationSerializer
+    permission_classes = []  # allow any
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        token, _ = Token.objects.get_or_create(user=user)
+        data = {'id': user.pk, 'username': user.username, 'token': token.key}
+        return Response(data, status=status.HTTP_201_CREATED)
+
+
+class LoginView(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        resp = super().post(request, *args, **kwargs)
+        token = Token.objects.get(key=resp.data['token'])
+        user = token.user
+        return Response({'token': token.key, 'id': user.pk, 'username': user.username})
