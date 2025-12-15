@@ -43,18 +43,18 @@ const refreshUsers = async () => {
   `).join('') || '<li>(none)</li>';
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+function initDashboard() {
   showAdminArea();
   const showRolesBtn = document.getElementById('showRolesBtn');
   if (showRolesBtn) showRolesBtn.addEventListener('click', async () => {
     const list = document.getElementById('rolesList');
-    if (list.style.display === 'none') { await refreshRoles(); list.style.display = 'block'; } else { list.style.display = 'none'; }
+    if (list.style.display === 'none' || !list.style.display) { await refreshRoles(); list.style.display = 'block'; } else { list.style.display = 'none'; }
   });
 
   const showUsersBtn = document.getElementById('showUsersBtn');
   if (showUsersBtn) showUsersBtn.addEventListener('click', async () => {
     const list = document.getElementById('usersList');
-    if (list.style.display === 'none') { await refreshUsers(); list.style.display = 'block'; } else { list.style.display = 'none'; }
+    if (list.style.display === 'none' || !list.style.display) { await refreshUsers(); list.style.display = 'block'; } else { list.style.display = 'none'; }
   });
 
   const createForm = document.getElementById('createRoleForm');
@@ -77,6 +77,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const out = document.getElementById('adminResult');
     if (res.ok) { out.textContent = 'نقش اختصاص یافت'; } else { out.textContent = 'خطا: ' + res.status; }
   });
-});
+}
+
+// Bind either immediately or on DOMContentLoaded depending on load timing
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDashboard);
+} else {
+  initDashboard();
+}
 // ensure admin area is evaluated (in case script loads after DOMContentLoaded)
 showAdminArea();

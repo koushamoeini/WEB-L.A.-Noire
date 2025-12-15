@@ -74,6 +74,12 @@ body {
   transition: transform 0.15s ease;
 }
 
+.button.small {
+  padding: 8px 14px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+
 .button.ghost {
   background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.4);
@@ -153,6 +159,13 @@ button[type='submit'] {
   margin-top: 14px;
   cursor: pointer;
   box-shadow: 0 12px 30px rgba(95, 228, 192, 0.25);
+}
+
+.button.ghost {
+  background: rgba(255,255,255,0.04);
+  color: #f5f7fb;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: none;
 }
 
 .full {

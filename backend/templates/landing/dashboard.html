@@ -22,8 +22,8 @@
           <h2>داشبورد</h2>
           <p>شما با حساب ادمین وارد شده‌اید — در این بخش میتوانید نقش‌ها و کاربران را توسط شناسه (id) مدیریت کنید.</p>
           <div>
-            <button id="showRolesBtn">نمایش نقش‌ها (نمایش ID)</button>
-            <button id="showUsersBtn">نمایش کاربران (نمایش ID)</button>
+            <button id="showRolesBtn" class="button ghost small">نمایش نقش‌ها (ID)</button>
+            <button id="showUsersBtn" class="button ghost small">نمایش کاربران (ID)</button>
             <ul id="rolesList" style="margin-top:12px; display:none"></ul>
             <ul id="usersList" style="margin-top:12px; display:none"></ul>
           </div>
@@ -46,13 +46,6 @@
       </section>
     </main>
 </main>
-    <script>
-      // ensure admin area visibility updates on load (token may be set via login)
-      window.addEventListener('load', () => {
-        const script = document.createElement('script');
-        script.src = "{% static 'demo/dashboard.js' %}";
-        document.body.appendChild(script);
-      });
-    </script>
+    <script src="{% static 'demo/dashboard.js' %}" defer></script>
   </body>
 </html>
