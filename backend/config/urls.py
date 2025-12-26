@@ -25,4 +25,5 @@ urlpatterns = [
     path('dashboard/', TemplateView.as_view(template_name='landing/dashboard.html'), name='dashboard'),
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
+    path('api/', include('cases.urls')),
 ]
