@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'cases',
+    'evidence',
     'rest_framework.authtoken',
 ]
 
