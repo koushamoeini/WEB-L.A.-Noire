@@ -23,6 +23,7 @@ urlpatterns = [
     path('register/', TemplateView.as_view(template_name='landing/register.html'), name='register'),
     path('login/', TemplateView.as_view(template_name='landing/login.html'), name='login'),
     path('dashboard/', TemplateView.as_view(template_name='landing/dashboard.html'), name='dashboard'),
+    path('cases/', TemplateView.as_view(template_name='landing/cases.html'), name='cases'),
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('cases.urls')),

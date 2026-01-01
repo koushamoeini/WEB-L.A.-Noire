@@ -1,0 +1,114 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | پرونده‌ها</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card">
+        <div class="panel-header">
+          <h1>پرونده‌ها</h1>
+          <a href="{% url 'landing' %}" class="ghost">بازگشت</a>
+        </div>
+
+        <p class="subtitle">
+          این صفحه با توکن ذخیره‌شده در مرورگر کار می‌کند. ابتدا وارد شوید.
+        </p>
+
+        <div id="authHint" class="guidance"></div>
+
+        <div id="caseArea" style="display:none; margin-top:18px;">
+          <div class="panel-header" style="margin-top:10px;">
+            <h2 style="margin:0;">ثبت شکایت</h2>
+          </div>
+          <form id="createCaseForm" class="form-grid" style="margin-top:12px;">
+            <label>
+              عنوان
+              <input name="title" required />
+            </label>
+            <label>
+              سطح جرم
+              <select name="crime_level" required>
+                <option value="3">سطح ۳ (جرائم خرد)</option>
+                <option value="2">سطح ۲ (جرائم بزرگ)</option>
+                <option value="1">سطح ۱ (جرائم کلان)</option>
+                <option value="0">سطح بحرانی</option>
+              </select>
+            </label>
+            <label class="full">
+              توضیحات
+              <input name="description" required />
+            </label>
+            <div class="full">
+              <button type="submit">ثبت پرونده</button>
+            </div>
+          </form>
+
+          <div class="panel-header" style="margin-top:22px;">
+            <h2 style="margin:0;">لیست پرونده‌ها</h2>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <button id="refreshCasesBtn" class="button ghost small">بروزرسانی</button>
+              <button id="statsBtn" class="button ghost small">آمار</button>
+            </div>
+          </div>
+
+          <ul id="casesList" style="margin-top:12px;"></ul>
+
+          <div id="caseDetail" class="panel" style="margin-top:14px; padding:16px; border-radius:16px; display:none;">
+            <div class="panel-header">
+              <h3 id="caseTitle" style="margin:0;">جزئیات پرونده</h3>
+              <button id="closeDetailBtn" class="button ghost small" type="button">بستن</button>
+            </div>
+            <div id="caseMeta" class="guidance" style="margin-top:10px;"></div>
+
+            <form id="resubmitForm" class="inline-form" style="margin-top:12px; display:none;">
+              <button type="submit">ارسال مجدد (Resubmit)</button>
+            </form>
+
+            <form id="traineeReviewForm" class="form-grid" style="margin-top:12px; display:none;">
+              <label>
+                تایید؟
+                <select name="approved" required>
+                  <option value="true">تایید</option>
+                  <option value="false">رد</option>
+                </select>
+              </label>
+              <label class="full">
+                یادداشت
+                <input name="notes" />
+              </label>
+              <div class="full">
+                <button type="submit">ثبت بررسی کارآموز</button>
+              </div>
+            </form>
+
+            <form id="officerReviewForm" class="form-grid" style="margin-top:12px; display:none;">
+              <label>
+                تایید؟
+                <select name="approved" required>
+                  <option value="true">تایید</option>
+                  <option value="false">رد</option>
+                </select>
+              </label>
+              <label class="full">
+                یادداشت
+                <input name="notes" />
+              </label>
+              <div class="full">
+                <button type="submit">ثبت بررسی افسر</button>
+              </div>
+            </form>
+          </div>
+
+          <div id="caseResult" class="result"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="{% static 'demo/cases.js' %}" defer></script>
+  </body>
+</html>

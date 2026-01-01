@@ -48,7 +48,10 @@ const refreshUsers = async () => {
   const users = await res.json();
   users.sort((a,b) => (a.id||0)-(b.id||0));
   list.innerHTML = users.map(u => `
-    <li data-id="${u.id}">${u.id} — ${u.username} — roles: [${u.roles.map(id => roleMap[id] ? `${roleMap[id]}(${id})` : id).join(', ')}]</li>
+    <li data-id="${u.id}">
+      <a class="button ghost small" href="/cases/" target="_blank" rel="noopener">پرونده‌ها</a>
+      ${u.id} — ${u.username} — roles: [${u.roles.map(id => roleMap[id] ? `${roleMap[id]}(${id})` : id).join(', ')}]
+    </li>
   `).join('') || '<li>(none)</li>';
   // update user select used by assignment form
   const userSelect = document.getElementById('userSelect');
