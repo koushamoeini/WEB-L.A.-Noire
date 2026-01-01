@@ -8,23 +8,41 @@ from .permissions import IsTrainee, IsOfficerOrHigher
 
 class CaseViewSet(viewsets.ModelViewSet):
     serializer_class = CaseSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser or user.roles.filter(code__in=['police_chief', 'captain']).exists():
+        roles = user.roles.values_list('code', flat=True)
+        
+        # Chiefs and Captains see everything
+        if user.is_superuser or 'police_chief' in roles or 'captain' in roles:
             return Case.objects.all()
+        
+        # Trainees see cases pending their review
+        if 'trainee' in roles:
+            return Case.objects.filter(status=Case.Status.PENDING_TRAINEE)
+            
+        # Officers see cases pending their review
+        if any(r in roles for r in ['police_officer', 'sergeant']):
+            return Case.objects.filter(status=Case.Status.PENDING_OFFICER)
+
+        # Plaintiffs see cases they created or are involved in
         return Case.objects.filter(Q(complainants=user) | Q(creator=user)).distinct()
 
     def perform_create(self, serializer):
         case = serializer.save(creator=self.request.user)
-        case.complainants.add(self.request.user)
-        from .models import CaseComplainant
-        CaseComplainant.objects.create(case=case, user=self.request.user)
+        # If it's a complaint (not from scene), add creator as first complainant
+        if case.status == Case.Status.PENDING_TRAINEE:
+            case.complainants.add(self.request.user)
+            from .models import CaseComplainant
+            CaseComplainant.objects.create(case=case, user=self.request.user)
 
     @action(detail=True, methods=['post'])
     def resubmit(self, request, pk=None):
         """Plaintiff resubmits a rejected case"""
         case = self.get_object()
+        if case.creator != request.user:
+            return Response({'error': 'Only the creator can resubmit'}, status=status.HTTP_403_FORBIDDEN)
         if case.status != Case.Status.REJECTED:
             return Response({'error': 'Only rejected cases can be resubmitted'}, status=status.HTTP_400_BAD_REQUEST)
         case.status = Case.Status.PENDING_TRAINEE
