@@ -6,9 +6,16 @@ class WitnessSerializer(serializers.ModelSerializer):
         model = SceneWitness
         fields = ['phone', 'national_code']
 
+class CaseComplainantSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(source='user.username', read_only=True)
+    class Meta:
+        model = CaseComplainant
+        fields = ['user', 'username', 'is_confirmed']
+
 class CaseSerializer(serializers.ModelSerializer):
     status_label = serializers.CharField(source='get_status_display', read_only=True)
     level_label = serializers.CharField(source='get_crime_level_display', read_only=True)
+    complainant_details = CaseComplainantSerializer(many=True, read_only=True)
 
     class Meta:
         model = Case

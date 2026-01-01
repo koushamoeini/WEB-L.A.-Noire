@@ -16,7 +16,20 @@ class CaseViewSet(viewsets.ModelViewSet):
         return Case.objects.filter(Q(complainants=user) | Q(creator=user)).distinct()
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        case = serializer.save(creator=self.request.user)
+        case.complainants.add(self.request.user)
+        from .models import CaseComplainant
+        CaseComplainant.objects.create(case=case, user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def resubmit(self, request, pk=None):
+        """Plaintiff resubmits a rejected case"""
+        case = self.get_object()
+        if case.status != Case.Status.REJECTED:
+            return Response({'error': 'Only rejected cases can be resubmitted'}, status=status.HTTP_400_BAD_REQUEST)
+        case.status = Case.Status.PENDING_TRAINEE
+        case.save()
+        return Response({'status': 'resubmitted'})
 
     @action(detail=False, methods=['post'], permission_classes=[IsOfficerOrHigher])
     def create_from_scene(self, request):
@@ -49,7 +62,43 @@ class CaseViewSet(viewsets.ModelViewSet):
             case.status = Case.Status.CANCELLED if case.submission_attempts >= 3 else Case.Status.REJECTED
         case.review_notes = request.data.get('notes', '')
         case.save()
+        
+        # Confirm/Reject specific complainants
+        complainant_ids = request.data.get('confirmed_complainants', [])
+        case.complainant_details.filter(user_id__in=complainant_ids).update(is_confirmed=True)
+        case.complainant_details.exclude(user_id__in=complainant_ids).update(is_confirmed=False)
+        
         return Response({'new_status': case.get_status_display()})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrHigher])
+    def officer_review(self, request, pk=None):
+        """Officer review logic (Section 4.2.1)"""
+        case = self.get_object()
+        approved = request.data.get('approved', False)
+        if approved:
+            case.status = Case.Status.ACTIVE
+        else:
+            # If officer rejects, it goes back to trainee, NOT plaintiff
+            case.status = Case.Status.PENDING_TRAINEE
+        case.review_notes = request.data.get('notes', '')
+        case.save()
+        return Response({'new_status': case.get_status_display()})
+
+    @action(detail=True, methods=['post'])
+    def add_complainant(self, request, pk=None):
+        """Add plaintiff to an existing case (Section 4.2.2)"""
+        case = self.get_object()
+        user_id = request.data.get('user_id')
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            user = User.objects.get(id=user_id)
+            case.complainants.add(user)
+            from .models import CaseComplainant
+            CaseComplainant.objects.get_or_create(case=case, user=user)
+            return Response({'status': 'complainant added'})
+        except User.DoesNotExist:
+            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):

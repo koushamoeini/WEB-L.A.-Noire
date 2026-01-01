@@ -34,14 +34,20 @@ class Case(models.Model):
         verbose_name="وضعیت"
     )
     
-    submission_attempts = models.PositiveSmallIntegerField(default=1)
+    submission_attempts = models.PositiveSmallIntegerField(default=0)
     review_notes = models.TextField(blank=True, null=True, verbose_name="یادداشت داور")
     
     creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='created_cases')
+    complainants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='involved_cases', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.id} - {self.title}"
+
+class CaseComplainant(models.Model):
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='complainant_details')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    is_confirmed = models.BooleanField(default=False)
 
 class CrimeScene(models.Model):
     case = models.OneToOneField(Case, on_delete=models.CASCADE, related_name='scene_data')
