@@ -37,7 +37,7 @@ class Case(models.Model):
     submission_attempts = models.PositiveSmallIntegerField(default=0)
     review_notes = models.TextField(blank=True, null=True, verbose_name="یادداشت داور")
     
-    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='created_cases')
+    creator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='created_cases', null=True, blank=True, null=True, blank=True)
     complainants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='involved_cases', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
