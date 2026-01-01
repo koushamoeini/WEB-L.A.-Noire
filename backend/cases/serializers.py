@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Case, CrimeScene, SceneWitness
+from .models import Case, CrimeScene, SceneWitness, CaseComplainant
 
 class WitnessSerializer(serializers.ModelSerializer):
     class Meta:
