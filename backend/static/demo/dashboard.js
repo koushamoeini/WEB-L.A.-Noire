@@ -63,6 +63,12 @@ const refreshUsers = async () => {
 function initDashboard() {
   showAdminArea();
 
+  // If a non-admin user manually opens /dashboard/admin/, redirect to their own dashboard.
+  if (getToken() && !isSuper()) {
+    window.location.replace('/dashboard/');
+    return;
+  }
+
   // Preload selects for admins so assignment works without clicking list buttons
   if (getToken() && isSuper()) {
     refreshRoles();

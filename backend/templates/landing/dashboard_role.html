@@ -1,0 +1,31 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | داشبورد</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl" data-role-code="{{ role_code|default:'' }}">
+    <main class="landing">
+      <section class="card">
+        <div class="panel-header">
+          <h1 id="dashboardHeading">داشبورد</h1>
+          <a href="/dashboard/" class="ghost">بازگشت</a>
+        </div>
+
+        <p id="whoami" class="subtitle">…</p>
+
+        <div class="hero-actions" style="margin-top:18px;">
+          <a href="/cases/" class="button">ایجاد / مدیریت پرونده‌ها</a>
+          <a href="/evidence/" class="button ghost">ثبت / مدیریت شواهد</a>
+        </div>
+
+        <div id="roleInfo" class="guidance" style="margin-top:14px;"></div>
+      </section>
+    </main>
+
+    <script src="{% static 'demo/role_dashboard.js' %}" defer></script>
+  </body>
+</html>

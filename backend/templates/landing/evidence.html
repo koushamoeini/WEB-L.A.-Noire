@@ -1,0 +1,93 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | ثبت شواهد</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card">
+        <div class="panel-header">
+          <h1>ثبت شواهد</h1>
+          <a href="/dashboard/" class="ghost">بازگشت</a>
+        </div>
+
+        <p class="subtitle">
+          این بخش برای ثبت و مدیریت شواهد پرونده‌هاست. دسترسی واقعی توسط سرور کنترل می‌شود.
+        </p>
+
+        <div id="authHint" class="guidance"></div>
+
+        <div id="evidenceArea" style="display:none; margin-top:18px;">
+          <div class="panel-header" style="margin-top:10px;">
+            <h2 style="margin:0;">ثبت شاهد جدید</h2>
+          </div>
+
+          <form id="createEvidenceForm" class="form-grid" style="margin-top:12px;">
+            <label>
+              پرونده
+              <select name="case_id" id="caseSelect" required>
+                <option value="">انتخاب پرونده (ID - عنوان)</option>
+              </select>
+            </label>
+
+            <label>
+              نوع شاهد
+              <select name="kind" id="kindSelect" required>
+                <option value="">انتخاب نوع شاهد</option>
+                <option value="witness">شواهد: استشهاد شاهدان یا افراد محلی</option>
+                <option value="biological">شواهد: زیستی و پزشکی</option>
+                <option value="vehicle">شواهد: وسایل نقلیه</option>
+                <option value="id-document">شواهد: مدارک شناسایی</option>
+                <option value="other">شواهد: سایر موارد</option>
+              </select>
+            </label>
+
+            <label>
+              عنوان
+              <input name="title" required />
+            </label>
+
+            <label class="full">
+              توضیحات
+              <input name="description" required />
+            </label>
+
+            <div id="kindFields" class="full"></div>
+
+            <div class="full">
+              <button type="submit">ثبت شاهد</button>
+            </div>
+          </form>
+
+          <div class="panel-header" style="margin-top:22px;">
+            <h2 style="margin:0;">لیست شواهد</h2>
+            <button id="refreshEvidenceBtn" class="button ghost small" type="button">بروزرسانی</button>
+          </div>
+
+          <ul id="evidenceList" style="margin-top:12px;"></ul>
+
+          <div id="evidenceDetail" class="panel" style="margin-top:14px; padding:16px; border-radius:16px; display:none;">
+            <div class="panel-header">
+              <h3 id="evidenceTitle" style="margin:0;">جزئیات شاهد</h3>
+              <button id="closeEvidenceBtn" class="button ghost small" type="button">بستن</button>
+            </div>
+            <div id="evidenceMeta" class="guidance" style="margin-top:10px;"></div>
+
+            <form id="uploadImagesForm" class="inline-form" style="margin-top:12px;">
+              <input type="file" id="imagesInput" name="images" multiple accept="image/*" />
+              <button type="submit">آپلود تصاویر</button>
+            </form>
+          </div>
+
+          <div id="evidenceResult" class="result"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="{% static 'demo/evidence.js' %}" defer></script>
+  </body>
+</html>

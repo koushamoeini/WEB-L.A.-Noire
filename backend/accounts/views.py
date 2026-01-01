@@ -52,6 +52,27 @@ class UserListView(ListAPIView):
         return get_user_model().objects.all().order_by('id')
 
 
+class MeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        roles = []
+        try:
+            roles = list(user.roles.all().order_by('id').values('id', 'code', 'name'))
+        except Exception:
+            roles = []
+        return Response(
+            {
+                'id': user.pk,
+                'username': user.username,
+                'email': user.email,
+                'is_superuser': bool(user.is_superuser),
+                'roles': roles,
+            }
+        )
+
+
 class RegisterView(CreateAPIView):
     serializer_class = RegistrationSerializer
     permission_classes = []  # allow any

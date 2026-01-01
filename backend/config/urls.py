@@ -18,12 +18,19 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
 
+from . import views
+
 urlpatterns = [
     path('', TemplateView.as_view(template_name='landing/index.html'), name='landing'),
     path('register/', TemplateView.as_view(template_name='landing/register.html'), name='register'),
     path('login/', TemplateView.as_view(template_name='landing/login.html'), name='login'),
-    path('dashboard/', TemplateView.as_view(template_name='landing/dashboard.html'), name='dashboard'),
+    path('dashboard/', TemplateView.as_view(template_name='landing/dashboard_router.html'), name='dashboard'),
+    path('dashboard/admin/', TemplateView.as_view(template_name='landing/dashboard.html'), name='dashboard-admin'),
+    path('dashboard/user/', TemplateView.as_view(template_name='landing/dashboard_user.html'), name='dashboard-user'),
+    path('dashboard/judge/', TemplateView.as_view(template_name='landing/dashboard_judge.html'), name='dashboard-judge'),
+    path('dashboard/role/<slug:role_code>/', views.role_dashboard, name='dashboard-role'),
     path('cases/', TemplateView.as_view(template_name='landing/cases.html'), name='cases'),
+    path('evidence/', TemplateView.as_view(template_name='landing/evidence.html'), name='evidence'),
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('cases.urls')),

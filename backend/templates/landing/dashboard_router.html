@@ -1,0 +1,23 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | داشبورد</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card">
+        <div class="panel-header">
+          <h1>در حال انتقال به داشبورد…</h1>
+          <a href="/dashboard/" class="ghost">بازگشت</a>
+        </div>
+        <p id="routerMsg" class="subtitle">لطفاً چند لحظه صبر کنید.</p>
+        <div id="routerHelp" class="guidance"></div>
+      </section>
+    </main>
+    <script src="{% static 'demo/dashboard_router.js' %}" defer></script>
+  </body>
+</html>
