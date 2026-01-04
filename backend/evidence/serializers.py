@@ -12,11 +12,19 @@ class EvidenceImageSerializer(serializers.ModelSerializer):
 class EvidenceBaseSerializer(serializers.ModelSerializer):
     images = EvidenceImageSerializer(many=True, read_only=True)
     recorder_name = serializers.CharField(source='recorder.username', read_only=True)
+    type_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Evidence
-        fields = ['id', 'case', 'title', 'description', 'recorded_at', 'recorder', 'recorder_name', 'images']
+        fields = ['id', 'case', 'title', 'description', 'recorded_at', 'recorder', 'recorder_name', 'images', 'is_on_board', 'type_display']
         read_only_fields = ['recorder']
+
+    def get_type_display(self, obj):
+        if hasattr(obj, 'witnesstestimony'): return "استشهاد شاهد"
+        if hasattr(obj, 'biologicalevidence'): return "شواهد زیستی"
+        if hasattr(obj, 'vehicleevidence'): return "وسایل نقلیه"
+        if hasattr(obj, 'identificationdocument'): return "مدارک شناسایی"
+        return "سایر موارد"
 
 class WitnessTestimonySerializer(EvidenceBaseSerializer):
     class Meta(EvidenceBaseSerializer.Meta):
