@@ -5,6 +5,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>WP-Project | پرونده‌ها</title>
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet"> -->
     <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
   </head>
   <body dir="rtl">
@@ -12,7 +15,11 @@
       <section class="card">
         <div class="panel-header">
           <h1>پرونده‌ها</h1>
-          <a href="/dashboard/" class="ghost">بازگشت</a>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="/investigation/" class="button small" style="background-color: #e67e22;">تحقیقات</a>
+            <a href="/dashboard/" class="ghost">بازگشت</a>
+            <button id="logoutBtn" class="button ghost">خروج</button>
+          </div>
         </div>
 
         <p class="subtitle">
@@ -23,8 +30,14 @@
 
         <div id="caseArea" style="display:none; margin-top:18px;">
           <div class="panel-header" style="margin-top:10px;">
-            <h2 style="margin:0;">ثبت شکایت</h2>
+            <h2 style="margin:0;">ثبت شکایت / صحنه جرم</h2>
+            <select id="caseTypeSelector" class="button ghost small" style="background: rgba(255,255,255,0.1); border: 1px solid var(--accent);">
+              <option value="complaint">شکایت مردمی (4.2.1)</option>
+              <option value="scene">گزارش صحنه جرم (4.2.2)</option>
+            </select>
           </div>
+
+          <!-- Standard Complaint Form -->
           <form id="createCaseForm" class="form-grid" style="margin-top:12px;">
             <label>
               عنوان
@@ -48,6 +61,48 @@
             </div>
           </form>
 
+          <!-- Crime Scene Form -->
+          <form id="createSceneForm" class="form-grid" style="margin-top:12px; display:none;">
+            <label>
+              عنوان
+              <input name="title" required />
+            </label>
+            <label>
+              سطح جرم
+              <select name="crime_level" required>
+                <option value="3">سطح ۳ (جرائم خرد)</option>
+                <option value="2">سطح ۲ (جرائم بزرگ)</option>
+                <option value="1">سطح ۱ (جرائم کلان)</option>
+                <option value="0">سطح بحرانی</option>
+              </select>
+            </label>
+            <label>
+              محل وقوع
+              <input name="location" required />
+            </label>
+            <label>
+              زمان وقوع
+              <input type="datetime-local" name="occurrence_time" required />
+            </label>
+            <label class="full">
+              توضیحات
+              <input name="description" required />
+            </label>
+            <div class="full" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+              <strong>شاهدان:</strong>
+              <div id="witnessesContainer" style="width: 100%;">
+                <div class="inline-form" style="margin-bottom: 8px;">
+                  <input placeholder="شماره تماس" class="w-phone" style="min-width: 150px;" />
+                  <input placeholder="کد ملی" class="w-national" style="min-width: 150px;" />
+                </div>
+              </div>
+              <button type="button" id="addWitnessBtn" class="button ghost small">+ افزودن شاهد</button>
+            </div>
+            <div class="full">
+              <button type="submit" style="background-color: #e67e22;">ثبت صحنه جرم</button>
+            </div>
+          </form>
+
           <div class="panel-header" style="margin-top:22px;">
             <h2 style="margin:0;">لیست پرونده‌ها</h2>
             <div style="display:flex; gap:10px; align-items:center;">
@@ -64,9 +119,31 @@
               <button id="closeDetailBtn" class="button ghost small" type="button">بستن</button>
             </div>
             <div id="caseMeta" class="guidance" style="margin-top:10px;"></div>
+            <div id="caseDescription" style="margin-top:12px; padding:10px; background:#f9f9f9; border-radius:8px; border-right: 4px solid #ccc;"></div>
+            <div id="caseExtraInfo" style="margin-top:10px; font-size: 0.9em; color: #555;"></div>
 
-            <form id="resubmitForm" class="inline-form" style="margin-top:12px; display:none;">
-              <button type="submit">ارسال مجدد (Resubmit)</button>
+            <div id="complainantsSection" style="margin-top:16px; border-top: 1px solid rgba(255,255,255,0.1); padding-top:12px;">
+              <h4 style="margin:0 0 8px 0;">شاکیان پرونده</h4>
+              <ul id="complainantsList" style="font-size: 0.9em; margin-bottom: 12px;"></ul>
+              
+              <form id="addComplainantForm" class="inline-form">
+                <input type="number" name="user_id" placeholder="ID کاربر" required style="min-width: 100px;" />
+                <button type="submit" class="button small">افزودن شاکی</button>
+              </form>
+            </div>
+
+            <form id="resubmitForm" class="form-grid" style="margin-top:12px; display:none;">
+              <label>
+                عنوان جدید
+                <input name="title" id="resubmitTitle" required />
+              </label>
+              <label class="full">
+                توضیحات جدید
+                <input name="description" id="resubmitDescription" required />
+              </label>
+              <div class="full">
+                <button type="submit">اصلاح و ارسال مجدد (Resubmit)</button>
+              </div>
             </form>
 
             <form id="traineeReviewForm" class="form-grid" style="margin-top:12px; display:none;">
@@ -102,6 +179,10 @@
                 <button type="submit">ثبت بررسی افسر</button>
               </div>
             </form>
+
+            <div id="solveArea" style="margin-top:12px; display:none;">
+              <button id="solveCaseBtn" class="button small" style="background-color: #27ae60;">مختومه کردن پرونده (Solve)</button>
+            </div>
           </div>
 
           <div id="caseResult" class="result"></div>
@@ -112,3 +193,4 @@
     <script src="{% static 'demo/cases.js' %}" defer></script>
   </body>
 </html>
+

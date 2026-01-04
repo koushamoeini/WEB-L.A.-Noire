@@ -74,6 +74,21 @@ async function openCaseDetail(caseId) {
     'caseMeta',
     `عنوان: ${selectedCase.title} | وضعیت: ${selectedCase.status_label} | سطح: ${selectedCase.level_label}`
   );
+  setText('caseDescription', `توضیحات: ${selectedCase.description}`);
+
+  let extra = `تعداد تلاش‌ها: ${selectedCase.submission_attempts}`;
+  if (selectedCase.review_notes) {
+    extra += ` | یادداشت قبلی: ${selectedCase.review_notes}`;
+  }
+  setText('caseExtraInfo', extra);
+
+  // Display complainants
+  const compList = document.getElementById('complainantsList');
+  if (compList && selectedCase.complainant_details) {
+    compList.innerHTML = selectedCase.complainant_details
+      .map(c => `<li>${c.username} (ID: ${c.user}) ${c.is_confirmed ? '✅ تایید شده' : '⏳ در انتظار تایید'}</li>`)
+      .join('');
+  }
 
   // Show/hide action forms based on status.
   // We keep it simple: show review buttons when case is in the pending states.
@@ -81,10 +96,18 @@ async function openCaseDetail(caseId) {
   hide('resubmitForm');
   hide('traineeReviewForm');
   hide('officerReviewForm');
+  hide('solveArea');
 
-  if (selectedCase.status === 'RE') show('resubmitForm');
+  if (selectedCase.status === 'RE') {
+    show('resubmitForm');
+    const rTitle = document.getElementById('resubmitTitle');
+    const rDesc = document.getElementById('resubmitDescription');
+    if (rTitle) rTitle.value = selectedCase.title;
+    if (rDesc) rDesc.value = selectedCase.description;
+  }
   if (selectedCase.status === 'PT') show('traineeReviewForm');
   if (selectedCase.status === 'PO') show('officerReviewForm');
+  if (selectedCase.status === 'AC') show('solveArea');
 
   show('caseDetail');
 }
@@ -121,7 +144,9 @@ async function postAction(url, payload) {
 
   if (res.ok) {
     out.textContent = 'عملیات انجام شد.';
-    if (selectedCase?.id) await openCaseDetail(selectedCase.id);
+    // Hide detail view because the status change might make the case invisible to the current user
+    hide('caseDetail');
+    selectedCase = null;
     await fetchCases();
     return;
   }
@@ -146,6 +171,13 @@ async function fetchStats() {
 }
 
 function initCasesPage() {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('is_superuser');
+    window.location.href = '/login/';
+  });
+
   const hint = document.getElementById('authHint');
   if (!getToken()) {
     if (hint) hint.textContent = 'ابتدا وارد شوید (Login) تا توکن ذخیره شود.';
@@ -162,6 +194,34 @@ function initCasesPage() {
   const statsBtn = document.getElementById('statsBtn');
   if (statsBtn) statsBtn.addEventListener('click', fetchStats);
 
+  const typeSelector = document.getElementById('caseTypeSelector');
+  if (typeSelector) {
+    typeSelector.addEventListener('change', (e) => {
+      if (e.target.value === 'scene') {
+        hide('createCaseForm');
+        show('createSceneForm');
+      } else {
+        show('createCaseForm');
+        hide('createSceneForm');
+      }
+    });
+  }
+
+  const addWitnessBtn = document.getElementById('addWitnessBtn');
+  if (addWitnessBtn) {
+    addWitnessBtn.addEventListener('click', () => {
+      const container = document.getElementById('witnessesContainer');
+      const div = document.createElement('div');
+      div.className = 'inline-form';
+      div.style.marginBottom = '8px';
+      div.innerHTML = `
+        <input placeholder="شماره تماس" class="w-phone" style="min-width: 150px;" />
+        <input placeholder="کد ملی" class="w-national" style="min-width: 150px;" />
+      `;
+      container.appendChild(div);
+    });
+  }
+
   const createForm = document.getElementById('createCaseForm');
   if (createForm)
     createForm.addEventListener('submit', async (e) => {
@@ -173,6 +233,44 @@ function initCasesPage() {
         crime_level: parseInt(String(form.get('crime_level') || '3'), 10),
       });
     });
+
+  const sceneForm = document.getElementById('createSceneForm');
+  if (sceneForm) {
+    sceneForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = new FormData(sceneForm);
+      const witnesses = [];
+      document.querySelectorAll('#witnessesContainer .inline-form').forEach(row => {
+        const phone = row.querySelector('.w-phone').value;
+        const national = row.querySelector('.w-national').value;
+        if (phone && national) witnesses.push({ phone, national_code: national });
+      });
+
+      const payload = {
+        title: form.get('title'),
+        description: form.get('description'),
+        crime_level: parseInt(form.get('crime_level')),
+        location: form.get('location'),
+        occurrence_time: form.get('occurrence_time'),
+        witnesses: witnesses
+      };
+
+      const res = await fetch(`${API_BASE}/cases/create_from_scene/`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        document.getElementById('caseResult').textContent = 'صحنه جرم با موفقیت ثبت شد.';
+        sceneForm.reset();
+        await fetchCases();
+      } else {
+        const data = await res.json();
+        alert('خطا: ' + JSON.stringify(data));
+      }
+    });
+  }
 
   const closeBtn = document.getElementById('closeDetailBtn');
   if (closeBtn)
@@ -186,7 +284,11 @@ function initCasesPage() {
     resubmitForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!selectedCase?.id) return;
-      await postAction(`${API_BASE}/cases/${selectedCase.id}/resubmit/`);
+      const form = new FormData(resubmitForm);
+      await postAction(`${API_BASE}/cases/${selectedCase.id}/resubmit/`, {
+        title: String(form.get('title') || '').trim(),
+        description: String(form.get('description') || '').trim(),
+      });
     });
 
   const traineeForm = document.getElementById('traineeReviewForm');
@@ -212,6 +314,38 @@ function initCasesPage() {
         approved: String(form.get('approved')) === 'true',
         notes: String(form.get('notes') || ''),
       });
+    });
+
+  const solveBtn = document.getElementById('solveCaseBtn');
+  if (solveBtn)
+    solveBtn.addEventListener('click', async () => {
+      if (!selectedCase?.id) return;
+      if (confirm('آیا از مختومه کردن این پرونده اطمینان دارید؟')) {
+        await postAction(`${API_BASE}/cases/${selectedCase.id}/solve/`);
+      }
+    });
+
+  const addCompForm = document.getElementById('addComplainantForm');
+  if (addCompForm)
+    addCompForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!selectedCase?.id) return;
+      const form = new FormData(addCompForm);
+      const userId = form.get('user_id');
+      
+      const res = await fetch(`${API_BASE}/cases/${selectedCase.id}/add_complainant/`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ user_id: userId }),
+      });
+
+      if (res.ok) {
+        alert('شاکی با موفقیت اضافه شد.');
+        await openCaseDetail(selectedCase.id);
+      } else {
+        const data = await res.json();
+        alert('خطا: ' + (data.error || res.status));
+      }
     });
 
   // initial load
