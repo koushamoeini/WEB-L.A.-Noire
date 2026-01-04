@@ -13,7 +13,7 @@ class Command(BaseCommand):
             ('police_chief', 'رییس پلیس'),
             ('captain', 'کاپیتان'),
             ('sergeant', 'گروهبان'),
-            ('workshop', 'کارگاه'),
+            ('detective', 'کارآگاه'),
             ('police_officer', 'مامور پلیس'),
             ('patrol_officer', 'افسر گشت'),
             ('trainee', 'کارآموز'),
