@@ -52,6 +52,14 @@ class UserAdminForm(forms.ModelForm):
         user = super().save(commit=commit)
         if commit:
             user.roles.set(self.cleaned_data.get('roles', []))
+        else:
+            # Django Admin calls save(commit=False) then save_m2m()
+            # We override save_m2m to include our custom roles field
+            old_save_m2m = self.save_m2m
+            def new_save_m2m():
+                old_save_m2m()
+                user.roles.set(self.cleaned_data.get('roles', []))
+            self.save_m2m = new_save_m2m
         return user
 
 
