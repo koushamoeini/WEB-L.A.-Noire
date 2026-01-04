@@ -11,7 +11,13 @@ class IsTrainee(HasRole):
     def __init__(self): super().__init__(['trainee'])
 
 class IsOfficerOrHigher(HasRole):
-    def __init__(self): super().__init__(['police_officer', 'captain', 'police_chief', 'sergeant', 'workshop'])
+    def __init__(self): super().__init__(['police_officer', 'captain', 'police_chief', 'sergeant', 'detective'])
 
 class IsChief(HasRole):
     def __init__(self): super().__init__(['police_chief'])
+
+class IsSergeant(HasRole):
+    def __init__(self): super().__init__(['sergeant', 'captain', 'police_chief'])
+
+class IsDetective(HasRole):
+    def __init__(self): super().__init__(['detective', 'captain', 'police_chief'])
