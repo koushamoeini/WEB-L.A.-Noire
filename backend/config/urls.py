@@ -31,8 +31,10 @@ urlpatterns = [
     path('dashboard/role/<slug:role_code>/', views.role_dashboard, name='dashboard-role'),
     path('cases/', TemplateView.as_view(template_name='landing/cases.html'), name='cases'),
     path('evidence/', TemplateView.as_view(template_name='landing/evidence.html'), name='evidence'),
+    path('investigation/', TemplateView.as_view(template_name='landing/investigation.html'), name='investigation'),
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('cases.urls')),
     path('api/evidence/', include('evidence.urls')),
+    path('api/investigation/', include('investigation.urls')),
 ]
