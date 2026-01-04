@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from django.db.models import Q, Count
 from .models import Case, CrimeScene, SceneWitness
 from .serializers import CaseSerializer, WitnessSerializer
-from .permissions import IsTrainee, IsOfficerOrHigher
+from .permissions import IsTrainee, IsOfficerOrHigher, IsSergeant, IsChief, IsDetective
 
 class CaseViewSet(viewsets.ModelViewSet):
     serializer_class = CaseSerializer
@@ -18,16 +18,29 @@ class CaseViewSet(viewsets.ModelViewSet):
         if user.is_superuser or 'police_chief' in roles or 'captain' in roles:
             return Case.objects.all()
         
+        # Combine filters based on roles
+        queryset = Case.objects.none()
+        
         # Trainees see cases pending their review
         if 'trainee' in roles:
-            return Case.objects.filter(status=Case.Status.PENDING_TRAINEE)
+            queryset |= Case.objects.filter(status=Case.Status.PENDING_TRAINEE)
             
         # Officers see cases pending their review
-        if any(r in roles for r in ['police_officer', 'sergeant']):
-            return Case.objects.filter(status=Case.Status.PENDING_OFFICER)
+        if 'police_officer' in roles:
+            queryset |= Case.objects.filter(status=Case.Status.PENDING_OFFICER)
 
-        # Plaintiffs see cases they created or are involved in
-        return Case.objects.filter(Q(complainants=user) | Q(creator=user)).distinct()
+        # Sergeants see cases pending resolution review
+        if 'sergeant' in roles:
+            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.PENDING_SERGEANT])
+
+        # Detectives see active cases to investigate
+        if 'detective' in roles:
+            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT])
+
+        # Everyone sees cases they created or are involved in (Plaintiffs)
+        queryset |= Case.objects.filter(Q(complainants=user) | Q(creator=user))
+
+        return queryset.distinct()
 
     def perform_create(self, serializer):
         case = serializer.save(creator=self.request.user)
@@ -39,15 +52,19 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def resubmit(self, request, pk=None):
-        """Plaintiff resubmits a rejected case"""
+        """Plaintiff resubmits a rejected case with updated info"""
         case = self.get_object()
         if case.creator != request.user:
             return Response({'error': 'Only the creator can resubmit'}, status=status.HTTP_403_FORBIDDEN)
         if case.status != Case.Status.REJECTED:
             return Response({'error': 'Only rejected cases can be resubmitted'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Allow updating title and description during resubmission
+        case.title = request.data.get('title', case.title)
+        case.description = request.data.get('description', case.description)
         case.status = Case.Status.PENDING_TRAINEE
         case.save()
-        return Response({'status': 'resubmitted'})
+        return Response({'status': 'resubmitted', 'title': case.title})
 
     @action(detail=False, methods=['post'], permission_classes=[IsOfficerOrHigher])
     def create_from_scene(self, request):
@@ -117,6 +134,55 @@ class CaseViewSet(viewsets.ModelViewSet):
             return Response({'status': 'complainant added'})
         except User.DoesNotExist:
             return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsDetective])
+    def submit_resolution(self, request, pk=None):
+        """Detective submits case for resolution (Section 4.4)"""
+        case = self.get_object()
+        if case.status != Case.Status.ACTIVE:
+            return Response({'error': 'Only active cases can be submitted for resolution'}, status=400)
+        
+        # Check if there's at least one main suspect
+        if not case.suspects.filter(is_main_suspect=True).exists():
+            return Response({'error': 'At least one main suspect must be identified'}, status=400)
+            
+        case.status = Case.Status.PENDING_SERGEANT
+        case.save()
+        return Response({'status': 'submitted_for_resolution'})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsSergeant])
+    def sergeant_review(self, request, pk=None):
+        """Sergeant reviews the detective's resolution (Section 4.4)"""
+        case = self.get_object()
+        approved = request.data.get('approved', False)
+        notes = request.data.get('notes', '')
+        
+        if approved:
+            # If critical, needs Chief's approval
+            if case.crime_level == Case.CrimeLevel.CRITICAL:
+                case.status = Case.Status.PENDING_CHIEF
+            else:
+                case.status = Case.Status.SOLVED
+        else:
+            case.status = Case.Status.ACTIVE # Back to detective
+            
+        case.review_notes = notes
+        case.save()
+        return Response({'status': 'reviewed_by_sergeant', 'new_status': case.status})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsChief])
+    def chief_review(self, request, pk=None):
+        """Chief reviews critical cases (Section 5.4)"""
+        case = self.get_object()
+        approved = request.data.get('approved', False)
+        
+        if approved:
+            case.status = Case.Status.SOLVED
+        else:
+            case.status = Case.Status.ACTIVE
+            
+        case.save()
+        return Response({'status': 'reviewed_by_chief', 'new_status': case.status})
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
