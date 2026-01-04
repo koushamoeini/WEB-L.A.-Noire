@@ -1,0 +1,254 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | تحقیقات و بازجویی</title>
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet"> -->
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+    <style>
+      .board-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        background: #2c3e50; /* Darker background for contrast */
+        padding: 30px;
+        border-radius: 16px;
+        min-height: 500px;
+        margin-top: 20px;
+        border: 3px solid #34495e;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        position: relative; /* Required for SVG overlay */
+        overflow: visible;
+      }
+      #boardSvg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none; /* Let clicks pass through to items */
+        z-index: 1;
+      }
+      .board-item {
+        background: #fff;
+        padding: 8px;
+        border-radius: 4px; /* More like a photo/card */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        width: 120px;
+        height : 120px;
+        text-align: center;
+        position: relative;
+        color: #2c3e50;
+        transform: rotate(-1deg); /* Slight tilt for "board" feel */
+        transition: transform 0.2s;
+        z-index: 2; /* Above SVG lines */
+      }
+      .board-item:nth-child(even) {
+        transform: rotate(1.5deg);
+      }
+      .board-item:hover {
+        transform: scale(1.05) rotate(0deg);
+        z-index: 10;
+      }
+      .board-item.evidence { border-top: 6px solid #3498db; }
+      .board-item.suspect { border-top: 6px solid #e74c3c; }
+      .connection-line {
+        margin-top: 10px;
+        font-size: 0.8em;
+        color: #666;
+        border-top: 1px solid #eee;
+        padding-top: 5px;
+      }
+    </style>
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card">
+        <div class="panel-header">
+          <h1>تحقیقات و بازجویی</h1>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="/dashboard/" class="ghost">بازگشت</a>
+            <button id="logoutBtn" class="button ghost">خروج</button>
+          </div>
+        </div>
+
+        <div id="investigationArea">
+          <div class="panel-header" style="margin-top:10px;">
+            <h2 style="margin:0;">انتخاب پرونده</h2>
+          </div>
+          <select id="caseSelect" class="full" style="margin-top:10px; padding: 8px; border-radius: 8px;">
+            <option value="">یک پرونده انتخاب کنید...</option>
+          </select>
+
+          <div id="caseContent" style="display:none; margin-top:20px;">
+            <!-- Case Resolution Panel (Section 4.4: حل پرونده) -->
+            <div id="resolutionPanel" class="panel" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; display: none; border-left: 5px solid #3498db;">
+              <h3 style="margin-top:0; color:#ecf0f1;">📋 وضعیت پرونده: <span id="caseStatusText" style="color:#3498db; font-weight:bold;">-</span></h3>
+              
+              <!-- Detective Actions (Step 1) -->
+              <div id="detectiveActions" style="display:none; background:rgba(255,255,255,0.1); padding:15px; border-radius:8px; margin-bottom:10px;">
+                <h4 style="margin:0 0 10px 0; color:#ecf0f1;">🔍 گام ۱: کارآگاه - ارسال برای حل پرونده</h4>
+                <p style="margin:0 0 10px 0; font-size:0.95em;">پس از جمع‌آوری تمام شواهد و شناسایی متهمین اصلی، پرونده را برای بررسی گروهبان ارسال کنید.</p>
+                <button id="btnSubmitResolution" class="button" style="background:#3498db; width:100%; font-weight:bold; padding:10px;">ارسال برای حل پرونده</button>
+              </div>
+              
+              <!-- Sergeant Actions (Step 2) -->
+              <div id="sergeantActions" style="display:none; background:rgba(255,255,255,0.1); padding:15px; border-radius:8px; margin-bottom:10px;">
+                <h4 style="margin:0 0 10px 0; color:#ecf0f1;">👮 گام ۲: گروهبان - بررسی و تایید</h4>
+                <p style="margin:0 0 10px 0; font-size:0.95em;">شواهد و متهمین را بررسی کنید. در صورت تایید:</p>
+                <ul style="margin:0 0 10px 0; padding-left:20px; font-size:0.9em;">
+                  <li>اگر جرم <strong>بحرانی</strong> است: به رئیس پلیس ارسال می‌شود</li>
+                  <li>اگر جرم <strong>عادی</strong> است: پرونده مختومه می‌شود</li>
+                </ul>
+                <textarea id="sergeantNotes" placeholder="یادداشت‌های بررسی..." style="width:100%; margin-bottom:10px; color: black; padding:8px; border-radius:4px; min-height:80px;"></textarea>
+                <div style="display:flex; gap:10px;">
+                  <button id="btnApproveSergeant" class="button" style="background:#27ae60; flex:1; font-weight:bold;">✓ تایید</button>
+                  <button id="btnRejectSergeant" class="button" style="background:#e74c3c; flex:1; font-weight:bold;">✗ رد (بازگشت)</button>
+                </div>
+              </div>
+              
+              <!-- Chief Actions (Step 3) -->
+              <div id="chiefActions" style="display:none; background:rgba(255,255,255,0.1); padding:15px; border-radius:8px;">
+                <h4 style="margin:0 0 10px 0; color:#ecf0f1;">👑 گام ۳: رئیس پلیس - تایید نهایی (جرائم بحرانی)</h4>
+                <p style="margin:0 0 10px 0; font-size:0.95em;">این پرونده به دلیل <strong>سطح بحرانی</strong> نیاز به تایید نهایی شما دارد.</p>
+                <div style="display:flex; gap:10px;">
+                  <button id="btnApproveChief" class="button" style="background:#27ae60; flex:1; font-weight:bold;">✓ تایید نهایی</button>
+                  <button id="btnRejectChief" class="button" style="background:#e74c3c; flex:1; font-weight:bold;">✗ رد (بازگشت)</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="tabs" style="display:flex; gap:10px; margin-bottom:20px;">
+              <button class="tab-btn active" data-tab="suspectsTab">متهمین و بازجویی</button>
+              <button class="tab-btn" data-tab="evidenceTab">شواهد و مدارک</button>
+              <button class="tab-btn" data-tab="boardTab">تخته کارآگاه</button>
+            </div>
+
+            <!-- Suspects Tab (Section 5.4: شناسایی متهمین و بازجویی) -->
+            <div id="suspectsTab" class="tab-content">
+              <h3 style="color:#2c3e50; border-bottom:3px solid #e74c3c; padding-bottom:10px;">👥 مدیریت متهمین (Section 5.4)</h3>
+              <div class="panel" style="background:#f9f9f9; padding:15px; margin-bottom:20px; border-radius:8px; border-left:4px solid #3498db;">
+                <h4 style="margin-top:0; color:#2c3e50;">افزودن متهم جدید</h4>
+                <form id="addSuspectForm" class="form-grid">
+                  <input name="name" placeholder="نام کامل متهم" required style="padding:8px; border:1px solid #bdc3c7; border-radius:4px;" />
+                  <input name="details" placeholder="جزئیات و اطلاعات" required style="padding:8px; border:1px solid #bdc3c7; border-radius:4px;" />
+                  <label style="display:flex; align-items:center; gap:8px; color:#2c3e50;">
+                    <input type="checkbox" name="is_main_suspect" style="width:16px; height:16px; cursor:pointer;"> 
+                    <span style="font-weight:bold;">🎯 متهم اصلی</span>
+                  </label>
+                  <button type="submit" class="button" style="background:#3498db; font-weight:bold;">+ افزودن متهم</button>
+                </form>
+              </div>
+              <h4 style="color:#2c3e50; margin-bottom:10px;">متهمین این پرونده:</h4>
+              <ul id="suspectsList" style="margin:0; padding:0; list-style:none;"></ul>
+
+              <div id="interrogationArea" style="display:none; margin-top:20px; padding:20px; background:linear-gradient(135deg, #ecf0f1 0%, #f5f7fa 100%); border-radius:10px; border-left: 4px solid #e74c3c;">
+                <h3 style="margin-top:0; color:#2c3e50;">🎤 ثبت بازجویی (Section 5.4)</h3>
+                <p style="margin:0 0 10px 0; color:#555; font-size:0.9em;"><strong>متهم:</strong> <span id="currentSuspectName" style="color:#e74c3c; font-weight:bold;"></span></p>
+                <form id="addInterrogationForm" class="form-grid">
+                  <textarea name="transcript" placeholder="متن کامل بازجویی..." class="full" required style="min-height:100px; padding:8px; border:1px solid #bdc3c7; border-radius:4px; color:#2c3e50;"></textarea>
+                  <div style="display:flex; gap:10px; align-items:center;">
+                    <div style="flex:1;">
+                      <label style="display:block; margin-bottom:5px; color:#2c3e50; font-weight:bold;">امتیاز کارآگاه (۱-۱۰):</label>
+                      <input type="number" name="score" placeholder="امتیاز" min="1" max="10" required style="width:100%; padding:8px; border:1px solid #bdc3c7; border-radius:4px; color:#2c3e50;" />
+                    </div>
+                    <button type="submit" class="button" style="background:#3498db; margin-top:22px; padding:8px 15px;">ثبت</button>
+                  </div>
+                </form>
+                <div style="margin-top:20px;">
+                  <h4 style="color:#2c3e50; margin-bottom:10px; border-bottom:2px solid #3498db; padding-bottom:5px;">📝 تاریخچه بازجویی‌ها</h4>
+                  <p style="color:#7f8c8d; font-size:0.9em; margin-bottom:10px;">توضیح: کارآگاه امتیاز اولیه ثبت می‌کند. سپس <strong>کاپیتان</strong> امتیاز نهایی را تایید می‌کند.</p>
+                  <ul id="interrogationsList" style="margin:0; padding:0; list-style:none;"></ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Evidence Tab (Section 4.3: شواهد و مدارک) -->
+            <div id="evidenceTab" class="tab-content" style="display:none;">
+              <h3 style="color:#2c3e50; border-bottom:3px solid #3498db; padding-bottom:10px;">🔍 شواهد و مدارک (Section 4.3)</h3>
+              
+              <div class="panel" style="padding:15px; margin-bottom:20px;">
+                <h4>نوع مدرک را انتخاب کنید:</h4>
+                <select id="evidenceTypeSelect" class="full" style="margin-bottom:15px; padding:8px;">
+                  <option value="witness">استشهاد شاهدان (1.3.4)</option>
+                  <option value="biological">شواهد زیستی و پزشکی (2.3.4)</option>
+                  <option value="vehicle">شواهد وسایل نقلیه (3.3.4)</option>
+                  <option value="id_doc">مدارک شناسایی (4.3.4)</option>
+                  <option value="other">سایر موارد (5.3.4)</option>
+                </select>
+
+                <!-- Common Fields -->
+                <form id="addEvidenceForm" class="form-grid">
+                  <input name="title" placeholder="عنوان مدرک" required />
+                  <input name="description" placeholder="توضیحات کلی" required />
+                  
+                  <!-- Witness Fields -->
+                  <div id="witnessFields" class="full evidence-fields">
+                    <textarea name="transcript" placeholder="رونوشت صحبت‌های شاهد" style="width:100%; min-height:80px;"></textarea>
+                  </div>
+
+                  <!-- Biological Fields -->
+                  <div id="biologicalFields" class="full evidence-fields" style="display:none;">
+                    <label><input type="checkbox" name="is_verified"> تایید شده توسط آزمایشگاه</label>
+                    <input name="medical_follow_up" placeholder="نتیجه پیگیری پزشکی" />
+                  </div>
+
+                  <!-- Vehicle Fields -->
+                  <div id="vehicleFields" class="full evidence-fields" style="display:none;">
+                    <input name="model_name" placeholder="مدل خودرو" />
+                    <input name="color" placeholder="رنگ" />
+                    <input name="license_plate" placeholder="شماره پلاک" />
+                    <input name="serial_number" placeholder="شماره سریال (اگر پلاک ندارد)" />
+                  </div>
+
+                  <!-- ID Doc Fields -->
+                  <div id="idDocFields" class="full evidence-fields" style="display:none;">
+                    <input name="owner_full_name" placeholder="نام کامل صاحب مدرک" />
+                    <textarea name="extra_info_json" placeholder='اطلاعات تکمیلی (JSON) - مثال: {"age": 30}' style="width:100%;"></textarea>
+                  </div>
+
+                  <button type="submit" class="full">ثبت مدرک</button>
+                </form>
+              </div>
+
+              <ul id="evidenceList" style="margin-top:15px;"></ul>
+            </div>
+
+            <!-- Board Tab (Section 4.4: تخته کارآگاه) -->
+            <div id="boardTab" class="tab-content" style="display:none;">
+              <h3 style="color:#2c3e50; border-bottom:3px solid #e74c3c; padding-bottom:10px;">🎲 تخته کارآگاه (Detective's Board - Section 4.4)</h3>
+              <p class="subtitle" style="color:#555; margin-bottom:15px;">📌 شواهد و متهمینی که به تخته اضافه شده‌اند در اینجا نمایش داده می‌شوند. خطوط قرمز اتصالات بین آن‌ها را نشان می‌دهند.</p>
+              
+              <div id="boardItems" class="board-container">
+                <svg id="boardSvg"></svg>
+                <!-- Items will be injected here -->
+              </div>
+
+              <div style="margin-top:20px;">
+                <h3>ایجاد اتصال (خط قرمز)</h3>
+                <form id="addConnectionForm" class="form-grid">
+                  <select id="fromItem" name="from" required>
+                    <option value="">از...</option>
+                  </select>
+                  <select id="toItem" name="to" required>
+                    <option value="">به...</option>
+                  </select>
+                  <input name="description" placeholder="علت اتصال" required />
+                  <button type="submit">ایجاد اتصال</button>
+                </form>
+                <ul id="connectionsList" style="margin-top:15px;"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="{% static 'demo/investigation.js' %}" defer></script>
+  </body>
+</html>
+
