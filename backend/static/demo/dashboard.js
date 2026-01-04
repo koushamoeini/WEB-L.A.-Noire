@@ -3,10 +3,30 @@ const API_BASE = '/api';
 const getToken = () => localStorage.getItem('token');
 const isSuper = () => localStorage.getItem('is_superuser') === 'true';
 
-const showAdminArea = () => {
-  const area = document.getElementById('adminArea');
-  if (!area) return;
-  if (getToken() && isSuper()) area.style.display = 'block';
+const showAreas = async () => {
+  const userArea = document.getElementById('userActions');
+  const adminArea = document.getElementById('adminArea');
+  const investigationBtn = document.getElementById('investigationBtn');
+  
+  if (getToken()) {
+    if (userArea) userArea.style.display = 'block';
+    if (isSuper() && adminArea) adminArea.style.display = 'block';
+
+    // Check roles for investigation button visibility
+    try {
+      const res = await fetch(`${API_BASE}/accounts/auth/me/`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        const roles = data.roles.map(r => r.code);
+        const canInvestigate = roles.some(r => ['detective', 'sergeant', 'captain', 'police_chief'].includes(r));
+        if (investigationBtn) {
+          investigationBtn.style.display = canInvestigate ? 'inline-block' : 'none';
+        }
+      }
+    } catch (err) {
+      console.error('Error checking roles:', err);
+    }
+  }
 };
 
 const authHeaders = () => ({
@@ -61,7 +81,14 @@ const refreshUsers = async () => {
 };
 
 function initDashboard() {
-  showAdminArea();
+  showAreas();
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('is_superuser');
+    window.location.href = '/login/';
+  });
 
   // If a non-admin user manually opens /dashboard/admin/, redirect to their own dashboard.
   if (getToken() && !isSuper()) {
