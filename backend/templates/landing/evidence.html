@@ -5,6 +5,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>WP-Project | ثبت شواهد</title>
+    <!-- <link rel="preconnect" href="https://fonts.googleapis.com"> -->
+    <!-- <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> -->
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet"> -->
     <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
   </head>
   <body dir="rtl">
@@ -12,7 +15,10 @@
       <section class="card">
         <div class="panel-header">
           <h1>ثبت شواهد</h1>
-          <a href="/dashboard/" class="ghost">بازگشت</a>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="/dashboard/" class="ghost">بازگشت</a>
+            <button id="logoutBtn" class="button ghost">خروج</button>
+          </div>
         </div>
 
         <p class="subtitle">
@@ -77,6 +83,10 @@
             </div>
             <div id="evidenceMeta" class="guidance" style="margin-top:10px;"></div>
 
+            <div style="margin-top:10px; display:flex; gap:10px;">
+              <button id="toggleBoardBtn" class="button small">افزودن به تخته / حذف</button>
+            </div>
+
             <form id="uploadImagesForm" class="inline-form" style="margin-top:12px;">
               <input type="file" id="imagesInput" name="images" multiple accept="image/*" />
               <button type="submit">آپلود تصاویر</button>
@@ -91,3 +101,4 @@
     <script src="{% static 'demo/evidence.js' %}" defer></script>
   </body>
 </html>
+
