@@ -12,7 +12,10 @@
       <section class="card">
         <div class="panel-header">
           <h1>داشبورد قاضی</h1>
-          <a href="/dashboard/" class="ghost">بازگشت</a>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="/dashboard/" class="ghost">بازگشت</a>
+            <button id="logoutBtn" class="button ghost">خروج</button>
+          </div>
         </div>
 
         <p id="whoami" class="subtitle">…</p>
@@ -29,3 +32,4 @@
     <script src="{% static 'demo/role_dashboard.js' %}" defer></script>
   </body>
 </html>
+

@@ -19,6 +19,13 @@ const setHeading = (text) => {
 };
 
 async function initRoleDashboard() {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('is_superuser');
+    window.location.href = '/login/';
+  });
+
   const roleCode = document.body?.dataset?.roleCode || '';
 
   if (!getToken()) {

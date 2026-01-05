@@ -12,7 +12,10 @@
       <section class="card">
         <div class="panel-header">
           <h1>در حال انتقال به داشبورد…</h1>
-          <a href="/dashboard/" class="ghost">بازگشت</a>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="/dashboard/" class="ghost">بازگشت</a>
+            <button id="logoutBtn" class="button ghost">خروج</button>
+          </div>
         </div>
         <p id="routerMsg" class="subtitle">لطفاً چند لحظه صبر کنید.</p>
         <div id="routerHelp" class="guidance"></div>
@@ -21,3 +24,4 @@
     <script src="{% static 'demo/dashboard_router.js' %}" defer></script>
   </body>
 </html>
+

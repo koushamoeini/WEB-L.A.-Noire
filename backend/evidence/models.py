@@ -9,6 +9,7 @@ class Evidence(models.Model):
     description = models.TextField(verbose_name="توضیحات")
     recorded_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت")
     recorder = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="ثبت‌کننده")
+    is_on_board = models.BooleanField(default=False, verbose_name="روی تخته")
 
     def __str__(self):
         return f"{self.title} ({self.case.id})"

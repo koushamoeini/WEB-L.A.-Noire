@@ -40,7 +40,7 @@ const pickDashboardPath = (me) => {
     'witness',
     'suspect',
     'criminal',
-    'workshop',
+    'detective',
     'base_user',
   ];
 
@@ -52,6 +52,13 @@ const pickDashboardPath = (me) => {
 };
 
 async function routeDashboard() {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('is_superuser');
+    window.location.href = '/login/';
+  });
+
   if (!getToken()) {
     setMsg('ابتدا وارد شوید.');
     setHelp('از صفحه ورود وارد شوید تا توکن ذخیره شود.');
