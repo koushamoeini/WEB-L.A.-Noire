@@ -138,6 +138,8 @@ class VerdictViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(judge=self.request.user)
 
+
+
     def get_queryset(self):
         case_id = self.request.query_params.get('case')
         if case_id:

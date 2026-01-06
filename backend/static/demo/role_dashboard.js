@@ -4,8 +4,9 @@ const getToken = () => localStorage.getItem('token');
 
 const authHeaders = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Token ${getToken()}`,
+  Authorization: `Bearer ${getToken()}`,
 });
+
 
 const setText = (id, text) => {
   const el = document.getElementById(id);

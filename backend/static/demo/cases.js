@@ -5,8 +5,9 @@ const isSuper = () => localStorage.getItem('is_superuser') === 'true';
 
 const authHeaders = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Token ${getToken()}`,
+  Authorization: `Bearer ${getToken()}`,
 });
+
 
 const setText = (id, text) => {
   const el = document.getElementById(id);

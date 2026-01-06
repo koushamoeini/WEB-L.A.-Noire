@@ -40,7 +40,8 @@ if (loginForm) {
     if (response.ok) {
       const body = await response.json();
       // save token and superuser flag then redirect to dashboard
-      localStorage.setItem('token', body.token);
+      localStorage.setItem('token', body.access);
+      localStorage.setItem('refresh', body.refresh);
       localStorage.setItem('is_superuser', body.is_superuser ? 'true' : 'false');
       window.location.href = '/dashboard/';
     } else {

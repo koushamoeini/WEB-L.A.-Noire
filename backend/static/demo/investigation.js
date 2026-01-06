@@ -5,8 +5,9 @@ const EVIDENCE_API = '/api/evidence/';
 const token = localStorage.getItem('token');
 const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Token ${token}`
+    'Authorization': `Bearer ${token}`
 };
+
 
 let currentCaseId = null;
 let currentSuspectId = null;

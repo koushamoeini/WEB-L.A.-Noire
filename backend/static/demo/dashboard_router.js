@@ -14,8 +14,9 @@ const setHelp = (text) => {
 
 const authHeaders = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Token ${getToken()}`,
+  Authorization: `Bearer ${getToken()}`,
 });
+
 
 const pickDashboardPath = (me) => {
   if (me?.is_superuser) return '/dashboard/admin/';

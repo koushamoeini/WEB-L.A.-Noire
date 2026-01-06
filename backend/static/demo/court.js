@@ -5,8 +5,9 @@ const getCaseId = () => new URLSearchParams(window.location.search).get('case');
 
 const authHeaders = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Token ${getToken()}`,
+  Authorization: `Bearer ${getToken()}`,
 });
+
 
 async function loadTrialData() {
   const caseId = getCaseId();

@@ -17,11 +17,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from . import views
 
 urlpatterns = [
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+
     path('', TemplateView.as_view(template_name='landing/index.html'), name='landing'),
+
     path('register/', TemplateView.as_view(template_name='landing/register.html'), name='register'),
     path('login/', TemplateView.as_view(template_name='landing/login.html'), name='login'),
     path('dashboard/', TemplateView.as_view(template_name='landing/dashboard_router.html'), name='dashboard'),
@@ -33,6 +39,8 @@ urlpatterns = [
     path('evidence/', TemplateView.as_view(template_name='landing/evidence.html'), name='evidence'),
     path('court/', TemplateView.as_view(template_name='landing/court.html'), name='court'),
     path('investigation/', TemplateView.as_view(template_name='landing/investigation.html'), name='investigation'),
+
+
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('cases.urls')),

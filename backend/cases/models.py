@@ -12,9 +12,12 @@ class Case(models.Model):
         PENDING_TRAINEE = 'PT', 'در انتظار بررسی کارآموز'
         PENDING_OFFICER = 'PO', 'در انتظار تایید افسر'
         ACTIVE = 'AC', 'در جریان'
+        PENDING_SERGEANT = 'PS', 'در انتظار تایید گروهبان (حل پرونده)'
+        PENDING_CHIEF = 'PC', 'در انتظار تایید نهایی رئیس پلیس'
         REJECTED = 'RE', 'نیازمند اصلاح توسط شاکی'
         CANCELLED = 'CA', 'باطل شده'
         SOLVED = 'SO', 'مختومه'
+
 
     title = models.CharField(max_length=255, verbose_name="عنوان")
     description = models.TextField(verbose_name="توضیحات")
@@ -64,3 +67,5 @@ class SceneWitness(models.Model):
     scene = models.ForeignKey(CrimeScene, on_delete=models.CASCADE, related_name='witnesses')
     phone = models.CharField(max_length=20, verbose_name="شماره تماس")
     national_code = models.CharField(max_length=10, verbose_name="کد ملی")
+
+

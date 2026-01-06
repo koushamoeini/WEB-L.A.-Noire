@@ -4,6 +4,8 @@ from rest_framework.decorators import action
 from django.db.models import Q, Count
 from .models import Case, CrimeScene, SceneWitness
 from .serializers import CaseSerializer, WitnessSerializer
+
+
 from .permissions import IsTrainee, IsOfficerOrHigher, IsSergeant, IsChief, IsDetective
 
 class CaseViewSet(viewsets.ModelViewSet):
@@ -225,9 +227,13 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
+
+
         """Checkpoint 1: Aggregated Stats for Dashboard"""
         stats = Case.objects.aggregate(
             active=Count('id', filter=Q(status=Case.Status.ACTIVE)),
             solved=Count('id', filter=Q(status=Case.Status.SOLVED))
         )
         return Response({"پرونده‌های فعال": stats['active'], "پرونده‌های مختومه": stats['solved']})
+
+

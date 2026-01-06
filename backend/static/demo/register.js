@@ -44,7 +44,7 @@ if (registerForm) {
 
     if (response.ok) {
       const body = await response.json();
-      showMessage(`حساب ${body.username} ایجاد شد. توکن: ${body.token}`);
+      showMessage(`حساب ${body.username} ایجاد شد. توکن: ${body.access}`);
       event.target.reset();
     } else {
       const error = await parseError(response);

@@ -4,8 +4,9 @@ const getToken = () => localStorage.getItem('token');
 
 const authHeadersJson = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Token ${getToken()}`,
+  Authorization: `Bearer ${getToken()}`,
 });
+
 
 const authHeadersForm = () => ({
   Authorization: `Token ${getToken()}`,
