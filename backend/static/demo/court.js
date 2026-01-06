@@ -134,9 +134,23 @@ document.getElementById('verdictForm').addEventListener('submit', async (e) => {
   }
 });
 
+function setupLogout() {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
+    localStorage.removeItem('is_superuser');
+    window.location.href = '/';
+  });
+}
+
 // Initial Load
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadTrialData);
+  document.addEventListener('DOMContentLoaded', () => {
+    setupLogout();
+    loadTrialData();
+  });
 } else {
+  setupLogout();
   loadTrialData();
 }

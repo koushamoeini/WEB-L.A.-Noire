@@ -58,9 +58,7 @@ class CaseViewSet(viewsets.ModelViewSet):
             'case': CaseSerializer(case).data,
             'evidence': [],
             'suspects': [],
-            'officers_involved': list(set([
-                case.creator.username,
-            ]))
+            'officers_involved': []
         }
 
         # 2. Get All Evidence
@@ -70,16 +68,33 @@ class CaseViewSet(viewsets.ModelViewSet):
         data['evidence'] = EvidenceBaseSerializer(evidence_objs, many=True).data
 
         # 3. Get All Suspects & Interrogations
-        from investigation.models import Suspect
+        from investigation.models import Suspect, Interrogation
         from investigation.serializers import SuspectSerializer
-        suspects = Suspect.objects.filter(case=case)
-        data['suspects'] = SuspectSerializer(suspects, many=True).data
+        suspects_objs = Suspect.objects.filter(case=case)
+        data['suspects'] = SuspectSerializer(suspects_objs, many=True).data
 
         # 4. Get Existing Verdicts
         from investigation.models import Verdict
         from investigation.serializers import VerdictSerializer
         verdicts = Verdict.objects.filter(case=case)
         data['verdicts'] = VerdictSerializer(verdicts, many=True).data
+
+        # Collector for officers
+        officers = set()
+        if case.creator:
+            officers.add(f"{case.creator.get_full_name()} ({case.creator.username})")
+        
+        for ev in evidence_objs:
+            if ev.recorder:
+                officers.add(f"{ev.recorder.get_full_name()} ({ev.recorder.username})")
+        
+        for s in suspects_objs:
+            interrogations = Interrogation.objects.filter(suspect=s)
+            for i in interrogations:
+                if i.interrogator:
+                    officers.add(f"{i.interrogator.get_full_name()} ({i.interrogator.username})")
+        
+        data['officers_involved'] = list(officers)
 
         return Response(data)
 
@@ -227,13 +242,33 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def statistics(self, request):
-
-
         """Checkpoint 1: Aggregated Stats for Dashboard"""
         stats = Case.objects.aggregate(
             active=Count('id', filter=Q(status=Case.Status.ACTIVE)),
-            solved=Count('id', filter=Q(status=Case.Status.SOLVED))
+            solved=Count('id', filter=Q(status=Case.Status.SOLVED)),
+            pending_trainee=Count('id', filter=Q(status=Case.Status.PENDING_TRAINEE)),
+            pending_officer=Count('id', filter=Q(status=Case.Status.PENDING_OFFICER)),
+            rejected=Count('id', filter=Q(status=Case.Status.REJECTED))
         )
-        return Response({"پرونده‌های فعال": stats['active'], "پرونده‌های مختومه": stats['solved']})
+        
+        # Identify user's warning status if they are a citizen
+        warning = None
+        if not request.user.is_staff and not request.user.roles.exists():
+            last_case = Case.objects.filter(creator=request.user).order_by('-created_at').first()
+            if last_case and last_case.status == Case.Status.REJECTED:
+                warning = f"هشدار: پرونده قبلی شما به دلیل نقص رد شد. تعداد دفعات ثبت مجدد: {last_case.submission_attempts}/3"
+            elif last_case and last_case.status == Case.Status.CANCELLED:
+                warning = "هشدار: به دلیل 3 بار نقص، دسترسی شما برای ثبت این پرونده مسدود شد."
+
+        return Response({
+            "آمار کلی": {
+                "پرونده‌های فعال": stats['active'], 
+                "پرونده‌های مختومه": stats['solved'],
+                "در انتظار بررسی اولیه": stats['pending_trainee'],
+                "در انتظار بررسی افسر": stats['pending_officer'],
+                "رد شده (نیاز به اصلاح)": stats['rejected']
+            },
+            "اعلان_کاربر": warning
+        })
 
 

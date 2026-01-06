@@ -40,77 +40,127 @@ def seed_data():
     passwords = "password123"
     
     users_to_create = [
-        ('admin', 'system_admin'),
-        ('chief', 'police_chief'),
-        ('captain', 'captain'),
-        ('sergeant', 'sergeant'),
-        ('detective', 'detective'),
-        ('doctor', 'forensic_doctor'),
-        ('judge_user', 'judge'),
-        ('citizen', 'complainant'),
+        ('admin', 'system_admin', '1111111111', '09111111111'),
+        ('chief', 'police_chief', '2222222222', '09222222222'),
+        ('captain', 'captain', '3333333333', '09333333333'),
+        ('sergeant', 'sergeant', '4444444444', '09444444444'),
+        ('detective', 'detective', '5555555555', '09555555555'),
+        ('doctor', 'forensic_doctor', '6666666666', '09666666666'),
+        ('judge_user', 'judge', '7777777777', '09777777777'),
+        ('citizen', 'complainant', '8888888888', '09888888888'),
     ]
-
-    for username, role_code in users_to_create:
+    
+    user_objs = {}
+    for username, rcode, ncode, phone in users_to_create:
         user, created = User.objects.get_or_create(
-            username=username, 
-            defaults={'email': f'{username}@example.com'}
+            username=username,
+            defaults={
+                'email': f'{username}@police.ir',
+                'is_staff': (username == 'admin'),
+                'is_superuser': (username == 'admin'),
+            }
         )
         if created:
             user.set_password(passwords)
             user.save()
-        user.roles.add(role_objs[role_code])
-        if role_code == 'system_admin':
-            user.is_superuser = True
-            user.is_staff = True
-            user.save()
-        print(f"User '{username}' ready with role '{role_code}'")
+        
+        # Profile fields
+        from accounts.models import UserProfile
+        UserProfile.objects.update_or_create(
+            user=user,
+            defaults={'national_code': ncode, 'phone': phone}
+        )
+        
+        user.roles.add(role_objs[rcode])
+        user_objs[username] = user
+        print(f"User '{username}' ready with role '{rcode}'")
 
-    # 3. Create a Sample Case
-    citizen = User.objects.get(username='citizen')
-    detective = User.objects.get(username='detective')
-    doctor = User.objects.get(username='doctor')
+    # 3. Create Sample Cases
+    chief = user_objs['chief']
+    detective = user_objs['detective']
+    citizen = user_objs['citizen']
 
-    case, _ = Case.objects.get_or_create(
-        title="سرقت از بانک مرکزی",
+    # Case 1: Active
+    case1, _ = Case.objects.get_or_create(
+        title="سرقت از بانک ملت",
         defaults={
-            'description': "در تاریخ مذکور، سارقین مسلح به بانک حمله کردند.",
-            'crime_level': 1, # Level 1
-            'status': 'AC',  # Active
-            'creator': citizen
-        }
-    )
-    case.complainants.add(citizen)
-
-    # 4. Add Evidence
-    WitnessTestimony.objects.get_or_create(
-        case=case,
-        title="شهادت نگهبان",
-        defaults={
-            'description': "نگهبان سارقین را با ماسک دیده است.",
-            'transcript': "آنها ۳ نفر بودند و با یک ون سفید فرار کردند.",
-            'recorder': detective
+            'description': "سرقت مسلحانه از شعبه مرکزی در ساعت ۱۰ شب.",
+            'creator': chief,
+            'status': 'AC', # Active
+            'crime_level': 2 # Critical
         }
     )
 
+    # Case 2: Pending (Citizen Complaint)
+    case2, _ = Case.objects.get_or_create(
+        title="شکایت کلاهبرداری تلفنی",
+        defaults={
+            'description': "فردی با تماس تلفنی اقدام به تخلیه حساب بانکی کرده است.",
+            'creator': citizen,
+            'status': 'PT', # Pending Trainee
+            'crime_level': 1 # Normal
+        }
+    )
+
+    # Case 3: Solved
+    case3, _ = Case.objects.get_or_create(
+        title="نزاع خیابانی در پارک",
+        defaults={
+            'description': "درگیری فیزیکی گزارش شده در تاریخ ۱۴۰۴/۰۱/۱۰.",
+            'creator': chief,
+            'status': 'SL', # Solved
+            'crime_level': 1 # Normal
+        }
+    )
+
+    # 4. Add Evidence to Case 1
     BiologicalEvidence.objects.get_or_create(
-        case=case,
-        title="نمونه خون در صحنه",
+        case=case1,
         defaults={
-            'description': "یک قطره خون روی شیشه شکسته پیدا شد.",
+            'title': "اثر انگشت روی گاوصندوق",
+            'description': "اثر انگشت در گوشه سمت چپ گاوصندوق پیدا شد.",
             'is_verified': False,
             'recorder': detective
         }
     )
 
-    # 5. Add Suspect & Interrogation
-    suspect, _ = Suspect.objects.get_or_create(
-        case=case,
-        name="آرمان کلاهبردار",
-        defaults={'details': "سابقه دار در سرقت مسلحانه", 'is_main_suspect': True, 'is_on_board': True}
+    WitnessTestimony.objects.get_or_create(
+        case=case1,
+        defaults={
+            'title': "شهادت نگهبان بانک",
+            'description': "نگهبان که در اتاق مانیتورینگ بود.",
+            'transcript': "سارقان سه نفر بودند و با دستکش وارد شدند.",
+            'recorder': detective
+        }
     )
 
+    # 5. Add Suspects
+    s1, _ = Suspect.objects.get_or_create(
+        case=case1,
+        national_code="1234567890",
+        defaults={
+            'first_name': "آرمان",
+            'last_name': "کلاهبردار",
+            'details': "سابقه دار در سرقت مسلحانه",
+            'is_main_suspect': True,
+            'is_on_board': True
+        }
+    )
+    
+    s2, _ = Suspect.objects.get_or_create(
+        case=case3,
+        national_code="0987654321",
+        defaults={
+            'first_name': "کامران",
+            'last_name': "شرور",
+            'details': "متهم ردیف اول نزاع خیابانی",
+            'is_main_suspect': True
+        }
+    )
+
+    # 6. Add Interrogation
     Interrogation.objects.get_or_create(
-        suspect=suspect,
+        suspect=s1,
         defaults={
             'interrogator': detective,
             'transcript': "من آن شب در خانه بودم و داشتم فوتبال می‌دیدم.",
@@ -118,8 +168,22 @@ def seed_data():
         }
     )
     
-    # Ensure Board exists
-    Board.objects.get_or_create(case=case)
+    # 7. Add Verdict for Case 3
+    from investigation.models import Verdict
+    Verdict.objects.get_or_create(
+        case=case3,
+        suspect=s2,
+        defaults={
+            'judge': user_objs['judge_user'],
+            'description': "مجرم شناخته شد بر اساس شواهد موجود.",
+            'result': 'GUILTY'
+        }
+    )
+
+    # Ensure Boards exist
+    Board.objects.get_or_create(case=case1)
+    Board.objects.get_or_create(case=case2)
+    Board.objects.get_or_create(case=case3)
 
     print("Seeding completed successfully!")
 

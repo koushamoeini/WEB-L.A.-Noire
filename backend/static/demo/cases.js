@@ -189,8 +189,9 @@ function initCasesPage() {
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
     localStorage.removeItem('is_superuser');
-    window.location.href = '/login/';
+    window.location.href = '/';
   });
 
   const hint = document.getElementById('authHint');

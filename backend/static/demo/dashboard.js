@@ -31,7 +31,7 @@ const showAreas = async () => {
 
 const authHeaders = () => ({
   'Content-Type': 'application/json',
-  Authorization: `Token ${getToken()}`,
+  Authorization: `Bearer ${getToken()}`,
 });
 
 const refreshRoles = async () => {
@@ -86,8 +86,9 @@ function initDashboard() {
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
     localStorage.removeItem('is_superuser');
-    window.location.href = '/login/';
+    window.location.href = '/';
   });
 
   // If a non-admin user manually opens /dashboard/admin/, redirect to their own dashboard.

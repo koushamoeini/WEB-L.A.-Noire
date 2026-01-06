@@ -1,2 +1,1 @@
-# Dockerfile placeholder
-# Add instructions here when you're ready to dockerize the backend
+FROM python:3.12-slim

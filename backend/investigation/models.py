@@ -5,13 +5,16 @@ from evidence.models import Evidence
 
 class Suspect(models.Model):
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='suspects')
-    name = models.CharField(max_length=255, verbose_name="نام متهم")
+    name = models.CharField(max_length=255, verbose_name="نام متهم", blank=True)
+    first_name = models.CharField(max_length=150, blank=True, verbose_name="نام")
+    last_name = models.CharField(max_length=150, blank=True, verbose_name="نام خانوادگی")
+    national_code = models.CharField(max_length=10, blank=True, verbose_name="کد ملی")
     details = models.TextField(verbose_name="جزئیات")
     is_main_suspect = models.BooleanField(default=False, verbose_name="متهم اصلی")
     is_on_board = models.BooleanField(default=False, verbose_name="روی تخته")
 
     def __str__(self):
-        return f"{self.name} ({self.case.id})"
+        return f"{self.first_name} {self.last_name} ({self.case.id})"
 
 class Interrogation(models.Model):
     suspect = models.ForeignKey(Suspect, on_delete=models.CASCADE, related_name='interrogations')

@@ -23,8 +23,9 @@ async function initRoleDashboard() {
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) logoutBtn.addEventListener('click', () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
     localStorage.removeItem('is_superuser');
-    window.location.href = '/login/';
+    window.location.href = '/';
   });
 
   const roleCode = document.body?.dataset?.roleCode || '';
@@ -37,6 +38,13 @@ async function initRoleDashboard() {
 
   const res = await fetch(`${API_BASE}/auth/me/`, { headers: authHeaders() });
   if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem('token');
+      setText('whoami', 'نشست شما منقضی شده است.');
+      setText('roleInfo', 'در حال انتقال به صفحه ورود...');
+      setTimeout(() => { window.location.href = '/'; }, 2000);
+      return;
+    }
     setText('whoami', 'خطا در دریافت اطلاعات کاربر');
     setText('roleInfo', 'کد خطا: ' + res.status);
     return;

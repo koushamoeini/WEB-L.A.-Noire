@@ -9,7 +9,7 @@ const authHeadersJson = () => ({
 
 
 const authHeadersForm = () => ({
-  Authorization: `Token ${getToken()}`,
+  Authorization: `Bearer ${getToken()}`,
 });
 
 const setText = (id, text) => {
@@ -246,6 +246,14 @@ async function uploadImages() {
 }
 
 function initEvidencePage() {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
+    localStorage.removeItem('is_superuser');
+    window.location.href = '/';
+  });
+
   const hint = document.getElementById('authHint');
   if (!getToken()) {
     if (hint) hint.textContent = 'ابتدا وارد شوید (Login) تا توکن ذخیره شود.';

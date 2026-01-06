@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from investigation.views import CriminalRankingView
 
 from . import views
 
@@ -25,6 +26,7 @@ urlpatterns = [
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/ranking/', CriminalRankingView.as_view(), name='criminal-ranking'),
 
     path('', TemplateView.as_view(template_name='landing/index.html'), name='landing'),
 

@@ -53,6 +53,14 @@ const pickDashboardPath = (me) => {
 };
 
 async function routeDashboard() {
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh');
+    localStorage.removeItem('is_superuser');
+    window.location.href = '/';
+  });
+
   if (!getToken()) {
     setMsg('ابتدا وارد شوید.');
     setHelp('از صفحه ورود وارد شوید تا توکن ذخیره شود.');
@@ -64,8 +72,12 @@ async function routeDashboard() {
   const res = await fetch(`${API_BASE}/auth/me/`, { headers: authHeaders() });
   if (!res.ok) {
     if (res.status === 401) {
-      setMsg('توکن نامعتبر یا منقضی شده است.');
-      setHelp('دوباره وارد شوید.');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh');
+      setMsg('توکن نامعتبر یا منقضی شده است. در حال انتقال به صفحه ورود...');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
       return;
     }
     setMsg('خطا در دریافت اطلاعات کاربر: ' + res.status);

@@ -1,6 +1,8 @@
+from django.db.models import Count, Q
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict, Warrant
 from .serializers import (
     SuspectSerializer, InterrogationSerializer, 
@@ -9,6 +11,29 @@ from .serializers import (
 )
 from .permissions import IsCaptain, IsDetective, IsJudge, IsSergeant
 from cases.permissions import IsOfficerOrHigher
+
+class CriminalRankingView(APIView):
+    permission_classes = [IsOfficerOrHigher]
+
+    def get(self, request):
+        """Checkpoint 1: Ranking based on Guilty Verdicts"""
+        # Group by national_code and count guilty results
+        rankings = Verdict.objects.filter(result='GUILTY').values(
+            'suspect__national_code', 'suspect__first_name', 'suspect__last_name'
+        ).annotate(
+            guilty_count=Count('id')
+        ).order_by('-guilty_count')
+
+        results = []
+        for r in rankings:
+            results.append({
+                "کدملی": r['suspect__national_code'],
+                "نام": f"{r['suspect__first_name']} {r['suspect__last_name']}",
+                "امتیاز_جرم": r['guilty_count']
+            })
+            
+        return Response(results)
+
 
 class WarrantViewSet(viewsets.ModelViewSet):
     queryset = Warrant.objects.all()
