@@ -37,10 +37,49 @@ class CaseViewSet(viewsets.ModelViewSet):
         if 'detective' in roles:
             queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT])
 
+        # Judges see all active cases
+        if 'judge' in roles or 'qazi' in roles:
+            queryset |= Case.objects.all()
+
         # Everyone sees cases they created or are involved in (Plaintiffs)
         queryset |= Case.objects.filter(Q(complainants=user) | Q(creator=user))
 
         return queryset.distinct()
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def trial_history(self, request, pk=None):
+        """Aggregate all case data for the Judge's review (Section 6.4)"""
+        case = self.get_object()
+        
+        # 1. Base case info
+        data = {
+            'case': CaseSerializer(case).data,
+            'evidence': [],
+            'suspects': [],
+            'officers_involved': list(set([
+                case.creator.username,
+            ]))
+        }
+
+        # 2. Get All Evidence
+        from evidence.models import Evidence
+        from evidence.serializers import EvidenceBaseSerializer
+        evidence_objs = Evidence.objects.filter(case=case)
+        data['evidence'] = EvidenceBaseSerializer(evidence_objs, many=True).data
+
+        # 3. Get All Suspects & Interrogations
+        from investigation.models import Suspect
+        from investigation.serializers import SuspectSerializer
+        suspects = Suspect.objects.filter(case=case)
+        data['suspects'] = SuspectSerializer(suspects, many=True).data
+
+        # 4. Get Existing Verdicts
+        from investigation.models import Verdict
+        from investigation.serializers import VerdictSerializer
+        verdicts = Verdict.objects.filter(case=case)
+        data['verdicts'] = VerdictSerializer(verdicts, many=True).data
+
+        return Response(data)
 
     def perform_create(self, serializer):
         case = serializer.save(creator=self.request.user)

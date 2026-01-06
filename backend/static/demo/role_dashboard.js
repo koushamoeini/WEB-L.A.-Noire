@@ -60,6 +60,31 @@ async function initRoleDashboard() {
       setTimeout(() => window.location.replace('/dashboard/'), 800);
     }
   }
+
+  // Handle Judge-specific case list
+  if (roleCode === 'judge' || roleCode === 'qazi') {
+    const list = document.getElementById('judgeCasesList');
+    if (!list) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/cases/`, { headers: authHeaders() });
+      if (res.ok) {
+        const cases = await res.json();
+        if (cases.length === 0) {
+          list.textContent = 'هیچ پرونده‌ای یافت نشد.';
+        } else {
+          list.innerHTML = cases.map(c => `
+            <div class="inline-form" style="justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.05); margin-bottom: 8px;">
+              <span>#${c.id} - ${c.title}</span>
+              <a href="/court/?case=${c.id}" class="button small">ورود به دادگاه</a>
+            </div>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      list.textContent = 'خطا در دریافت لیست پرونده‌ها.';
+    }
+  }
 }
 
 if (document.readyState === 'loading') {

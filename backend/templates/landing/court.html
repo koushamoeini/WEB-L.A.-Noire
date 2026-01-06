@@ -1,0 +1,90 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | دادگاه</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+    <style>
+      .court-section { margin-bottom: 24px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; }
+      .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.85em; }
+      .badge-guilty { background: #ff4d4d; color: white; }
+      .badge-innocent { background: #2ecc71; color: white; }
+      .history-card { border-left: 3px solid var(--primary); padding-left: 10px; margin-bottom: 10px; }
+    </style>
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card" style="max-width: 1000px;">
+        <div class="panel-header">
+          <h1 id="courtHeading">صحن دادگاه</h1>
+          <a href="/dashboard/" class="ghost">بازگشت به داشبورد</a>
+        </div>
+
+        <div id="caseSummary" class="guidance" style="margin-bottom: 20px;">
+          <h2 id="caseTitle">در حال بارگذاری پرونده...</h2>
+          <p id="caseMeta"></p>
+        </div>
+
+        <div class="grid-2">
+            <!-- Left Side: Evidence & Suspects -->
+            <div class="column">
+                <div class="court-section">
+                    <h3>شواهد و مدارک</h3>
+                    <div id="evidenceList">در حال بارگذاری...</div>
+                </div>
+
+                <div class="court-section">
+                    <h3>متهمین و بازجویی‌ها</h3>
+                    <div id="suspectsList">در حال بارگذاری...</div>
+                </div>
+            </div>
+
+            <!-- Right Side: Reports & Final Verdict -->
+            <div class="column">
+                <div class="court-section">
+                    <h3>تاریخچه بررسی پلیس</h3>
+                    <div id="policeHistory">در حال بارگذاری...</div>
+                </div>
+
+                <div class="court-section" id="verdictArea" style="background: rgba(var(--primary-rgb), 0.1); border: 1px solid var(--primary);">
+                    <h3>ثبت رای نهایی قاضی</h3>
+                    <form id="verdictForm">
+                        <label>انتخاب متهم</label>
+                        <select id="verdictSuspect" name="suspect" required>
+                            <option value="">انتخاب کنید...</option>
+                        </select>
+
+                        <label>رای نهایی</label>
+                        <select name="result" required>
+                            <option value="GUILTY">گناهکار</option>
+                            <option value="INNOCENT">بی‌گناه</option>
+                        </select>
+
+                        <label>عنوان حکم (مثلاً حبس ابد)</label>
+                        <input name="title" placeholder="عنوان حکم..." required />
+
+                        <label>مجازات (در صورت گناهکار بودن)</label>
+                        <textarea name="punishment" rows="2" placeholder="جزئیات مجازات..."></textarea>
+
+                        <label>توضیحات و استدلال قاضی</label>
+                        <textarea name="description" rows="4" placeholder="دلایل صدور حکم..." required></textarea>
+
+                        <button type="submit" class="button" style="width:100%; margin-top:15px;">ثبت نهایی و صدور حکم</button>
+                    </form>
+                    <div id="verdictResult" class="result"></div>
+                </div>
+
+                <div class="court-section">
+                    <h3>احکام صادر شده</h3>
+                    <div id="issuedVerdicts"></div>
+                </div>
+            </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="{% static 'demo/court.js' %}" defer></script>
+  </body>
+</html>

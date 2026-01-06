@@ -1,12 +1,13 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board
+from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict
 from .serializers import (
     SuspectSerializer, InterrogationSerializer, 
-    InterrogationFeedbackSerializer, BoardConnectionSerializer, BoardSerializer
+    InterrogationFeedbackSerializer, BoardConnectionSerializer, BoardSerializer,
+    VerdictSerializer
 )
-from .permissions import IsCaptain, IsDetective
+from .permissions import IsCaptain, IsDetective, IsJudge
 from cases.permissions import IsOfficerOrHigher
 
 class BoardViewSet(viewsets.ModelViewSet):
@@ -88,3 +89,17 @@ class BoardConnectionViewSet(viewsets.ModelViewSet):
                 'error': str(e),
                 'detail': 'Internal Server Error during connection creation'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class VerdictViewSet(viewsets.ModelViewSet):
+    queryset = Verdict.objects.all()
+    serializer_class = VerdictSerializer
+    permission_classes = [permissions.IsAuthenticated, IsJudge]
+
+    def perform_create(self, serializer):
+        serializer.save(judge=self.request.user)
+
+    def get_queryset(self):
+        case_id = self.request.query_params.get('case')
+        if case_id:
+            return self.queryset.filter(case_id=case_id)
+        return self.queryset

@@ -45,3 +45,22 @@ class BoardConnection(models.Model):
     to_suspect = models.ForeignKey(Suspect, on_delete=models.CASCADE, null=True, blank=True, related_name='connections_to')
 
     description = models.CharField(max_length=255, blank=True, verbose_name="علت اتصال")
+
+class Verdict(models.Model):
+    class Result(models.TextChoices):
+        INNOCENT = 'INNOCENT', 'بی‌گناه'
+        GUILTY = 'GUILTY', 'گناهکار'
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='verdicts')
+    suspect = models.ForeignKey(Suspect, on_delete=models.CASCADE, related_name='verdicts')
+    judge = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='judge_verdicts')
+    
+    title = models.CharField(max_length=255, verbose_name="عنوان حکم")
+    result = models.CharField(max_length=10, choices=Result.choices, verbose_name="رای نهایی")
+    punishment = models.TextField(blank=True, null=True, verbose_name="مجازات")
+    description = models.TextField(verbose_name="توضیحات قاضی")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Verdict for {self.suspect.name}: {self.result}"

@@ -1,5 +1,14 @@
 from rest_framework import serializers
-from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board
+from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict
+
+class VerdictSerializer(serializers.ModelSerializer):
+    judge_username = serializers.ReadOnlyField(source='judge.username')
+    result_display = serializers.CharField(source='get_result_display', read_only=True)
+
+    class Meta:
+        model = Verdict
+        fields = '__all__'
+        read_only_fields = ['judge']
 
 class BoardSerializer(serializers.ModelSerializer):
     class Meta:
