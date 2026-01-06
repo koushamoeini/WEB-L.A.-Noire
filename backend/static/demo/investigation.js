@@ -21,7 +21,15 @@ const detectiveActions = document.getElementById('detectiveActions');
 const sergeantActions = document.getElementById('sergeantActions');
 const chiefActions = document.getElementById('chiefActions');
 
+// Warrant Elements
+const warrantStatus = document.getElementById('warrantStatus');
+const warrantType = document.getElementById('warrantType');
+const warrantSuspect = document.getElementById('warrantSuspect');
+const warrantDesc = document.getElementById('warrantDesc');
+const btnRequestWarrant = document.getElementById('btnRequestWarrant');
+
 const suspectsList = document.getElementById('suspectsList');
+
 const addSuspectForm = document.getElementById('addSuspectForm');
 const interrogationArea = document.getElementById('interrogationArea');
 const currentSuspectName = document.getElementById('currentSuspectName');
@@ -100,10 +108,66 @@ caseSelect.addEventListener('change', async (e) => {
         try { await loadSuspects(); } catch(e) { console.error(e); }
         try { await loadEvidence(); } catch(e) { console.error(e); }
         try { await loadBoard(); } catch(e) { console.error(e); }
+        try { await loadWarrants(); } catch(e) { console.error(e); }
     } else {
         caseContent.style.display = 'none';
     }
 });
+
+async function loadWarrants() {
+    if (!warrantStatus) return;
+    try {
+        const res = await fetch(`${API_BASE}warrants/?case=${currentCaseId}`, { headers });
+        if (res.ok) {
+            const warrants = await res.json();
+            if (warrants.length === 0) {
+                warrantStatus.textContent = 'هیچ حکمی برای این پرونده ثبت نشده است.';
+            } else {
+                warrantStatus.innerHTML = warrants.map(w => `
+                    <div style="font-size: 0.85em; margin-bottom: 4px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 4px;">
+                        [${w.type_display}] ${w.status_display} 
+                        ${w.approver_name ? `توسط ${w.approver_name}` : ''}
+                        ${w.approver_notes ? `<br>نوشته: ${w.approver_notes}` : ''}
+                    </div>
+                `).join('');
+            }
+        }
+    } catch (err) {
+        warrantStatus.textContent = 'خطا در بارگذاری احکام.';
+    }
+}
+
+if (btnRequestWarrant) {
+    btnRequestWarrant.addEventListener('click', async () => {
+        const data = {
+            case: currentCaseId,
+            type: warrantType.value,
+            suspect: warrantSuspect.value || null,
+            description: warrantDesc.value
+        };
+        if (!data.description) {
+            alert('لطفا علت درخواست را بنویسید.');
+            return;
+        }
+        try {
+            const res = await fetch(`${API_BASE}warrants/`, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(data)
+            });
+            if (res.ok) {
+                warrantDesc.value = '';
+                await loadWarrants();
+                alert('درخواست حکم با موفقیت ثبت شد.');
+            } else {
+                alert('خطا در ثبت درخواست.');
+            }
+        } catch (err) {
+            alert('خطا در ارتباط با سرور.');
+        }
+    });
+}
+
 
 async function updateCaseInfo() {
     try {
@@ -313,7 +377,20 @@ async function loadSuspects() {
         const res = await fetch(`${API_BASE}suspects/?case=${currentCaseId}`, { headers });
         const suspects = await res.json();
         suspectsList.innerHTML = '';
+        
+        // Update Warrant Suspect Dropdown
+        if (warrantSuspect) {
+            warrantSuspect.innerHTML = '<option value="">بدون متهم مشخص</option>';
+            suspects.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                warrantSuspect.appendChild(opt);
+            });
+        }
+
         suspects.forEach(s => {
+
             const li = document.createElement('li');
             li.className = 'panel';
             li.style.marginBottom = '10px';

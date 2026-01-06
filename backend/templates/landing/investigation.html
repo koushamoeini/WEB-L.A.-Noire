@@ -85,7 +85,26 @@
           </select>
 
           <div id="caseContent" style="display:none; margin-top:20px;">
+            <!-- Warrant Management Panel -->
+            <div id="warrantPanel" class="panel" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <h3 style="margin-top:0;">📜 مدیریت احکام (Warrants)</h3>
+              <div id="warrantStatus" class="guidance" style="margin-bottom: 10px; font-size: 0.9em;">در حال بارگذاری احکام...</div>
+              <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <select id="warrantType" class="full">
+                  <option value="INTERROGATION">حکم بازجویی</option>
+                  <option value="ARREST">حکم بازداشت</option>
+                  <option value="SEARCH">حکم تفتیش</option>
+                </select>
+                <select id="warrantSuspect" class="full">
+                   <option value="">بدون متهم مشخص</option>
+                </select>
+                <input id="warrantDesc" placeholder="علت درخواست حکم..." class="full" />
+                <button id="btnRequestWarrant" class="button ghost full">ثبت درخواست حکم</button>
+              </div>
+            </div>
+
             <!-- Case Resolution Panel (Section 4.4: حل پرونده) -->
+
             <div id="resolutionPanel" class="panel" style="background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 20px; margin-bottom: 20px; border-radius: 10px; display: none; border-left: 5px solid #3498db;">
               <h3 style="margin-top:0; color:#ecf0f1;">📋 وضعیت پرونده: <span id="caseStatusText" style="color:#3498db; font-weight:bold;">-</span></h3>
               

@@ -1,7 +1,15 @@
 from rest_framework import serializers
-from .models import Case, CrimeScene, SceneWitness, CaseComplainant
+from .models import Case, CrimeScene, SceneWitness, CaseComplainant, Payment
+
+class PaymentSerializer(serializers.ModelSerializer):
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    class Meta:
+        model = Payment
+        fields = '__all__'
+        read_only_fields = ['user', 'is_paid', 'transaction_id']
 
 class WitnessSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = SceneWitness
         fields = ['phone', 'national_code']

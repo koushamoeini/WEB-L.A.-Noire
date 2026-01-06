@@ -28,6 +28,8 @@ if (registerForm) {
     const formData = Object.fromEntries(new FormData(event.target).entries());
     const payload = {
       username: formData.username,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
       password: formData.password,
       email: formData.email,
       phone: formData.phone,

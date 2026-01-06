@@ -47,9 +47,14 @@ async function fetchCases() {
   list.innerHTML = cases
     .map(
       (c) =>
-        `<li><button class="button ghost small" type="button" data-case-id="${c.id}">انتخاب</button> ${c.id} — ${c.title} — ${c.status_label} — ${c.level_label}</li>`
+        `<li>
+          <button class="button ghost small" type="button" data-case-id="${c.id}">انتخاب</button> 
+          ${c.id} — ${c.title} — ${c.status_label} — ${c.level_label}
+          ${c.submission_attempts >= 3 ? '<span title="بیش از ۳ مرتبه رد شده" style="color:#ff4444; margin-right:8px;">⚠️</span>' : ''}
+        </li>`
     )
     .join('');
+
 
   list.querySelectorAll('button[data-case-id]').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -80,7 +85,16 @@ async function openCaseDetail(caseId) {
   if (selectedCase.review_notes) {
     extra += ` | یادداشت قبلی: ${selectedCase.review_notes}`;
   }
-  setText('caseExtraInfo', extra);
+  
+  const extWrap = document.getElementById('caseExtraInfo');
+  if (extWrap) {
+    if (selectedCase.submission_attempts >= 3) {
+      extWrap.innerHTML = `<span style="color: #ff4444; font-weight: bold; background: rgba(255,0,0,0.1); padding: 2px 8px; border-radius: 4px;">⚠️ پرونده ۳ اخطاره (نیازمند دقت ویژه)</span><br>${extra}`;
+    } else {
+      extWrap.textContent = extra;
+    }
+  }
+
 
   // Display complainants
   const compList = document.getElementById('complainantsList');

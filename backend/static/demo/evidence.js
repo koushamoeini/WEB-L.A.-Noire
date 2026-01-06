@@ -177,25 +177,8 @@ async function openEvidenceDetail(kind, id) {
   selectedEvidence = { kind, id: evidence.id };
 
   setText('evidenceTitle', `جزئیات شاهد #${evidence.id}`);
-  setText('evidenceMeta', `عنوان: ${evidence.title} | پرونده: ${evidence.case} | ثبت‌کننده: ${evidence.recorder_name || ''} | روی تخته: ${evidence.is_on_board ? 'بله' : 'خیر'}`);
+  setText('evidenceMeta', `عنوان: ${evidence.title} | پرونده: ${evidence.case} | ثبت‌کننده: ${evidence.recorder_name || ''}`);
   show('evidenceDetail');
-}
-
-async function toggleBoard() {
-  const out = document.getElementById('evidenceResult');
-  if (!selectedEvidence?.kind || !selectedEvidence?.id) return;
-
-  const url = `${API_BASE}${KIND_ENDPOINT[selectedEvidence.kind]}${selectedEvidence.id}/toggle_board/`;
-  const res = await fetch(url, { method: 'POST', headers: authHeadersJson() });
-
-  if (!res.ok) {
-    out.textContent = await parseJsonOrStatus(res);
-    return;
-  }
-
-  const data = await res.json();
-  out.textContent = data.is_on_board ? 'به تخته اضافه شد.' : 'از تخته حذف شد.';
-  await openEvidenceDetail(selectedEvidence.kind, selectedEvidence.id);
 }
 
 async function createEvidence(kind, payload, files) {
@@ -262,13 +245,6 @@ async function uploadImages() {
 }
 
 function initEvidencePage() {
-  const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn) logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('is_superuser');
-    window.location.href = '/login/';
-  });
-
   const hint = document.getElementById('authHint');
   if (!getToken()) {
     if (hint) hint.textContent = 'ابتدا وارد شوید (Login) تا توکن ذخیره شود.';
@@ -301,11 +277,6 @@ function initEvidencePage() {
   if (uploadForm) uploadForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     await uploadImages();
-  });
-
-  const toggleBoardBtn = document.getElementById('toggleBoardBtn');
-  if (toggleBoardBtn) toggleBoardBtn.addEventListener('click', async () => {
-    await toggleBoard();
   });
 
   const createForm = document.getElementById('createEvidenceForm');

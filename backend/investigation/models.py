@@ -64,3 +64,32 @@ class Verdict(models.Model):
 
     def __str__(self):
         return f"Verdict for {self.suspect.name}: {self.result}"
+
+class Warrant(models.Model):
+    class WarrantType(models.TextChoices):
+        ARREST = 'ARREST', 'حکم بازداشت'
+        INTERROGATION = 'INTERROGATION', 'حکم بازجویی'
+        SEARCH = 'SEARCH', 'حکم تفتیش'
+
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', 'در انتظار بررسی'
+        APPROVED = 'APPROVED', 'تایید شده'
+        REJECTED = 'REJECTED', 'رد شده'
+
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='warrants')
+    suspect = models.ForeignKey(Suspect, on_delete=models.SET_NULL, null=True, blank=True, related_name='warrants')
+    requester = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='requested_warrants')
+    approver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_warrants')
+    
+    type = models.CharField(max_length=20, choices=WarrantType.choices, default=WarrantType.INTERROGATION)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    
+    description = models.TextField(verbose_name="علت درخواست حکم")
+    approver_notes = models.TextField(blank=True, null=True, verbose_name="توضیحات تاییدکننده")
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Warrant {self.type} for {self.suspect.name if self.suspect else 'Case '+str(self.case.id)} - {self.status}"
+

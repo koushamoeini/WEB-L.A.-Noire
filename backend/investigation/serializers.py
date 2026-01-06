@@ -1,7 +1,19 @@
 from rest_framework import serializers
-from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict
+from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict, Warrant
+
+class WarrantSerializer(serializers.ModelSerializer):
+    requester_name = serializers.ReadOnlyField(source='requester.username')
+    approver_name = serializers.ReadOnlyField(source='approver.username')
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Warrant
+        fields = '__all__'
+        read_only_fields = ['requester', 'approver', 'status']
 
 class VerdictSerializer(serializers.ModelSerializer):
+
     judge_username = serializers.ReadOnlyField(source='judge.username')
     result_display = serializers.CharField(source='get_result_display', read_only=True)
 
