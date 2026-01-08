@@ -338,6 +338,27 @@ class VerdictViewSet(viewsets.ModelViewSet):
             return self.queryset.filter(case_id=case_id)
         return self.queryset
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
+    def officer_review(self, request, pk=None):
+        report = self.get_object()
+        if report.status != RewardReport.Status.PENDING_OFFICER:
+            return Response({'error': 'This report is not awaiting officer review.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        approved = _parse_approved(request.data.get('approved'))
+        report.officer = request.user
+        report.officer_notes = request.data.get('notes', '')
+
+        suspect_id = request.data.get('suspect')
+        if suspect_id:
+            report.suspect_id = suspect_id
+
+        if approved:
+            report.status = RewardReport.Status.PENDING_DETECTIVE
+        else:
+            report.status = RewardReport.Status.REJECTED
+
+        report.save()
+        return Response({'status': report.status})
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
     def mark_paid(self, request, pk=None):
         report = self.get_object()
         if report.status != RewardReport.Status.APPROVED:
