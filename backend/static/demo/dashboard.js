@@ -14,7 +14,7 @@ const showAreas = async () => {
 
     // Check roles for investigation button visibility
     try {
-      const res = await fetch(`${API_BASE}/accounts/auth/me/`, { headers: authHeaders() });
+      const res = await fetch(`${API_BASE}/auth/me/`, { headers: authHeaders() });
       if (res.ok) {
         const data = await res.json();
         const roles = data.roles.map(r => r.code);
@@ -160,5 +160,5 @@ if (document.readyState === 'loading') {
 } else {
   initDashboard();
 }
-// ensure admin area is evaluated (in case script loads after DOMContentLoaded)
-showAdminArea();
+// ensure areas are evaluated (in case script loads after DOMContentLoaded)
+showAreas();
