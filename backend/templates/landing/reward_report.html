@@ -1,0 +1,115 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | گزارش پاداش</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card">
+        <div class="panel-header">
+          <h1>گزارش پاداش (Section 8.4)</h1>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="/dashboard/" class="ghost">بازگشت</a>
+            <button id="logoutBtn" class="button ghost">خروج</button>
+          </div>
+        </div>
+
+        <p class="subtitle">
+          ثبت گزارش برای دریافت پاداش بر اساس جرم و مدت زمان تعقیب
+        </p>
+
+        <div id="authHint" class="guidance" style="margin-bottom: 20px;"></div>
+
+        <div id="rewardArea" style="display:none;">
+          <!-- Tabs -->
+          <div class="hero-actions" style="margin-bottom: 20px; gap: 8px;">
+            <button class="button tab-btn" data-tab="create">ثبت گزارش جدید</button>
+            <button class="button ghost tab-btn" data-tab="pending">درانتظار تایید</button>
+            <button class="button ghost tab-btn" data-tab="approved">تایید‌شده</button>
+            <button class="button ghost tab-btn" data-tab="lookup">جستجو</button>
+          </div>
+
+          <!-- Create Form -->
+          <div id="create-tab" class="tab-content active" style="display: block;">
+            <div class="panel" style="padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+              <h3 style="margin-top:0;">ثبت گزارش جدید</h3>
+              <form id="createRewardForm" class="form-grid">
+                <label>
+                  نام متهم
+                  <input id="suspectName" name="suspect_full_name" required />
+                </label>
+                <label>
+                  کد ملی متهم
+                  <input id="suspectCode" name="suspect_national_code" maxlength="10" />
+                </label>
+                <label style="grid-column: 1 / -1;">
+                  توضیحات / شرح جرم
+                  <textarea name="description" required style="min-height: 100px;"></textarea>
+                </label>
+                <button type="submit" class="button" style="grid-column: 1 / -1;">ثبت گزارش</button>
+              </form>
+              <div id="createResult" class="guidance" style="margin-top: 15px; display:none;"></div>
+            </div>
+          </div>
+
+          <!-- Pending Reviews -->
+          <div id="pending-tab" class="tab-content" style="display: none;">
+            <div class="panel" style="padding: 20px; border-radius: 10px;">
+              <h3 style="margin-top:0;">گزارش‌های درانتظار تایید</h3>
+              <div id="pendingList" class="guidance">در حال بارگذاری...</div>
+            </div>
+          </div>
+
+          <!-- Approved Reports -->
+          <div id="approved-tab" class="tab-content" style="display: none;">
+            <div class="panel" style="padding: 20px; border-radius: 10px;">
+              <h3 style="margin-top:0;">گزارش‌های تایید‌شده</h3>
+              <div id="approvedList" class="guidance">در حال بارگذاری...</div>
+            </div>
+          </div>
+
+          <!-- Lookup -->
+          <div id="lookup-tab" class="tab-content" style="display: none;">
+            <div class="panel" style="padding: 20px; border-radius: 10px;">
+              <h3 style="margin-top:0;">جستجوی گزارش</h3>
+              <div class="form-grid" style="margin-bottom: 15px;">
+                <input 
+                  id="lookupNational" 
+                  placeholder="کد ملی متهم" 
+                  maxlength="10"
+                  class="full"
+                />
+                <input 
+                  id="lookupTracking" 
+                  placeholder="کد پیگیری" 
+                  class="full"
+                />
+                <button id="lookupBtn" class="button ghost full">جستجو</button>
+              </div>
+              <div id="lookupResult" class="guidance"></div>
+            </div>
+          </div>
+
+          <!-- Statistics -->
+          <div class="hero-actions" style="margin-top: 30px; gap: 10px;">
+            <div class="card" style="padding: 15px; flex: 1;">
+              <strong>گزارش‌های جدید:</strong> <span id="statNew">0</span>
+            </div>
+            <div class="card" style="padding: 15px; flex: 1;">
+              <strong>تایید‌شده:</strong> <span id="statApproved">0</span>
+            </div>
+            <div class="card" style="padding: 15px; flex: 1;">
+              <strong>رد‌شده:</strong> <span id="statRejected">0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="{% static 'demo/reward_report.js' %}" defer></script>
+  </body>
+</html>
