@@ -11,6 +11,38 @@ from .serializers import (
 )
 from .permissions import IsCaptain, IsDetective, IsJudge, IsSergeant
 from cases.permissions import IsOfficerOrHigher
+def _reward_amount_for_suspect(suspect):
+    if not suspect:
+        return 0
+
+    nc = (getattr(suspect, 'national_code', '') or '').strip()
+    if not nc:
+        # fallback قدیمی
+        if not suspect.case_id:
+            return 0
+        days = _pursuit_days(suspect)
+        level = _crime_level_score(suspect.case.crime_level)
+        return days * level * 20000000
+
+    # حالت صحیح طبق PDF: max(Lj) از پرونده‌های باز، max(Di) از همه پرونده‌ها
+    qs = Suspect.objects.select_related('case').filter(national_code=nc)
+
+    max_lj = 0
+    max_di = 0
+
+    for s in qs:
+        if s.case_id:
+            di = _crime_level_score(s.case.crime_level)
+            if di > max_di:
+                max_di = di
+
+        if s.case_id and _is_case_open(s.case):
+            lj = _pursuit_days(s)
+            if lj > max_lj:
+                max_lj = lj
+
+    score = max_lj * max_di
+    return score * 20000000
 
 class CriminalRankingView(APIView):
     permission_classes = [IsOfficerOrHigher]
