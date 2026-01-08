@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 from cases.models import Case
 from evidence.models import Evidence
 
@@ -10,6 +11,7 @@ class Suspect(models.Model):
     last_name = models.CharField(max_length=150, blank=True, verbose_name="نام خانوادگی")
     national_code = models.CharField(max_length=10, blank=True, verbose_name="کد ملی")
     details = models.TextField(verbose_name="جزئیات")
+    created_at = models.DateTimeField(default=timezone.now, verbose_name="تاریخ شناسایی")
     is_main_suspect = models.BooleanField(default=False, verbose_name="متهم اصلی")
     is_on_board = models.BooleanField(default=False, verbose_name="روی تخته")
 
@@ -95,4 +97,36 @@ class Warrant(models.Model):
 
     def __str__(self):
         return f"Warrant {self.type} for {self.suspect.name if self.suspect else 'Case '+str(self.case.id)} - {self.status}"
+
+
+class RewardReport(models.Model):
+    class Status(models.TextChoices):
+        PENDING_OFFICER = 'PO', 'در انتظار بررسی افسر'
+        PENDING_DETECTIVE = 'PD', 'در انتظار بررسی کارآگاه'
+        APPROVED = 'AP', 'تایید نهایی'
+        REJECTED = 'RE', 'رد شده'
+
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='reward_reports')
+    suspect = models.ForeignKey(Suspect, on_delete=models.SET_NULL, null=True, blank=True, related_name='reward_reports')
+    suspect_full_name = models.CharField(max_length=255, blank=True, verbose_name='نام متهم')
+    suspect_national_code = models.CharField(max_length=10, blank=True, verbose_name='کد ملی متهم')
+    description = models.TextField(verbose_name='توضیحات گزارش')
+
+    status = models.CharField(max_length=2, choices=Status.choices, default=Status.PENDING_OFFICER)
+    officer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reward_officer_reviews')
+    officer_notes = models.TextField(blank=True, verbose_name='یادداشت افسر')
+    detective = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reward_detective_reviews')
+    detective_notes = models.TextField(blank=True, verbose_name='یادداشت کارآگاه')
+
+    reward_amount = models.BigIntegerField(null=True, blank=True, verbose_name='مبلغ پاداش')
+    tracking_code = models.CharField(max_length=20, unique=True, null=True, blank=True, verbose_name='کد پیگیری')
+    is_paid = models.BooleanField(default=False, verbose_name='پرداخت شده')
+    paid_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ پرداخت')
+    paid_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reward_payments')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"RewardReport #{self.id} - {self.get_status_display()}"
 
