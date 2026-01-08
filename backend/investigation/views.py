@@ -355,3 +355,51 @@ class VerdictViewSet(viewsets.ModelViewSet):
         report.save(update_fields=['is_paid', 'paid_at', 'paid_by'])
         return Response({'status': 'paid', 'paid_at': report.paid_at})
 
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
+    def lookup(self, request):
+        national_code = (request.query_params.get('national_code') or '').strip()
+        tracking_code = (request.query_params.get('tracking_code') or '').strip()
+
+        if not national_code or not tracking_code:
+            return Response(
+                {'error': 'national_code and tracking_code are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        report = (
+            RewardReport.objects
+            .select_related('reporter', 'reporter__profile', 'suspect')
+            .filter(status=RewardReport.Status.APPROVED, tracking_code=tracking_code)
+            .first()
+        )
+        if not report:
+            return Response({'error': 'No approved report found for this tracking code.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # تطبیق کد ملی مظنون (از فیلد ذخیره‌شده یا از خود suspect)
+        suspect_nc = (report.suspect_national_code or '').strip()
+        if not suspect_nc and report.suspect:
+            suspect_nc = (report.suspect.national_code or '').strip()
+
+        if suspect_nc != national_code:
+            return Response({'error': 'National code does not match this tracking code.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        reporter_profile = getattr(report.reporter, 'profile', None)
+
+        return Response({
+            'tracking_code': report.tracking_code,
+            'reward_amount': report.reward_amount,
+            'suspect': {
+                'full_name': report.suspect_full_name or (str(report.suspect) if report.suspect else ''),
+                'national_code': suspect_nc,
+            },
+            'reporter': {
+                'username': report.reporter.username,
+                'national_code': reporter_profile.national_code if reporter_profile else None,
+                'phone': reporter_profile.phone if reporter_profile else None,
+            },
+            'status': report.status,
+            'is_paid': report.is_paid,
+            'paid_at': report.paid_at,
+        })
