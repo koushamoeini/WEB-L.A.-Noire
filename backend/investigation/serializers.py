@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict, Warrant
+from django.utils import timezone
+from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict, Warrant, RewardReport
+from cases.models import Case
 
 class WarrantSerializer(serializers.ModelSerializer):
     requester_name = serializers.ReadOnlyField(source='requester.username')
@@ -129,4 +131,22 @@ class SuspectStatusSerializer(serializers.ModelSerializer):
         return self.get_pursuit_score(obj) * 20000000
 
 
+
+
+
+class RewardReportSerializer(serializers.ModelSerializer):
+    reporter_name = serializers.ReadOnlyField(source='reporter.username')
+    officer_name = serializers.ReadOnlyField(source='officer.username')
+    detective_name = serializers.ReadOnlyField(source='detective.username')
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = RewardReport
+        fields = '__all__'
+        read_only_fields = [
+            'reporter', 'officer', 'detective',
+            'reward_amount', 'tracking_code',
+            'is_paid', 'paid_at', 'paid_by',
+            'created_at', 'updated_at',
+        ]
 
