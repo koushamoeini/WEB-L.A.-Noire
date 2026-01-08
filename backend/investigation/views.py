@@ -11,6 +11,42 @@ from .serializers import (
 )
 from .permissions import IsCaptain, IsDetective, IsJudge, IsSergeant
 from cases.permissions import IsOfficerOrHigher
+
+
+OPEN_CASE_STATUSES = {
+    Case.Status.PENDING_TRAINEE,
+    Case.Status.PENDING_OFFICER,
+    Case.Status.ACTIVE,
+    Case.Status.PENDING_SERGEANT,
+    Case.Status.PENDING_CHIEF,
+}
+
+
+def _is_case_open(case):
+    if not case:
+        return False
+    return case.status in OPEN_CASE_STATUSES
+
+
+def _pursuit_days(suspect):
+    if not suspect or not suspect.case_id or not _is_case_open(suspect.case):
+        return 0
+    if not suspect.created_at:
+        return 0
+    return max((timezone.now() - suspect.created_at).days, 0)
+
+
+def _crime_level_score(level):
+    if level == Case.CrimeLevel.LEVEL_3:
+        return 1
+    if level == Case.CrimeLevel.LEVEL_2:
+        return 2
+    if level == Case.CrimeLevel.LEVEL_1:
+        return 3
+    if level == Case.CrimeLevel.CRITICAL:
+        return 4
+    return 0
+
 def _reward_amount_for_suspect(suspect):
     if not suspect:
         return 0
