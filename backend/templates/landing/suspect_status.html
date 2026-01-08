@@ -1,0 +1,66 @@
+{% load static %}
+<!doctype html>
+<html lang="fa">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>WP-Project | وضعیت مظنونین</title>
+    <link rel="stylesheet" href="{% static 'demo/styles.css' %}" />
+  </head>
+  <body dir="rtl">
+    <main class="landing">
+      <section class="card">
+        <div class="panel-header">
+          <h1>وضعیت مظنونین (Section 7.4)</h1>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="/dashboard/" class="ghost">بازگشت</a>
+            <button id="logoutBtn" class="button ghost">خروج</button>
+          </div>
+        </div>
+
+        <p class="subtitle">
+          جستجو و بررسی وضعیت فعلی مظنونین شامل مدت تعقیب، سطح جرم، و مبلغ پاداش
+        </p>
+
+        <div id="authHint" class="guidance" style="margin-bottom: 20px;"></div>
+
+        <div id="suspectArea" style="display:none;">
+          <!-- Filter & Search -->
+          <div class="form-grid" style="margin-bottom: 20px;">
+            <input 
+              id="searchInput" 
+              placeholder="جستجو: نام یا کد ملی..." 
+              class="full"
+            />
+            <select id="statusFilter" class="full">
+              <option value="">تمامی موارد</option>
+              <option value="PT">در انتظار بررسی اولیه</option>
+              <option value="PO">در انتظار بررسی افسر</option>
+              <option value="AC">فعال</option>
+              <option value="PS">در انتظار حل</option>
+              <option value="SL">حل‌شده</option>
+            </select>
+            <button id="refreshBtn" class="button ghost">بازیابی</button>
+          </div>
+
+          <!-- Statistics -->
+          <div class="hero-actions" style="margin-bottom: 20px;">
+            <div class="card" style="padding: 15px; flex: 1;">
+              <strong>مظنونین تحت تعقیب:</strong> <span id="countPursuit">-</span>
+            </div>
+            <div class="card" style="padding: 15px; flex: 1;">
+              <strong>موارد شدید:</strong> <span id="countSevere">-</span>
+            </div>
+          </div>
+
+          <!-- Suspects List -->
+          <div id="suspectsList" style="margin-top: 20px;">
+            <div class="guidance">در حال بارگذاری لیست...</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="{% static 'demo/suspect_status.js' %}" defer></script>
+  </body>
+</html>
