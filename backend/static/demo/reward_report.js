@@ -152,6 +152,12 @@ function renderReports(reports, containerId) {
             <p style="font-size: 0.9em; margin: 0 0 5px 0;">
               <strong>پاداش: ${amount}</strong>
             </p>
+            ${(r.status === 'AP' && !r.is_paid) ? `
+              <div style="margin-top: 10px;">
+                <a href="/api/investigation/reward-reports/${r.id}/request_payment/" target="_blank" class="button small">دریافت پاداش (درگاه بانکی)</a>
+              </div>
+            ` : ''}
+            ${r.is_paid ? '<p style="color: #27ae60; font-size: 0.85em; margin-top: 5px;">✅ پرداخت شده</p>' : ''}
             <p class="guidance" style="margin: 8px 0 0 0;">
               کد پیگیری: ${r.tracking_code || r.id}
             </p>
