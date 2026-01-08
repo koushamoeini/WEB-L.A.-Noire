@@ -337,3 +337,21 @@ class VerdictViewSet(viewsets.ModelViewSet):
         if case_id:
             return self.queryset.filter(case_id=case_id)
         return self.queryset
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
+    def mark_paid(self, request, pk=None):
+        report = self.get_object()
+        if report.status != RewardReport.Status.APPROVED:
+            return Response({'error': 'Only approved reports can be paid.'}, status=status.HTTP_400_BAD_REQUEST)
+        if report.is_paid:
+            return Response({'error': 'This reward is already marked as paid.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        code = (request.data.get('tracking_code') or '').strip()
+        if code and report.tracking_code and code != report.tracking_code:
+            return Response({'error': 'Tracking code does not match.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        report.is_paid = True
+        report.paid_at = timezone.now()
+        report.paid_by = request.user
+        report.save(update_fields=['is_paid', 'paid_at', 'paid_by'])
+        return Response({'status': 'paid', 'paid_at': report.paid_at})
+
