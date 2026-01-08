@@ -205,12 +205,10 @@ class SuspectViewSet(viewsets.ModelViewSet):
 
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
-    def status(self, request):
+    def status_list(self, request):
         suspects = Suspect.objects.select_related('case').all().order_by('id')
         serializer = SuspectStatusSerializer(suspects, many=True)
         return Response(serializer.data)
-
-    from collections import defaultdict
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def most_wanted(self, request):

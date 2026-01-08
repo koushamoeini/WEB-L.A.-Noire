@@ -41,10 +41,8 @@ urlpatterns = [
     path('evidence/', TemplateView.as_view(template_name='landing/evidence.html'), name='evidence'),
     path('court/', TemplateView.as_view(template_name='landing/court.html'), name='court'),
     path('investigation/', TemplateView.as_view(template_name='landing/investigation.html'), name='investigation'),
-
-
     path('suspects/status/', TemplateView.as_view(template_name='landing/suspect_status.html'), name='suspect-status'),
-    path('rewards/', TemplateView.as_view(template_name='landing/rewards.html'), name='rewards'),
+    path('rewards/', TemplateView.as_view(template_name='landing/reward_report.html'), name='reward-report'),
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('cases.urls')),
