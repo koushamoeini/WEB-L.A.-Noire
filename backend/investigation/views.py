@@ -91,6 +91,13 @@ class SuspectViewSet(viewsets.ModelViewSet):
     serializer_class = SuspectSerializer
     permission_classes = [permissions.IsAuthenticated, IsOfficerOrHigher]
 
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def status(self, request):
+        suspects = Suspect.objects.select_related('case').all().order_by('id')
+        serializer = SuspectStatusSerializer(suspects, many=True)
+        return Response(serializer.data)
+
     def get_queryset(self):
         case_id = self.request.query_params.get('case')
         if case_id:
