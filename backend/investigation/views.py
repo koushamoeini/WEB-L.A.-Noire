@@ -98,6 +98,70 @@ class SuspectViewSet(viewsets.ModelViewSet):
         serializer = SuspectStatusSerializer(suspects, many=True)
         return Response(serializer.data)
 
+    from collections import defaultdict
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def most_wanted(self, request):
+        suspects = Suspect.objects.select_related('case').all()
+
+        # گروه‌بندی بر اساس national_code (اگر خالی بود، با id جدا نگهش می‌داریم)
+        groups = {}
+        for s in suspects:
+            key = (s.national_code or "").strip()
+            if not key:
+                key = f"__suspect_{s.id}"  # برای افرادی که کدملی ندارند
+            g = groups.get(key)
+            if not g:
+                full_name = f"{s.first_name} {s.last_name}".strip() or (s.name or "").strip()
+                groups[key] = g = {
+                    "national_code": s.national_code,
+                    "full_name": full_name,
+                    "suspect_ids": [],
+                    "case_ids": set(),
+                    "max_pursuit_days_open": 0,
+                    "max_crime_level": 0,  # امتیاز ۱..۴
+                }
+
+            g["suspect_ids"].append(s.id)
+            if s.case_id:
+                g["case_ids"].add(s.case_id)
+
+            # max(Di) از همه پرونده‌ها
+            if s.case_id:
+                di = _crime_level_score(s.case.crime_level)
+                if di > g["max_crime_level"]:
+                    g["max_crime_level"] = di
+
+            # max(Lj) فقط از پرونده‌های باز
+            if s.case_id and _is_case_open(s.case):
+                lj = _pursuit_days(s)  # این تابع خودش open بودن را هم چک می‌کند
+                if lj > g["max_pursuit_days_open"]:
+                    g["max_pursuit_days_open"] = lj
+
+        # تبدیل به لیست + فیلتر یک ماه
+        results = []
+        for key, g in groups.items():
+            if g["max_pursuit_days_open"] <= 30:
+                continue
+
+            score = g["max_pursuit_days_open"] * g["max_crime_level"]
+            reward_amount = score * 20000000
+
+            results.append({
+                "national_code": g["national_code"],
+                "full_name": g["full_name"],
+                "suspect_ids": g["suspect_ids"],
+                "case_ids": sorted(list(g["case_ids"])),
+                "max_pursuit_days": g["max_pursuit_days_open"],
+                "max_crime_level": g["max_crime_level"],
+                "score": score,
+                "reward_amount": reward_amount,
+            })
+
+        # مرتب‌سازی نزولی بر اساس score
+        results.sort(key=lambda x: x["score"], reverse=True)
+        return Response(results)
+
     def get_queryset(self):
         case_id = self.request.query_params.get('case')
         if case_id:
