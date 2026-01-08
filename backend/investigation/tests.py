@@ -44,3 +44,38 @@ class InvestigationAPITests(APITestCase):
         url = reverse("interrogation-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_global_stats(self):
+        self.client.force_authenticate(user=self.detective)
+        url = reverse("global-stats")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("rewards", response.data)
+        self.assertIn("cases", response.data)
+
+    def test_reward_flow_and_payment(self):
+        # 1. Create Report
+        self.client.force_authenticate(user=self.detective)
+        report = RewardReport.objects.create(
+            reporter=self.detective, 
+            suspect_full_name="Criminal", 
+            suspect_national_code="111"
+        )
+        # 2. Detective Review (sets status to AP)
+        # We manually set to AP for testing payment simulator more easily or use action
+        report.status = RewardReport.Status.APPROVED
+        report.reward_amount = 5000000
+        report.tracking_code = "TESTCODE123"
+        report.save()
+
+        # 3. Request Payment (Render simulator)
+        url = reverse("reward-report-request-payment", args=[report.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200) # HTML render
+
+        # 4. Callback
+        url = reverse("reward-report-payment-callback", args=[report.id])
+        response = self.client.post(url, {"status": "OK"})
+        self.assertEqual(response.status_code, 200)
+        report.refresh_from_db()
+        self.assertTrue(report.is_paid)
