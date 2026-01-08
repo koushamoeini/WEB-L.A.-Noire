@@ -1,12 +1,15 @@
+from django.db import models
 from django.db.models import Count, Q
 import random
 import string
 from collections import defaultdict
 from rest_framework import viewsets, permissions, status
 from django.utils import timezone
+from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from cases.permissions import IsOfficerOrHigher  # از قبل داری
 
 from cases.models import Case
@@ -204,12 +207,14 @@ class SuspectViewSet(viewsets.ModelViewSet):
 
 
 
+    @extend_schema(summary="لیست وضعیت مظنونین", responses={200: SuspectStatusSerializer(many=True)})
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def status_list(self, request):
         suspects = Suspect.objects.select_related('case').all().order_by('id')
         serializer = SuspectStatusSerializer(suspects, many=True)
         return Response(serializer.data)
 
+    @extend_schema(summary="لیست خطرناک‌ترین مجرمان")
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
     def most_wanted(self, request):
         suspects = Suspect.objects.select_related('case').all()
@@ -351,6 +356,42 @@ class VerdictViewSet(viewsets.ModelViewSet):
         return self.queryset
 
 
+class GlobalStatsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary="آمار جامع پروژه",
+        description="تجمیع آمارهای مربوط به پرونده‌ها، مظنونین و مبالغ پاداش پرداخت شده.",
+        responses={200: dict}
+    )
+    def get(self, request):
+        case_stats = Case.objects.aggregate(
+            total=Count('id'),
+            active=Count('id', filter=Q(status=Case.Status.ACTIVE)),
+            solved=Count('id', filter=Q(status=Case.Status.SOLVED)),
+        )
+        reward_stats = RewardReport.objects.aggregate(
+            total_count=Count('id'),
+            total_paid=Count('id', filter=Q(is_paid=True)),
+            sum_paid=models.Sum('reward_amount', filter=Q(is_paid=True))
+        )
+        suspect_stats = Suspect.objects.aggregate(
+            total=Count('id'),
+            under_pursuit=Count('id', filter=Q(case__status__in=OPEN_CASE_STATUSES))
+        )
+
+        return Response({
+            "cases": case_stats,
+            "rewards": {
+                "count": reward_stats['total_count'],
+                "paid_count": reward_stats['total_paid'],
+                "total_amount_paid": reward_stats['sum_paid'] or 0
+            },
+            "suspects": suspect_stats,
+            "server_time": timezone.now()
+        })
+
+
 class RewardReportViewSet(viewsets.ModelViewSet):
     queryset = RewardReport.objects.all().order_by('-created_at')
     serializer_class = RewardReportSerializer
@@ -369,9 +410,14 @@ class RewardReportViewSet(viewsets.ModelViewSet):
             return qs
         return qs.filter(reporter=user)
 
+    @extend_schema(summary="ثبت گزارش جدید پاداش")
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         serializer.save(reporter=self.request.user)
 
+    @extend_schema(summary="بررسی اولیه توسط افسر")
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
     def officer_review(self, request, pk=None):
         report = self.get_object()
@@ -394,6 +440,7 @@ class RewardReportViewSet(viewsets.ModelViewSet):
         report.save()
         return Response({'status': report.status})
 
+    @extend_schema(summary="بررسی نهایی توسط کارآگاه و محاسبه پاداش")
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsDetective])
     def detective_review(self, request, pk=None):
         report = self.get_object()
@@ -421,6 +468,46 @@ class RewardReportViewSet(viewsets.ModelViewSet):
         report.save()
         return Response({'status': report.status, 'reward_amount': report.reward_amount, 'tracking_code': report.tracking_code})
 
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def request_payment(self, request, pk=None):
+        """شبیه‌ساز هدایت به درگاه بانکی (بخش ۱ چکلست)"""
+        report = self.get_object()
+        if report.status != RewardReport.Status.APPROVED:
+            return Response({'error': 'فقط گزارش‌های تایید شده قابل پرداخت هستند.'}, status=400)
+        if report.is_paid:
+            return Response({'error': 'این پاداش قبلاً پرداخت شده است.'}, status=400)
+        
+        context = {
+            'report_id': report.id,
+            'amount': report.reward_amount,
+            'tracking_code': report.tracking_code,
+        }
+        return render(request, 'landing/payment_gateway.html', context)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.AllowAny])
+    def payment_callback(self, request, pk=None):
+        """صفحه بازگشت از درگاه (بخش ۱ چکلست)"""
+        report = self.get_object()
+        status_code = request.data.get('status')
+
+        if status_code == 'OK':
+            report.is_paid = True
+            report.paid_at = timezone.now()
+            # در شبیه‌ساز، چون کاربر مستقیم از بانک میاد، پرداخت‌کننده رو سیستم در نظر می‌گیریم
+            report.save(update_fields=['is_paid', 'paid_at'])
+            msg = "پرداخت با موفقیت انجام شد. مبلغ به حساب شما واریز گردید."
+            success = True
+        else:
+            msg = "پرداخت توسط کاربر لغو شد یا با خطا مواجه گردید."
+            success = False
+
+        return Response({
+            "success": success,
+            "message": msg,
+            "tracking_code": report.tracking_code,
+            "amount": report.reward_amount
+        })
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
     def mark_paid(self, request, pk=None):
         report = self.get_object()
@@ -440,6 +527,7 @@ class RewardReportViewSet(viewsets.ModelViewSet):
         return Response({'status': 'paid', 'paid_at': report.paid_at})
 
 
+    @extend_schema(summary="پیگیری وضعیت پاداش با کد ملی و کد رهگیری")
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
     def lookup(self, request):
         national_code = (request.query_params.get('national_code') or '').strip()
