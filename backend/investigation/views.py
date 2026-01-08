@@ -1,16 +1,24 @@
 from django.db.models import Count, Q
+import random
+import string
+from collections import defaultdict
 from rest_framework import viewsets, permissions, status
+from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict, Warrant
+from cases.permissions import IsOfficerOrHigher  # از قبل داری
+
+from cases.models import Case
+from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict, Warrant, RewardReport
 from .serializers import (
-    SuspectSerializer, InterrogationSerializer, 
+    SuspectSerializer, SuspectStatusSerializer, InterrogationSerializer, 
     InterrogationFeedbackSerializer, BoardConnectionSerializer, BoardSerializer,
-    VerdictSerializer, WarrantSerializer
+    VerdictSerializer, WarrantSerializer, RewardReportSerializer
 )
 from .permissions import IsCaptain, IsDetective, IsJudge, IsSergeant
 from cases.permissions import IsOfficerOrHigher
+
 
 
 OPEN_CASE_STATUSES = {
@@ -46,6 +54,7 @@ def _crime_level_score(level):
     if level == Case.CrimeLevel.CRITICAL:
         return 4
     return 0
+
 
 def _reward_amount_for_suspect(suspect):
     if not suspect:
@@ -120,6 +129,10 @@ class CriminalRankingView(APIView):
             
         return Response(results)
 
+
+
+
+
 def _match_suspect(report):
     if report.suspect_id:
         return report.suspect
@@ -130,6 +143,7 @@ def _match_suspect(report):
             report.save(update_fields=['suspect'])
             return match
     return None
+
 
 class WarrantViewSet(viewsets.ModelViewSet):
     queryset = Warrant.objects.all()
@@ -186,6 +200,8 @@ class SuspectViewSet(viewsets.ModelViewSet):
     queryset = Suspect.objects.all()
     serializer_class = SuspectSerializer
     permission_classes = [permissions.IsAuthenticated, IsOfficerOrHigher]
+
+
 
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
@@ -330,13 +346,34 @@ class VerdictViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(judge=self.request.user)
 
-
-
     def get_queryset(self):
         case_id = self.request.query_params.get('case')
         if case_id:
             return self.queryset.filter(case_id=case_id)
         return self.queryset
+
+
+class RewardReportViewSet(viewsets.ModelViewSet):
+    queryset = RewardReport.objects.all().order_by('-created_at')
+    serializer_class = RewardReportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+
+        user = self.request.user
+        roles = [r.code for r in user.roles.all()]
+        elevated = user.is_superuser or any(r in roles for r in ['police_officer', 'captain', 'police_chief', 'detective', 'sergeant'])
+        if elevated:
+            return qs
+        return qs.filter(reporter=user)
+
+    def perform_create(self, serializer):
+        serializer.save(reporter=self.request.user)
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
     def officer_review(self, request, pk=None):
         report = self.get_object()
@@ -358,6 +395,34 @@ class VerdictViewSet(viewsets.ModelViewSet):
 
         report.save()
         return Response({'status': report.status})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsDetective])
+    def detective_review(self, request, pk=None):
+        report = self.get_object()
+        if report.status != RewardReport.Status.PENDING_DETECTIVE:
+            return Response({'error': 'This report is not awaiting detective review.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        approved = _parse_approved(request.data.get('approved'))
+        report.detective = request.user
+        report.detective_notes = request.data.get('notes', '')
+
+        suspect_id = request.data.get('suspect')
+        if suspect_id:
+            report.suspect_id = suspect_id
+
+        if approved:
+            suspect = _match_suspect(report)
+            if not suspect:
+                return Response({'error': 'Suspect not found for reward calculation.'}, status=status.HTTP_400_BAD_REQUEST)
+            report.reward_amount = _reward_amount_for_suspect(suspect)
+            report.tracking_code = _generate_tracking_code()
+            report.status = RewardReport.Status.APPROVED
+        else:
+            report.status = RewardReport.Status.REJECTED
+
+        report.save()
+        return Response({'status': report.status, 'reward_amount': report.reward_amount, 'tracking_code': report.tracking_code})
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
     def mark_paid(self, request, pk=None):
         report = self.get_object()
@@ -375,6 +440,7 @@ class VerdictViewSet(viewsets.ModelViewSet):
         report.paid_by = request.user
         report.save(update_fields=['is_paid', 'paid_at', 'paid_by'])
         return Response({'status': 'paid', 'paid_at': report.paid_at})
+
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
     def lookup(self, request):
