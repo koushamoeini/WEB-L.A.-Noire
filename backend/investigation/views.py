@@ -44,6 +44,24 @@ def _reward_amount_for_suspect(suspect):
     score = max_lj * max_di
     return score * 20000000
 
+
+def _generate_tracking_code():
+    while True:
+        code = ''.join(random.choices(string.digits, k=10))
+        if not RewardReport.objects.filter(tracking_code=code).exists():
+            return code
+
+
+def _parse_approved(value):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return str(value).strip().lower() in {'true', '1', 'yes', 'y', 'on'}
+
+
 class CriminalRankingView(APIView):
     permission_classes = [IsOfficerOrHigher]
 
