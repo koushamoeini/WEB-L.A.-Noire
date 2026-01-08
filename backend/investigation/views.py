@@ -34,6 +34,16 @@ class CriminalRankingView(APIView):
             
         return Response(results)
 
+def _match_suspect(report):
+    if report.suspect_id:
+        return report.suspect
+    if report.suspect_national_code:
+        match = Suspect.objects.filter(national_code=report.suspect_national_code).order_by('-created_at').first()
+        if match:
+            report.suspect = match
+            report.save(update_fields=['suspect'])
+            return match
+    return None
 
 class WarrantViewSet(viewsets.ModelViewSet):
     queryset = Warrant.objects.all()
