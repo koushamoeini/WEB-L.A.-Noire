@@ -1,0 +1,201 @@
+/* Hamburger button */
+.hamburger-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1100;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #8b0000 0%, #a40000 100%);
+  border: 2px solid #d4af37;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.9), 0 0 0 8px rgba(10, 10, 10, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.hamburger-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.95), 0 0 0 8px rgba(10, 10, 10, 0.8), 0 0 20px rgba(212, 175, 55, 0.3);
+  border-color: #ffd700;
+}
+
+.hamburger-btn span {
+  width: 26px;
+  height: 3px;
+  background: #d4af37;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+/* Overlay */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Sidebar */
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+  border-left: 2px solid #8b0000;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  right: -280px;
+  top: 0;
+  z-index: 1000;
+  transition: right 0.3s ease;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.5);
+}
+
+.sidebar.open {
+  right: 0;
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.3);
+}
+
+.sidebar-header h2 {
+  color: #d4af37;
+  margin: 0 0 16px 0;
+  font-size: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(212, 175, 55, 0.3);
+}
+
+.user-badge {
+  background: rgba(139, 0, 0, 0.2);
+  border: 1px solid #8b0000;
+  border-radius: 6px;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.user-name {
+  color: #e0e0e0;
+  font-size: 0.9rem;
+  display: block;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #b0b0b0;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(139, 0, 0, 0.1);
+  color: #d4af37;
+  border-left-color: #8b0000;
+}
+
+.nav-item.active {
+  background: rgba(139, 0, 0, 0.2);
+  color: #d4af37;
+  border-left-color: #d4af37;
+  font-weight: 600;
+}
+
+.nav-icon {
+  font-size: 1.4rem;
+  width: 28px;
+  display: inline-block;
+}
+
+.nav-label {
+  font-size: 1rem;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(139, 0, 0, 0.3);
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid #8b0000;
+  border-radius: 6px;
+  color: #d4af37;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.logout-btn:hover {
+  background: rgba(139, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Scrollbar styling */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: #8b0000;
+  border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: #a40000;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 260px;
+    right: -260px;
+  }
+
+  .hamburger-btn {
+    top: 15px;
+    right: 15px;
+  }
+}
