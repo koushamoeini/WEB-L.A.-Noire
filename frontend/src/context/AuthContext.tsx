@@ -19,19 +19,20 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
+  const [token, setToken] = useState<string | null>(localStorage.getItem('access_token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initAuth = async () => {
-      const savedToken = localStorage.getItem('token');
+      const savedToken = localStorage.getItem('access_token');
       if (savedToken) {
         try {
           const userData = await authAPI.getMe();
           setUser(userData);
           setToken(savedToken);
         } catch (error) {
-          localStorage.removeItem('token');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
           setToken(null);
           setUser(null);
         }
@@ -44,8 +45,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = async (identifier: string, password: string) => {
     const response = await authAPI.login({ identifier, password });
-    localStorage.setItem('token', response.token);
-    setToken(response.token);
+    localStorage.setItem('access_token', response.access);
+    localStorage.setItem('refresh_token', response.refresh);
+    setToken(response.access);
     
     // Fetch full user data
     const userData = await authAPI.getMe();
@@ -54,8 +56,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const register = async (data: RegisterRequest) => {
     const response = await authAPI.register(data);
-    localStorage.setItem('token', response.token);
-    setToken(response.token);
+    localStorage.setItem('access_token', response.access);
+    localStorage.setItem('refresh_token', response.refresh);
+    setToken(response.access);
     
     // Fetch full user data
     const userData = await authAPI.getMe();
@@ -63,7 +66,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
     setToken(null);
     setUser(null);
   };

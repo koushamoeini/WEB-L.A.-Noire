@@ -23,7 +23,8 @@ export interface RegisterRequest {
 export interface RegisterResponse {
   id: number;
   username: string;
-  token: string;
+  access: string;
+  refresh: string;
 }
 
 export interface LoginRequest {
@@ -32,7 +33,8 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
+  access: string;
+  refresh: string;
   id: number;
   username: string;
   is_superuser: boolean;
