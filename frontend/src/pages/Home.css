@@ -1,0 +1,142 @@
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  padding: 20px;
+  direction: rtl;
+}
+
+.home-content {
+  text-align: center;
+  color: #d4af37;
+  max-width: 700px;
+}
+
+.home-title {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  color: #d4af37;
+}
+
+.home-subtitle {
+  font-size: 2.5rem;
+  font-weight: 600;
+  margin-bottom: 24px;
+  color: #8b0000;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.home-description {
+  font-size: 1.25rem;
+  margin-bottom: 48px;
+  color: #e0e0e0;
+  line-height: 1.6;
+}
+
+.home-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.home-button {
+  padding: 14px 32px;
+  border-radius: 4px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.home-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 0, 0, 0.4);
+}
+
+.home-button.primary {
+  background-color: #8b0000;
+  color: #d4af37;
+  border: 2px solid #8b0000;
+}
+
+.home-button.primary:hover {
+  background-color: #a40000;
+  border-color: #a40000;
+}
+
+.home-button.secondary {
+  background-color: transparent;
+  color: #d4af37;
+  border: 2px solid #d4af37;
+}
+
+.home-button.secondary:hover {
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+.stats-section {
+  margin-top: 60px;
+  margin-bottom: 40px;
+}
+
+.stats-title {
+  color: #d4af37;
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 30px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.stat-item {
+  background: rgba(139, 0, 0, 0.2);
+  border: 2px solid #8b0000;
+  border-radius: 8px;
+  padding: 30px 20px;
+  text-align: center;
+}
+
+.stat-value {
+  color: #d4af37;
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.stat-label {
+  color: #e0e0e0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+  .home-title {
+    font-size: 2rem;
+  }
+
+  .home-subtitle {
+    font-size: 1.75rem;
+  }
+
+  .home-description {
+    font-size: 1rem;
+  }
+
+  .home-actions {
+    flex-direction: column;
+  }
+
+  .home-button {
+    width: 100%;
+  }
+}
