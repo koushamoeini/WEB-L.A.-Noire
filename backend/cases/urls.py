@@ -5,4 +5,6 @@ from .views import CaseViewSet
 router = DefaultRouter()
 router.register(r'cases', CaseViewSet, basename='case')
 
+
 urlpatterns = [path('', include(router.urls))]
+

@@ -2,8 +2,9 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import CreateAPIView
+
 from django.shortcuts import redirect
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -93,9 +94,15 @@ class RegisterView(CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
-        data = {'id': user.pk, 'username': user.username, 'token': token.key}
+        refresh = RefreshToken.for_user(user)
+        data = {
+            'id': user.pk, 
+            'username': user.username, 
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+        }
         return Response(data, status=status.HTTP_201_CREATED)
+
 
     def get(self, request, *args, **kwargs):
         # Redirect browser GETs to the HTML registration page for convenience
@@ -124,8 +131,15 @@ class LoginView(APIView):
         )
         if not user or not user.check_password(password):
             return Response({'detail': 'اطلاعات ورود نامعتبر است.'}, status=status.HTTP_401_UNAUTHORIZED)
-        token, _ = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key, 'id': user.pk, 'username': user.username, 'is_superuser': user.is_superuser})
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'id': user.pk, 
+            'username': user.username, 
+            'is_superuser': user.is_superuser
+        })
+
 
     def get(self, request, *args, **kwargs):
         # Redirect browser GETs to the HTML login page for convenience

@@ -11,7 +11,7 @@ from .serializers import (
     VehicleEvidenceSerializer, IdentificationDocumentSerializer, OtherEvidenceSerializer,
     EvidenceImageSerializer
 )
-from cases.permissions import IsOfficerOrHigher
+from cases.permissions import IsOfficerOrHigher, IsForensicDoctor
 
 class EvidenceViewSet(viewsets.ModelViewSet):
     queryset = Evidence.objects.all()
@@ -71,6 +71,21 @@ class WitnessTestimonyViewSet(EvidenceBaseViewSet):
 class BiologicalEvidenceViewSet(EvidenceBaseViewSet):
     queryset = BiologicalEvidence.objects.all()
     serializer_class = BiologicalEvidenceSerializer
+
+    def get_permissions(self):
+        if self.action == 'verify':
+            return [permissions.IsAuthenticated(), IsForensicDoctor()]
+        return super().get_permissions()
+
+    @action(detail=True, methods=['post'])
+    def verify(self, request, pk=None):
+        instance = self.get_object()
+        instance.is_verified = True
+        instance.medical_follow_up = request.data.get('medical_follow_up', instance.medical_follow_up)
+        instance.database_follow_up = request.data.get('database_follow_up', instance.database_follow_up)
+        instance.save()
+        return Response({'status': 'verified', 'id': instance.id})
+
 
 class VehicleEvidenceViewSet(EvidenceBaseViewSet):
     queryset = VehicleEvidence.objects.all()

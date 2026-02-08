@@ -17,11 +17,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
+from investigation.views import CriminalRankingView, GlobalStatsView
 
 from . import views
 
 urlpatterns = [
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/ranking/', CriminalRankingView.as_view(), name='criminal-ranking'),
+    path('api/global-stats/', GlobalStatsView.as_view(), name='global-stats'),
+
     path('', TemplateView.as_view(template_name='landing/index.html'), name='landing'),
+
     path('register/', TemplateView.as_view(template_name='landing/register.html'), name='register'),
     path('login/', TemplateView.as_view(template_name='landing/login.html'), name='login'),
     path('dashboard/', TemplateView.as_view(template_name='landing/dashboard_router.html'), name='dashboard'),
@@ -31,7 +40,10 @@ urlpatterns = [
     path('dashboard/role/<slug:role_code>/', views.role_dashboard, name='dashboard-role'),
     path('cases/', TemplateView.as_view(template_name='landing/cases.html'), name='cases'),
     path('evidence/', TemplateView.as_view(template_name='landing/evidence.html'), name='evidence'),
+    path('court/', TemplateView.as_view(template_name='landing/court.html'), name='court'),
     path('investigation/', TemplateView.as_view(template_name='landing/investigation.html'), name='investigation'),
+    path('suspects/status/', TemplateView.as_view(template_name='landing/suspect_status.html'), name='suspect-status'),
+    path('rewards/', TemplateView.as_view(template_name='landing/reward_report.html'), name='reward-report'),
     path('admin/', admin.site.urls),
     path('api/', include('accounts.urls')),
     path('api/', include('cases.urls')),

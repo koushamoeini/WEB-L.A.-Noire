@@ -1,0 +1,31 @@
+{% extends "admin/base.html" %}
+{% load i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}</a></h1>
+{% endblock %}
+
+{% block userlinks %}
+    <a href="/">نمایش سایت</a> /
+    <a href="/dashboard/">داشبورد سامانه</a> /
+    {% if user.is_active and user.is_staff %}
+        {% url 'admin:password_change' as password_change_url %}
+        {% if password_change_url %}
+            <a href="{{ password_change_url }}">
+        {% else %}
+            <a href="{% url 'admin:password_change' %}">
+        {% endif %}
+        {% trans 'Change password' %}</a> /
+    {% endif %}
+    <a href="{% url 'admin:logout' %}" id="adminLogoutLink">{% trans 'Log out' %}</a>
+
+    <script>
+        document.getElementById('adminLogoutLink').addEventListener('click', function(e) {
+            localStorage.clear();
+        });
+    </script>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

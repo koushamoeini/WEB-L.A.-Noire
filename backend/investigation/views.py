@@ -1,15 +1,194 @@
+from django.db import models
+from django.db.models import Count, Q
+import random
+import string
+from collections import defaultdict
 from rest_framework import viewsets, permissions, status
+from django.utils import timezone
+from django.shortcuts import render
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board
+from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from cases.permissions import IsOfficerOrHigher  # از قبل داری
+
+from cases.models import Case
+from .models import Suspect, Interrogation, InterrogationFeedback, BoardConnection, Board, Verdict, Warrant, RewardReport
 from .serializers import (
-    SuspectSerializer, InterrogationSerializer, 
-    InterrogationFeedbackSerializer, BoardConnectionSerializer, BoardSerializer
+    SuspectSerializer, SuspectStatusSerializer, InterrogationSerializer, 
+    InterrogationFeedbackSerializer, BoardConnectionSerializer, BoardSerializer,
+    VerdictSerializer, WarrantSerializer, RewardReportSerializer
 )
-from .permissions import IsCaptain, IsDetective
+from .permissions import IsCaptain, IsDetective, IsJudge, IsSergeant
 from cases.permissions import IsOfficerOrHigher
 
+
+
+OPEN_CASE_STATUSES = {
+    Case.Status.PENDING_TRAINEE,
+    Case.Status.PENDING_OFFICER,
+    Case.Status.ACTIVE,
+    Case.Status.PENDING_SERGEANT,
+    Case.Status.PENDING_CHIEF,
+}
+
+
+def _is_case_open(case):
+    if not case:
+        return False
+    return case.status in OPEN_CASE_STATUSES
+
+
+def _pursuit_days(suspect):
+    if not suspect or not suspect.case_id or not _is_case_open(suspect.case):
+        return 0
+    if not suspect.created_at:
+        return 0
+    return max((timezone.now() - suspect.created_at).days, 0)
+
+
+def _crime_level_score(level):
+    if level == Case.CrimeLevel.LEVEL_3:
+        return 1
+    if level == Case.CrimeLevel.LEVEL_2:
+        return 2
+    if level == Case.CrimeLevel.LEVEL_1:
+        return 3
+    if level == Case.CrimeLevel.CRITICAL:
+        return 4
+    return 0
+
+
+def _reward_amount_for_suspect(suspect):
+    if not suspect:
+        return 0
+
+    nc = (getattr(suspect, 'national_code', '') or '').strip()
+    if not nc:
+        # fallback قدیمی
+        if not suspect.case_id:
+            return 0
+        days = _pursuit_days(suspect)
+        level = _crime_level_score(suspect.case.crime_level)
+        return days * level * 20000000
+
+    # حالت صحیح طبق PDF: max(Lj) از پرونده‌های باز، max(Di) از همه پرونده‌ها
+    qs = Suspect.objects.select_related('case').filter(national_code=nc)
+
+    max_lj = 0
+    max_di = 0
+
+    for s in qs:
+        if s.case_id:
+            di = _crime_level_score(s.case.crime_level)
+            if di > max_di:
+                max_di = di
+
+        if s.case_id and _is_case_open(s.case):
+            lj = _pursuit_days(s)
+            if lj > max_lj:
+                max_lj = lj
+
+    score = max_lj * max_di
+    return score * 20000000
+
+
+def _generate_tracking_code():
+    while True:
+        code = ''.join(random.choices(string.digits, k=10))
+        if not RewardReport.objects.filter(tracking_code=code).exists():
+            return code
+
+
+def _parse_approved(value):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return str(value).strip().lower() in {'true', '1', 'yes', 'y', 'on'}
+
+
+class CriminalRankingView(APIView):
+    permission_classes = [IsOfficerOrHigher]
+
+    def get(self, request):
+        """Checkpoint 1: Ranking based on Guilty Verdicts"""
+        # Group by national_code and count guilty results
+        rankings = Verdict.objects.filter(result='GUILTY').values(
+            'suspect__national_code', 'suspect__first_name', 'suspect__last_name'
+        ).annotate(
+            guilty_count=Count('id')
+        ).order_by('-guilty_count')
+
+        results = []
+        for r in rankings:
+            results.append({
+                "کدملی": r['suspect__national_code'],
+                "نام": f"{r['suspect__first_name']} {r['suspect__last_name']}",
+                "امتیاز_جرم": r['guilty_count']
+            })
+            
+        return Response(results)
+
+
+
+
+
+def _match_suspect(report):
+    if report.suspect_id:
+        return report.suspect
+    if report.suspect_national_code:
+        match = Suspect.objects.filter(national_code=report.suspect_national_code).order_by('-created_at').first()
+        if match:
+            report.suspect = match
+            report.save(update_fields=['suspect'])
+            return match
+    return None
+
+
+class WarrantViewSet(viewsets.ModelViewSet):
+    queryset = Warrant.objects.all()
+    serializer_class = WarrantSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(requester=self.request.user)
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        case_id = self.request.query_params.get('case')
+        if case_id:
+            qs = qs.filter(case_id=case_id)
+        
+        # Sergeants/Chiefs see everything, others see only their requests
+        user = self.request.user
+        roles = [r.code for r in user.roles.all()]
+        if 'sergeant' in roles or 'captain' in roles or 'police_chief' in roles:
+            return qs
+        return qs.filter(requester=user)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsSergeant])
+    def approve(self, request, pk=None):
+        warrant = self.get_object()
+        warrant.status = 'APPROVED'
+        warrant.approver = request.user
+        warrant.approver_notes = request.data.get('notes', '')
+        warrant.save()
+        return Response({'status': 'approved'})
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsSergeant])
+    def reject(self, request, pk=None):
+        warrant = self.get_object()
+        warrant.status = 'REJECTED'
+        warrant.approver = request.user
+        warrant.approver_notes = request.data.get('notes', '')
+        warrant.save()
+        return Response({'status': 'rejected'})
+
 class BoardViewSet(viewsets.ModelViewSet):
+
     queryset = Board.objects.all()
     serializer_class = BoardSerializer
     permission_classes = [permissions.IsAuthenticated, IsDetective]
@@ -24,6 +203,79 @@ class SuspectViewSet(viewsets.ModelViewSet):
     queryset = Suspect.objects.all()
     serializer_class = SuspectSerializer
     permission_classes = [permissions.IsAuthenticated, IsOfficerOrHigher]
+
+
+
+
+    @extend_schema(summary="لیست وضعیت مظنونین", responses={200: SuspectStatusSerializer(many=True)})
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def status_list(self, request):
+        suspects = Suspect.objects.select_related('case').all().order_by('id')
+        serializer = SuspectStatusSerializer(suspects, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(summary="لیست خطرناک‌ترین مجرمان")
+    @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
+    def most_wanted(self, request):
+        suspects = Suspect.objects.select_related('case').all()
+
+        # گروه‌بندی بر اساس national_code (اگر خالی بود، با id جدا نگهش می‌داریم)
+        groups = {}
+        for s in suspects:
+            key = (s.national_code or "").strip()
+            if not key:
+                key = f"__suspect_{s.id}"  # برای افرادی که کدملی ندارند
+            g = groups.get(key)
+            if not g:
+                full_name = f"{s.first_name} {s.last_name}".strip() or (s.name or "").strip()
+                groups[key] = g = {
+                    "national_code": s.national_code,
+                    "full_name": full_name,
+                    "suspect_ids": [],
+                    "case_ids": set(),
+                    "max_pursuit_days_open": 0,
+                    "max_crime_level": 0,  # امتیاز ۱..۴
+                }
+
+            g["suspect_ids"].append(s.id)
+            if s.case_id:
+                g["case_ids"].add(s.case_id)
+
+            # max(Di) از همه پرونده‌ها
+            if s.case_id:
+                di = _crime_level_score(s.case.crime_level)
+                if di > g["max_crime_level"]:
+                    g["max_crime_level"] = di
+
+            # max(Lj) فقط از پرونده‌های باز
+            if s.case_id and _is_case_open(s.case):
+                lj = _pursuit_days(s)  # این تابع خودش open بودن را هم چک می‌کند
+                if lj > g["max_pursuit_days_open"]:
+                    g["max_pursuit_days_open"] = lj
+
+        # تبدیل به لیست + فیلتر یک ماه
+        results = []
+        for key, g in groups.items():
+            if g["max_pursuit_days_open"] <= 30:
+                continue
+
+            score = g["max_pursuit_days_open"] * g["max_crime_level"]
+            reward_amount = score * 20000000
+
+            results.append({
+                "national_code": g["national_code"],
+                "full_name": g["full_name"],
+                "suspect_ids": g["suspect_ids"],
+                "case_ids": sorted(list(g["case_ids"])),
+                "max_pursuit_days": g["max_pursuit_days_open"],
+                "max_crime_level": g["max_crime_level"],
+                "score": score,
+                "reward_amount": reward_amount,
+            })
+
+        # مرتب‌سازی نزولی بر اساس score
+        results.sort(key=lambda x: x["score"], reverse=True)
+        return Response(results)
 
     def get_queryset(self):
         case_id = self.request.query_params.get('case')
@@ -88,3 +340,239 @@ class BoardConnectionViewSet(viewsets.ModelViewSet):
                 'error': str(e),
                 'detail': 'Internal Server Error during connection creation'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class VerdictViewSet(viewsets.ModelViewSet):
+    queryset = Verdict.objects.all()
+    serializer_class = VerdictSerializer
+    permission_classes = [permissions.IsAuthenticated, IsJudge]
+
+    def perform_create(self, serializer):
+        serializer.save(judge=self.request.user)
+
+    def get_queryset(self):
+        case_id = self.request.query_params.get('case')
+        if case_id:
+            return self.queryset.filter(case_id=case_id)
+        return self.queryset
+
+
+class GlobalStatsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    @extend_schema(
+        summary="آمار جامع پروژه",
+        description="تجمیع آمارهای مربوط به پرونده‌ها، مظنونین و مبالغ پاداش پرداخت شده.",
+        responses={200: dict}
+    )
+    def get(self, request):
+        case_stats = Case.objects.aggregate(
+            total=Count('id'),
+            active=Count('id', filter=Q(status=Case.Status.ACTIVE)),
+            solved=Count('id', filter=Q(status=Case.Status.SOLVED)),
+        )
+        reward_stats = RewardReport.objects.aggregate(
+            total_count=Count('id'),
+            total_paid=Count('id', filter=Q(is_paid=True)),
+            sum_paid=models.Sum('reward_amount', filter=Q(is_paid=True))
+        )
+        suspect_stats = Suspect.objects.aggregate(
+            total=Count('id'),
+            under_pursuit=Count('id', filter=Q(case__status__in=OPEN_CASE_STATUSES))
+        )
+
+        return Response({
+            "cases": case_stats,
+            "rewards": {
+                "count": reward_stats['total_count'],
+                "paid_count": reward_stats['total_paid'],
+                "total_amount_paid": reward_stats['sum_paid'] or 0
+            },
+            "suspects": suspect_stats,
+            "server_time": timezone.now()
+        })
+
+
+class RewardReportViewSet(viewsets.ModelViewSet):
+    queryset = RewardReport.objects.all().order_by('-created_at')
+    serializer_class = RewardReportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+
+        user = self.request.user
+        roles = [r.code for r in user.roles.all()]
+        elevated = user.is_superuser or any(r in roles for r in ['police_officer', 'captain', 'police_chief', 'detective', 'sergeant'])
+        if elevated:
+            return qs
+        return qs.filter(reporter=user)
+
+    @extend_schema(summary="ثبت گزارش جدید پاداش")
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(reporter=self.request.user)
+
+    @extend_schema(summary="بررسی اولیه توسط افسر")
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
+    def officer_review(self, request, pk=None):
+        report = self.get_object()
+        if report.status != RewardReport.Status.PENDING_OFFICER:
+            return Response({'error': 'This report is not awaiting officer review.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        approved = _parse_approved(request.data.get('approved'))
+        report.officer = request.user
+        report.officer_notes = request.data.get('notes', '')
+
+        suspect_id = request.data.get('suspect')
+        if suspect_id:
+            report.suspect_id = suspect_id
+
+        if approved:
+            report.status = RewardReport.Status.PENDING_DETECTIVE
+        else:
+            report.status = RewardReport.Status.REJECTED
+
+        report.save()
+        return Response({'status': report.status})
+
+    @extend_schema(summary="بررسی نهایی توسط کارآگاه و محاسبه پاداش")
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsDetective])
+    def detective_review(self, request, pk=None):
+        report = self.get_object()
+        if report.status != RewardReport.Status.PENDING_DETECTIVE:
+            return Response({'error': 'This report is not awaiting detective review.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        approved = _parse_approved(request.data.get('approved'))
+        report.detective = request.user
+        report.detective_notes = request.data.get('notes', '')
+
+        suspect_id = request.data.get('suspect')
+        if suspect_id:
+            report.suspect_id = suspect_id
+
+        if approved:
+            suspect = _match_suspect(report)
+            if not suspect:
+                return Response({'error': 'Suspect not found for reward calculation.'}, status=status.HTTP_400_BAD_REQUEST)
+            report.reward_amount = _reward_amount_for_suspect(suspect)
+            report.tracking_code = _generate_tracking_code()
+            report.status = RewardReport.Status.APPROVED
+        else:
+            report.status = RewardReport.Status.REJECTED
+
+        report.save()
+        return Response({'status': report.status, 'reward_amount': report.reward_amount, 'tracking_code': report.tracking_code})
+
+    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def request_payment(self, request, pk=None):
+        """شبیه‌ساز هدایت به درگاه بانکی (بخش ۱ چکلست)"""
+        report = self.get_object()
+        if report.status != RewardReport.Status.APPROVED:
+            return Response({'error': 'فقط گزارش‌های تایید شده قابل پرداخت هستند.'}, status=400)
+        if report.is_paid:
+            return Response({'error': 'این پاداش قبلاً پرداخت شده است.'}, status=400)
+        
+        context = {
+            'report_id': report.id,
+            'amount': report.reward_amount,
+            'tracking_code': report.tracking_code,
+        }
+        return render(request, 'landing/payment_gateway.html', context)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.AllowAny])
+    def payment_callback(self, request, pk=None):
+        """صفحه بازگشت از درگاه (بخش ۱ چکلست)"""
+        report = self.get_object()
+        status_code = request.data.get('status')
+
+        if status_code == 'OK':
+            report.is_paid = True
+            report.paid_at = timezone.now()
+            # در شبیه‌ساز، چون کاربر مستقیم از بانک میاد، پرداخت‌کننده رو سیستم در نظر می‌گیریم
+            report.save(update_fields=['is_paid', 'paid_at'])
+            msg = "پرداخت با موفقیت انجام شد. مبلغ به حساب شما واریز گردید."
+            success = True
+        else:
+            msg = "پرداخت توسط کاربر لغو شد یا با خطا مواجه گردید."
+            success = False
+
+        return Response({
+            "success": success,
+            "message": msg,
+            "tracking_code": report.tracking_code,
+            "amount": report.reward_amount
+        })
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
+    def mark_paid(self, request, pk=None):
+        report = self.get_object()
+        if report.status != RewardReport.Status.APPROVED:
+            return Response({'error': 'Only approved reports can be paid.'}, status=status.HTTP_400_BAD_REQUEST)
+        if report.is_paid:
+            return Response({'error': 'This reward is already marked as paid.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        code = (request.data.get('tracking_code') or '').strip()
+        if code and report.tracking_code and code != report.tracking_code:
+            return Response({'error': 'Tracking code does not match.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        report.is_paid = True
+        report.paid_at = timezone.now()
+        report.paid_by = request.user
+        report.save(update_fields=['is_paid', 'paid_at', 'paid_by'])
+        return Response({'status': 'paid', 'paid_at': report.paid_at})
+
+
+    @extend_schema(summary="پیگیری وضعیت پاداش با کد ملی و کد رهگیری")
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated, IsOfficerOrHigher])
+    def lookup(self, request):
+        national_code = (request.query_params.get('national_code') or '').strip()
+        tracking_code = (request.query_params.get('tracking_code') or '').strip()
+
+        if not national_code or not tracking_code:
+            return Response(
+                {'error': 'national_code and tracking_code are required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        report = (
+            RewardReport.objects
+            .select_related('reporter', 'reporter__profile', 'suspect')
+            .filter(status=RewardReport.Status.APPROVED, tracking_code=tracking_code)
+            .first()
+        )
+        if not report:
+            return Response({'error': 'No approved report found for this tracking code.'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # تطبیق کد ملی مظنون (از فیلد ذخیره‌شده یا از خود suspect)
+        suspect_nc = (report.suspect_national_code or '').strip()
+        if not suspect_nc and report.suspect:
+            suspect_nc = (report.suspect.national_code or '').strip()
+
+        if suspect_nc != national_code:
+            return Response({'error': 'National code does not match this tracking code.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        reporter_profile = getattr(report.reporter, 'profile', None)
+
+        return Response({
+            'tracking_code': report.tracking_code,
+            'reward_amount': report.reward_amount,
+            'suspect': {
+                'full_name': report.suspect_full_name or (str(report.suspect) if report.suspect else ''),
+                'national_code': suspect_nc,
+            },
+            'reporter': {
+                'username': report.reporter.username,
+                'national_code': reporter_profile.national_code if reporter_profile else None,
+                'phone': reporter_profile.phone if reporter_profile else None,
+            },
+            'status': report.status,
+            'is_paid': report.is_paid,
+            'paid_at': report.paid_at,
+        })
