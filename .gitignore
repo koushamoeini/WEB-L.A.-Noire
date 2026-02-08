@@ -2,27 +2,62 @@
 venv/
 */venv/
 .venv/
+env/
+*/env/
+.env/
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyc
 
 # Django
 db.sqlite3
+db.sqlite3-journal
 staticfiles/
 media/
+*.log
 
 # Environment variables
 .env
+.env.local
+.env.*.local
 
 # Editor files
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
 
 # Node
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
 
 # OS
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+
+# Docker
+*.env.docker
+docker-compose.override.yml
