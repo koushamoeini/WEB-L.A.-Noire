@@ -53,6 +53,17 @@ class UserListView(ListAPIView):
         return get_user_model().objects.all().order_by('id')
 
 
+class UserStatsView(APIView):
+    """Public endpoint for user statistics."""
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        user_model = get_user_model()
+        total_users = user_model.objects.count()
+        return Response({'total_users': total_users})
+
+
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

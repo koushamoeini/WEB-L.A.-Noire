@@ -1,0 +1,155 @@
+.layout-with-sidebar {
+  display: flex;
+  min-height: 100vh;
+  direction: rtl;
+}
+
+.main-content {
+  flex: 1;
+  background: #0a0a0a;
+  min-height: 100vh;
+  padding-top: 90px;
+  padding-right: 90px;
+}
+
+.dashboard-content {
+  padding: 32px;
+  max-width: 1200px;
+}
+
+.welcome-card,
+.info-card,
+.stats-grid {
+  margin-bottom: 24px;
+}
+
+.welcome-card,
+.info-card {
+  background: #1f1f1f;
+  border-radius: 8px;
+  border: 1px solid #404040;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-card h2 {
+  color: #d4af37;
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.user-info {
+  color: #e0e0e0;
+  line-height: 1.8;
+}
+
+.user-info p {
+  margin: 10px 0;
+}
+
+.user-roles {
+  margin-top: 16px;
+  padding: 16px;
+  background-color: #2a2a2a;
+  border-radius: 4px;
+  border: 1px solid #404040;
+}
+
+.user-roles ul {
+  margin: 8px 0 0 0;
+  padding-right: 20px;
+}
+
+.user-roles li {
+  margin: 6px 0;
+  color: #d4af37;
+  font-weight: 500;
+}
+
+.info-card h3 {
+  color: #d4af37;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.info-card p {
+  color: #e0e0e0;
+  line-height: 1.6;
+  margin: 12px 0;
+}
+
+.note {
+  color: #a0a0a0;
+  font-style: italic;
+  margin-top: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+  border: 1px solid #404040;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card.active {
+  border-color: #90ee90;
+  background: linear-gradient(135deg, rgba(16, 58, 16, 0.3) 0%, #1f1f1f 100%);
+}
+
+.stat-card.solved {
+  border-color: #87ceeb;
+  background: linear-gradient(135deg, rgba(26, 58, 58, 0.3) 0%, #1f1f1f 100%);
+}
+
+.stat-number {
+  color: #d4af37;
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  color: #a0a0a0;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding-top: 80px;
+    padding-right: 80px;
+  }
+
+  .dashboard-content {
+    padding: 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.action-button:hover {
+  border-color: #d4af37;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-right: 0;
+  }
+
+  .dashboard-content {
+    padding: 20px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

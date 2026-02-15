@@ -1,0 +1,127 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  padding: 20px;
+}
+
+.auth-card {
+  background: #1f1f1f;
+  border-radius: 8px;
+  border: 2px solid #8b0000;
+  box-shadow: 0 10px 40px rgba(139, 0, 0, 0.3);
+  padding: 40px;
+  width: 100%;
+  max-width: 450px;
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: #d4af37;
+  margin-bottom: 8px;
+  direction: rtl;
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: #e0e0e0;
+  margin-bottom: 32px;
+  direction: rtl;
+  font-size: 0.95rem;
+}
+
+.error-message {
+  background-color: #3a1010;
+  border: 1px solid #8b0000;
+  color: #ff9999;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  text-align: center;
+  direction: rtl;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  direction: rtl;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #d4af37;
+  font-size: 0.95rem;
+}
+
+.form-group input {
+  padding: 12px 16px;
+  border: 2px solid #404040;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #8b0000;
+}
+
+.form-group input::placeholder {
+  color: #707070;
+}
+
+.auth-button {
+  background: linear-gradient(135deg, #8b0000 0%, #a40000 100%);
+  color: #d4af37;
+  border: none;
+  padding: 14px;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.auth-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #a40000 0%, #c50000 100%);
+  box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
+}
+
+.auth-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-footer {
+  text-align: center;
+  margin-top: 24px;
+  color: #a0a0a0;
+  direction: rtl;
+}
+
+.auth-link {
+  color: #d4af37;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+  color: #e6c200
+.auth-link:hover {
+  text-decoration: underline;
+}

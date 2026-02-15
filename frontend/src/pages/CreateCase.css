@@ -1,0 +1,355 @@
+.create-case-container {
+  min-height: 100vh;
+  background-color: #0f0f0f;
+  padding: 90px 90px 40px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  direction: rtl;
+}
+
+.create-case-card {
+  background: #1f1f1f;
+  border: 2px solid #8b0000;
+  border-radius: 8px;
+  padding: 40px;
+  width: 100%;
+  max-width: 700px;
+  box-shadow: 0 10px 40px rgba(139, 0, 0, 0.3);
+}
+
+.create-case-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #d4af37;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.create-case-subtitle {
+  text-align: center;
+  color: #e0e0e0;
+  margin-bottom: 32px;
+  font-size: 0.95rem;
+}
+
+.create-case-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  color: #d4af37;
+  font-size: 0.95rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 12px 16px;
+  border: 2px solid #404040;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #8b0000;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #707070;
+}
+
+.form-group select option {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+}
+
+.form-group.inline {
+  flex: 1;
+}
+
+.witnesses-section {
+  margin-top: 24px;
+}
+
+.witnesses-section h3 {
+  color: #d4af37;
+  margin-bottom: 16px;
+  font-size: 1.1rem;
+}
+
+.witness-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+.witness-form .form-group {
+  margin: 0;
+}
+
+.btn-add-witness {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #8b0000 0%, #a40000 100%);
+  color: #d4af37;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: end;
+  white-space: nowrap;
+  margin-bottom: 0;
+}
+
+.btn-add-witness:hover:not(:disabled) {
+  background: linear-gradient(135deg, #a40000 0%, #c50000 100%);
+  box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
+}
+
+.btn-add-witness:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #666 0%, #777 100%);
+}
+
+.witnesses-list {
+  background-color: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.witness-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #1f1f1f;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  color: #e0e0e0;
+}
+
+.witness-item:last-child {
+  margin-bottom: 0;
+}
+
+.btn-remove {
+  padding: 6px 12px;
+  background-color: #3a1010;
+  color: #ff9999;
+  border: 1px solid #8b0000;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.btn-remove:hover {
+  background-color: #8b0000;
+  color: #d4af37;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.btn-submit,
+.btn-cancel {
+  padding: 14px 32px;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #8b0000 0%, #a40000 100%);
+  color: #d4af37;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #a40000 0%, #c50000 100%);
+  box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
+}
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background-color: transparent;
+  color: #d4af37;
+  border: 2px solid #d4af37;
+}
+
+.btn-cancel:hover {
+  background-color: rgba(212, 175, 55, 0.1);
+}
+
+@media (max-width: 768px) {
+  .create-case-card {
+    padding: 24px;
+  }
+
+  .create-case-title {
+    font-size: 1.5rem;
+  }
+
+  .witness-form {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .btn-add-witness {
+    width: 100%;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-submit,
+  .btn-cancel {
+    width: 100%;
+  }
+
+  /* Make date selectors stack on mobile */
+  .persian-date-selectors {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Persian Date Selector Styles */
+.persian-date-selectors {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.date-selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-selector-group label {
+  font-size: 0.875rem;
+  color: #d4af37;
+  margin: 0;
+  font-weight: 600;
+}
+
+.date-selector-group select {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: #2a2a2a;
+  border: 2px solid #404040;
+  border-radius: 4px;
+  color: #e0e0e0;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  direction: rtl;
+  text-align: right;
+}
+
+.date-selector-group select:focus {
+  outline: none;
+  border-color: #8b0000;
+}
+
+.date-selector-group select:hover {
+  border-color: #8b0000;
+}
+
+.date-selector-group select option {
+  background-color: #2a2a2a;
+  color: #e0e0e0;
+  padding: 8px;
+}
+
+.selected-date-display {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #2a2a2a;
+  border: 1px solid #404040;
+  border-radius: 4px;
+  color: #d4af37;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Time Input Styles */
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.time-input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-input-group label {
+  font-size: 0.875rem;
+  color: #d4af37;
+  margin: 0;
+}
+
+.time-input-group input {
+  width: 100%;
+  padding: 12px;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  background-color: #2a2a2a;
+  border: 2px solid #404040;
+  border-radius: 4px;
+  color: #e0e0e0;
+}
+
+.time-input-group input:focus {
+  border-color: #8b0000;
+  outline: none;
+}
+
+.time-separator {
+  font-size: 2rem;
+  color: #d4af37;
+  font-weight: bold;
+  margin-top: 28px;
+}
