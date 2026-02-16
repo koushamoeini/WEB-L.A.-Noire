@@ -49,6 +49,17 @@ export default function InvestigationBoard() {
     }
   }, [caseId]);
 
+  // Persist positions to localStorage
+  useEffect(() => {
+    if (boardItems.length > 0 && caseId) {
+      const positions = boardItems.reduce((acc, item) => ({
+        ...acc,
+        [item.id]: item.position
+      }), {});
+      localStorage.setItem(`board-pos-${caseId}`, JSON.stringify(positions));
+    }
+  }, [boardItems, caseId]);
+
   const fetchCases = async () => {
     try {
       const data = await caseAPI.listCases();
@@ -62,7 +73,7 @@ export default function InvestigationBoard() {
     if (!caseId) return;
     
     try {
-      setLoading(true);
+      if (boardItems.length === 0) setLoading(true); // Only show loader on initial fetch
       const [evidences, suspects, conns] = await Promise.all([
         evidenceAPI.listAllEvidence(parseInt(caseId)),
         investigationAPI.listSuspects(parseInt(caseId)),
@@ -72,30 +83,47 @@ export default function InvestigationBoard() {
       setAvailableEvidence(evidences);
       setAvailableSuspects(suspects);
 
-      const evidenceItems: BoardItem[] = evidences
-        .filter((e) => e.is_on_board)
-        .map((e, index) => ({
-          id: `evidence-${e.id}`,
-          type: 'evidence',
-          title: e.title,
-          description: e.type_display,
-          position: { x: 50 + (index % 3) * 200, y: 50 + Math.floor(index / 3) * 220 },
-          actualId: e.id,
-          image: e.images?.[0]?.image,
-        }));
+      setBoardItems(prev => {
+        // Create a map of existing positions by ID
+        const posMap = new Map(prev.map(i => [i.id, i.position]));
+        
+        // Load from localStorage as fallback
+        const savedPos = JSON.parse(localStorage.getItem(`board-pos-${caseId}`) || '{}');
 
-      const suspectItems: BoardItem[] = suspects
-        .filter((s) => s.is_on_board)
-        .map((s, index) => ({
-          id: `suspect-${s.id}`,
-          type: 'suspect',
-          title: s.name,
-          description: s.is_main_suspect ? 'متهم اصلی' : 'مظنون',
-          position: { x: 700 + (index % 2) * 200, y: 50 + Math.floor(index / 2) * 250 },
-          actualId: s.id,
-        }));
+        const evidenceItems: BoardItem[] = evidences
+          .filter((e) => e.is_on_board)
+          .map((e, index) => {
+            const itemId = `evidence-${e.id}`;
+            const position = posMap.get(itemId) || savedPos[itemId] || { x: 50 + (index % 3) * 200, y: 50 + Math.floor(index / 3) * 220 };
+            return {
+              id: itemId,
+              type: 'evidence',
+              title: e.title,
+              description: e.type_display,
+              position,
+              actualId: e.id,
+              image: e.images?.[0]?.image,
+            };
+          });
 
-      setBoardItems([...evidenceItems, ...suspectItems]);
+        const suspectItems: BoardItem[] = suspects
+          .filter((s) => s.is_on_board)
+          .map((s, index) => {
+            const itemId = `suspect-${s.id}`;
+            const position = posMap.get(itemId) || savedPos[itemId] || { x: 700 + (index % 2) * 200, y: 50 + Math.floor(index / 2) * 250 };
+            return {
+              id: itemId,
+              type: 'suspect',
+              title: s.name,
+              description: s.is_main_suspect ? 'متهم اصلی' : 'مظنون',
+              position,
+              actualId: s.id,
+            };
+          });
+
+        return [...evidenceItems, ...suspectItems];
+      });
+      
       setConnections(conns);
     } catch (error) {
       console.error('Failed to fetch board data:', error);
@@ -244,7 +272,7 @@ export default function InvestigationBoard() {
                   <div className="evidence-card-header"><span className="evidence-type-badge">#{c.id}</span></div>
                   <h3>{c.title}</h3>
                   <p className="evidence-description">{c.description.substring(0, 100)}...</p>
-                  <button className="btn btn-secondary" style={{ width: '100%' }}>بازگشایی پرونده</button>
+                  <button className="btn btn-secondary" style={{ width: '100%' }}>نمایش تخته پرونده</button>
                 </div>
               ))}
             </div>

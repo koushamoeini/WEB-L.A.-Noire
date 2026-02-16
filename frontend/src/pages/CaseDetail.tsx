@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { caseAPI } from '../services/caseApi';
+import { evidenceAPI } from '../services/evidenceApi';
+import { investigationAPI } from '../services/investigationApi';
 import { useAuth } from '../context/AuthContext';
 import type { Case } from '../types/case';
+import type { Evidence } from '../types/evidence';
+import type { Suspect } from '../types/investigation';
 import Sidebar from '../components/Sidebar';
 import './CaseDetail.css';
 
@@ -21,6 +25,9 @@ export default function CaseDetail() {
   const [newComplainantId, setNewComplainantId] = useState('');
   const [addingComplainant, setAddingComplainant] = useState(false);
 
+  const [evidences, setEvidences] = useState<Evidence[]>([]);
+  const [suspects, setSuspects] = useState<Suspect[]>([]);
+
   const userRoles = user?.roles?.map(r => r.code) || [];
 
   useEffect(() => {
@@ -29,10 +36,17 @@ export default function CaseDetail() {
 
   const fetchCase = async () => {
     try {
-      const data = await caseAPI.getCase(Number(id));
-      setCaseData(data);
-      setResubmitData({ title: data.title, description: data.description });
-      setSelectedComplainants(data.complainants);
+      setLoading(true);
+      const [caseResult, evidenceResult, suspectResult] = await Promise.all([
+        caseAPI.getCase(Number(id)),
+        evidenceAPI.listAllEvidence(Number(id)),
+        investigationAPI.listSuspects(Number(id)),
+      ]);
+      setCaseData(caseResult);
+      setEvidences(evidenceResult);
+      setSuspects(suspectResult);
+      setResubmitData({ title: caseResult.title, description: caseResult.description });
+      setSelectedComplainants(caseResult.complainants);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'خطا در بارگذاری پرونده');
     } finally {
@@ -301,6 +315,38 @@ export default function CaseDetail() {
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="case-lists-grid">
+            <div className="info-section">
+              <div className="section-header-row">
+                <h3>لیست شواهد</h3>
+                <button className="btn btn-sm" onClick={() => navigate(`/evidence/create?case=${caseData.id}`)}>ثبت جدید</button>
+              </div>
+              <div className="mini-list">
+                {evidences.length > 0 ? evidences.map(e => (
+                  <div key={e.id} className="mini-list-item">
+                    <span>🔍 {e.title}</span>
+                    <small>{e.type_display}</small>
+                  </div>
+                )) : <p className="no-data">شواهدی ثبت نشده است.</p>}
+              </div>
+            </div>
+
+            <div className="info-section">
+              <div className="section-header-row">
+                <h3>لیست مظنونین</h3>
+                <button className="btn btn-sm" onClick={() => navigate(`/suspects?case=${caseData.id}`)}>مدیریت</button>
+              </div>
+              <div className="mini-list">
+                {suspects.length > 0 ? suspects.map(s => (
+                  <div key={s.id} className="mini-list-item">
+                    <span>👤 {s.name}</span>
+                    <small>{s.is_main_suspect ? 'متهم اصلی' : 'مظنون'}</small>
+                  </div>
+                )) : <p className="no-data">مظنونی ثبت نشده است.</p>}
+              </div>
+            </div>
           </div>
 
           {/* Add Complainant Section */}

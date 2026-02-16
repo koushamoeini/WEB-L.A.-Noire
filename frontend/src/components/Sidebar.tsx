@@ -30,20 +30,10 @@ export default function Sidebar() {
       path: '/cases',
     },
     {
-      icon: '📋',
-      label: 'شواهد',
-      path: '/evidence',
-    },
-    {
       icon: '🎯',
       label: 'تخته کارآگاه',
       path: '/investigation',
       hidden: !isDetective,
-    },
-    {
-      icon: '👥',
-      label: 'متهمان',
-      path: '/suspects',
     },
   ];
 

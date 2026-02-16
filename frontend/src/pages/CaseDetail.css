@@ -97,6 +97,74 @@
   padding-bottom: 8px;
 }
 
+/* Lists on Detail Page */
+.case-lists-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(139, 0, 0, 0.3);
+  padding-bottom: 8px;
+}
+
+.section-header-row h3 {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.btn-sm {
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  background: #333;
+  color: #d4af37;
+  border: 1px solid #d4af37;
+}
+
+.btn-sm:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+.mini-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mini-list-item {
+  background: #000;
+  padding: 12px;
+  border-radius: 6px;
+  border-right: 3px solid #8b0000;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mini-list-item span {
+  color: #eee;
+  font-weight: 500;
+}
+
+.mini-list-item small {
+  color: #888;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.no-data {
+  color: #666;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
 .info-section p {
   color: #e0e0e0;
   margin: 12px 0;
