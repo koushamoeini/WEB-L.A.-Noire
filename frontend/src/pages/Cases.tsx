@@ -45,20 +45,27 @@ const Cases = () => {
       <Sidebar />
       <div className="main-content">
         <div className="cases-container">
-          <div className="cases-header">
-            <h1 className="gold-text">پرونده‌ها</h1>
-            <div className="cases-actions">
+          
+          <div className="cases-top-header">
+            <div className="header-info">
+              <h1 className="gold-text">مدیریت پرونده‌ها</h1>
+              <p className="welcome-text">مشاهده، ثبت و پیگیری پرونده‌های جنایی فعال و مختومه.</p>
+            </div>
+          </div>
+
+          <div className="cases-actions-bar">
+            <div className="actions-left">
               <button 
                 onClick={() => navigate('/cases/create-complaint')}
                 className="btn-gold-solid"
               >
-                ثبت شکایت جدید
+                + ثبت شکایت جدید
               </button>
               <button 
                 onClick={() => navigate('/cases/create-scene')}
                 className="btn-gold-outline"
               >
-                ثبت صحنه جرم
+                + ثبت صحنه جرم
               </button>
             </div>
           </div>
@@ -74,29 +81,36 @@ const Cases = () => {
               {cases.map((caseItem) => (
                 <div 
                   key={caseItem.id} 
-                  className="lux-card case-card-lux"
+                  className="case-card-luxury"
                   onClick={() => navigate(`/cases/${caseItem.id}`)}
                 >
-                  <div className="case-header">
-                    <span className="red-badge">#{caseItem.id}</span>
-                    <span className={`case-status ${caseItem.status}`}>
-                      {CASE_STATUS[caseItem.status as keyof typeof CASE_STATUS]}
-                    </span>
+                  <div className="card-top">
+                    <div className="status-indicator">
+                      <span className={`status-dot ${caseItem.status}`}></span>
+                      <span className="status-label">{CASE_STATUS[caseItem.status as keyof typeof CASE_STATUS]}</span>
+                    </div>
+                    <span className="case-id">#{caseItem.id}</span>
                   </div>
 
                   <h3 className="gold-text case-title">{caseItem.title}</h3>
-                  
-                  <p className="case-description">
-                    {caseItem.description.substring(0, 150)}...
+                  <p className="case-desc">
+                    {caseItem.description.length > 120 
+                      ? `${caseItem.description.substring(0, 120)}...` 
+                      : caseItem.description}
                   </p>
 
-                  <div className="case-meta">
-                    <span className={`crime-level level-${caseItem.crime_level}`}>
-                      {caseItem.level_label}
-                    </span>
-                    <span className="case-date">
-                      {new Date(caseItem.created_at).toLocaleDateString('fa-IR')}
-                    </span>
+                  <div className="card-bottom">
+                    <div className="meta-info">
+                      <span className={`crime-level-badge level-${caseItem.crime_level}`}>
+                        {caseItem.level_label}
+                      </span>
+                      <span className="date-text">
+                        {new Date(caseItem.created_at).toLocaleDateString('fa-IR')}
+                      </span>
+                    </div>
+                    <div className="entry-link">
+                      ورود به پرونده ←
+                    </div>
                   </div>
                 </div>
               ))}

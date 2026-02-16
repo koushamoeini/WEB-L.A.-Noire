@@ -26,7 +26,7 @@ export default function Sidebar() {
     },
     {
       icon: '📁',
-      label: 'پرونده‌ها',
+      label: 'وضعیت پرونده‌ها و شکایات',
       path: '/cases',
     },
     {

@@ -31,7 +31,16 @@ export default function Evidence() {
   };
 
   if (loading) {
-    return <div className="loading">در حال بارگذاری...</div>;
+    return (
+      <div className="layout-with-sidebar">
+        <Sidebar />
+        <div className="main-content">
+          <div className="evidence-container">
+            <div className="loading-flicker">در حال بارگذاری شواهد...</div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -39,14 +48,21 @@ export default function Evidence() {
       <Sidebar />
       <div className="main-content">
         <div className="evidence-container">
-          <div className="evidence-header">
-            <h1>شواهد {caseId ? `پرونده ${caseId}` : ''}</h1>
-            <div className="evidence-actions">
+          
+          <div className="evidence-top-header">
+            <div className="header-info">
+              <h1 className="gold-text">شواهد {caseId ? `پرونده ${caseId}` : ''}</h1>
+              <p className="welcome-text">لیست دقیق مدارک، شواهد زیستی و فیزیکی جمع‌آوری شده از صحنه جرم.</p>
+            </div>
+          </div>
+
+          <div className="evidence-actions-bar">
+            <div className="actions-left">
               <button
                 className="btn-gold-solid"
                 onClick={() => navigate('/evidence/create')}
               >
-                ثبت شواهد جدید
+                + ثبت شواهد جدید
               </button>
               {caseId && (
                 <button
@@ -60,45 +76,49 @@ export default function Evidence() {
           </div>
 
           {evidences.length === 0 ? (
-            <div className="no-data">
-              <p>هیچ شواهدی یافت نشد</p>
+            <div className="empty-state">
+              <p>هیچ شواهدی برای این پرونده ثبت نشده است.</p>
             </div>
           ) : (
             <div className="evidence-grid">
               {evidences.map((evidence) => (
-                <div key={evidence.id} className="evidence-card">
-                  <div className="evidence-card-header">
-                    <span className="evidence-type-badge">{evidence.type_display}</span>
-                    {evidence.is_on_board && (
-                      <span className="board-badge">روی تخته</span>
-                    )}
+                <div key={evidence.id} className="evidence-card-luxury" onClick={() => navigate(`/investigation?case=${evidence.case}`)}>
+                  <div className="card-top">
+                    <div className="status-indicator">
+                      <span className={`status-dot ${evidence.is_on_board ? 'active' : 'inactive'}`}></span>
+                      <span className="status-label">
+                        {evidence.is_on_board ? 'روی تخته کارآگاه' : 'در بایگانی'}
+                      </span>
+                    </div>
+                    <span className="case-id">#{evidence.id}</span>
                   </div>
-                  <h3>{evidence.title}</h3>
-                  <p className="evidence-description">{evidence.description}</p>
-                  <div className="evidence-meta">
-                    <div>
-                      <small>ثبت‌کننده:</small>
-                      <span>{evidence.recorder_name}</span>
+
+                  <div className="type-badge-container">
+                    <span className="luxury-type-badge">{evidence.type_display}</span>
+                  </div>
+
+                  <h3 className="gold-text evidence-title">{evidence.title}</h3>
+                  <p className="evidence-desc">
+                    {evidence.description.length > 120 
+                      ? `${evidence.description.substring(0, 120)}...` 
+                      : evidence.description}
+                  </p>
+
+                  <div className="card-bottom">
+                    <div className="meta-info">
+                      <div className="meta-item">
+                        <span className="meta-label">ثبت کننده:</span>
+                        <span className="meta-value">{evidence.recorder_name}</span>
+                      </div>
+                      <div className="meta-item">
+                        <span className="meta-label">تاریخ:</span>
+                        <span className="meta-value">{new Date(evidence.recorded_at).toLocaleDateString('fa-IR')}</span>
+                      </div>
                     </div>
-                    <div>
-                      <small>تاریخ:</small>
-                      <span>{new Date(evidence.recorded_at).toLocaleDateString('fa-IR')}</span>
+                    <div className="entry-link">
+                      مشاهده در تخته ←
                     </div>
                   </div>
-                  {evidence.images && evidence.images.length > 0 && (
-                    <div className="evidence-images">
-                      {evidence.images.map((img) => (
-                        <img key={img.id} src={img.image} alt="Evidence" />
-                      ))}
-                    </div>
-                  )}
-                  <button
-                    className="btn btn-secondary"
-                    style={{ width: '100%', marginTop: '10px' }}
-                    onClick={() => navigate(`/investigation?case=${evidence.case}`)}
-                  >
-                    مشاهده در تخته کارآگاه
-                  </button>
                 </div>
               ))}
             </div>
@@ -108,3 +128,4 @@ export default function Evidence() {
     </div>
   );
 }
+
