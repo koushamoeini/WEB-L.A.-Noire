@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { evidenceAPI } from '../services/evidenceApi';
 import type { Evidence } from '../types/evidence';
-import { EVIDENCE_TYPE_LABELS } from '../types/evidence';
 import Sidebar from '../components/Sidebar';
 import './Evidence.css';
 
@@ -31,15 +30,6 @@ export default function Evidence() {
     }
   };
 
-  const handleToggleBoard = async (type: string, id: number) => {
-    try {
-      await evidenceAPI.toggleBoard(type, id);
-      fetchEvidences(); // Refresh list
-    } catch (error) {
-      console.error('Failed to toggle board:', error);
-    }
-  };
-
   if (loading) {
     return <div className="loading">در حال بارگذاری...</div>;
   }
@@ -53,14 +43,14 @@ export default function Evidence() {
             <h1>شواهد {caseId ? `پرونده ${caseId}` : ''}</h1>
             <div className="evidence-actions">
               <button
-                className="btn btn-primary"
+                className="btn-gold-solid"
                 onClick={() => navigate('/evidence/create')}
               >
                 ثبت شواهد جدید
               </button>
               {caseId && (
                 <button
-                  className="btn btn-secondary"
+                  className="btn-gold-outline"
                   onClick={() => navigate(`/cases/${caseId}`)}
                 >
                   بازگشت به پرونده

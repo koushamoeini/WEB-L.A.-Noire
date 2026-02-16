@@ -49,7 +49,7 @@ export default function CreateEvidence() {
           <div className="create-evidence-header">
             <h1>انتخاب نوع شواهد</h1>
             <button
-              className="btn btn-secondary"
+              className="cancel-btn"
               onClick={() => navigate(caseId ? `/evidence?case=${caseId}` : '/evidence')}
             >
               بازگشت

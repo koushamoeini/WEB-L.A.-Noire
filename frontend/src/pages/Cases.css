@@ -1,9 +1,7 @@
 .cases-container {
-  min-height: 100vh;
-  background-color: #0f0f0f;
   padding: 40px;
-  padding-top: 90px;
-  padding-right: 90px;
+  max-width: 1400px;
+  margin: 0 auto;
   direction: rtl;
 }
 
@@ -11,220 +9,132 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
-  flex-wrap: wrap;
   gap: 20px;
+  margin-bottom: 50px;
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 30px;
 }
 
 .cases-header h1 {
-  color: #d4af37;
-  font-size: 2.5rem;
+  font-size: 3rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -1.5px;
+  text-shadow: 0 0 30px rgba(212, 175, 55, 0.15);
 }
 
 .cases-actions {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.case-button {
-  padding: 12px 24px;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s;
-  font-size: 0.95rem;
-}
-
-.case-button.primary {
-  background: linear-gradient(135deg, #8b0000 0%, #a40000 100%);
-  color: #d4af37;
-}
-
-.case-button.primary:hover {
-  background: linear-gradient(135deg, #a40000 0%, #c50000 100%);
-  box-shadow: 0 0 15px rgba(139, 0, 0, 0.4);
-}
-
-.case-button.secondary {
-  background-color: transparent;
-  color: #d4af37;
-  border: 2px solid #d4af37;
-}
-
-.case-button.secondary:hover {
-  background-color: rgba(212, 175, 55, 0.1);
+  gap: 15px;
 }
 
 .error-message {
-  background-color: #3a1010;
-  border: 1px solid #8b0000;
-  color: #ff9999;
-  padding: 16px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
   text-align: center;
-  direction: rtl;
 }
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
-  color: #a0a0a0;
-  font-size: 1.2rem;
+  padding: 80px 24px;
+  color: var(--text-dim);
+  border: 1px dashed rgba(212, 175, 55, 0.2);
+  border-radius: 16px;
 }
 
 .cases-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 28px;
 }
 
-.case-card {
-  background: #1f1f1f;
-  border: 1px solid #404040;
-  border-radius: 8px;
-  padding: 24px;
+.case-card-lux {
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.case-card:hover {
-  border-color: #8b0000;
-  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.3);
-  transform: translateY(-4px);
+  display: flex;
+  flex-direction: column;
+  min-height: 250px;
 }
 
 .case-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-  gap: 12px;
-}
-
-.case-header h3 {
-  color: #d4af37;
-  margin: 0;
-  font-size: 1.1rem;
-  flex: 1;
+  align-items: center;
+  gap: 10px;
 }
 
 .case-status {
   padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid transparent;
   white-space: nowrap;
-  border: 1px solid;
 }
 
-.case-status.PT {
-  background: rgba(255, 165, 0, 0.2);
-  color: #ffa500;
-  border-color: #ffa500;
-}
-
-.case-status.PO {
-  background: rgba(30, 144, 255, 0.2);
-  color: #1e90ff;
-  border-color: #1e90ff;
-}
-
-.case-status.AC {
-  background: rgba(50, 205, 50, 0.2);
-  color: #32cd32;
-  border-color: #32cd32;
-}
-
-.case-status.PS {
-  background: rgba(138, 43, 226, 0.2);
-  color: #8a2be2;
-  border-color: #8a2be2;
-}
-
-.case-status.PC {
-  background: rgba(255, 215, 0, 0.2);
-  color: #ffd700;
-  border-color: #ffd700;
-}
-
-.case-status.RE {
-  background: rgba(220, 20, 60, 0.2);
-  color: #dc143c;
-  border-color: #dc143c;
-}
-
-.case-status.CA {
-  background: rgba(128, 128, 128, 0.2);
-  color: #808080;
-  border-color: #808080;
-}
-
-.case-status.SO {
-  background: rgba(0, 128, 0, 0.2);
-  color: #008000;
-  border-color: #008000;
-}
+.case-status.PT { background: rgba(255, 165, 0, 0.12); color: #ffb020; border-color: rgba(255, 165, 0, 0.3); }
+.case-status.PO { background: rgba(30, 144, 255, 0.12); color: #63b3ff; border-color: rgba(30, 144, 255, 0.3); }
+.case-status.AC { background: rgba(50, 205, 50, 0.12); color: #66dd66; border-color: rgba(50, 205, 50, 0.3); }
+.case-status.PS { background: rgba(138, 43, 226, 0.12); color: #b88ef5; border-color: rgba(138, 43, 226, 0.3); }
+.case-status.PC { background: rgba(255, 215, 0, 0.12); color: #f5d96a; border-color: rgba(255, 215, 0, 0.3); }
+.case-status.RE { background: rgba(220, 20, 60, 0.12); color: #ff7b92; border-color: rgba(220, 20, 60, 0.3); }
+.case-status.CA { background: rgba(128, 128, 128, 0.18); color: #bdbdbd; border-color: rgba(128, 128, 128, 0.35); }
+.case-status.SO { background: rgba(0, 128, 0, 0.15); color: #71e271; border-color: rgba(0, 128, 0, 0.35); }
 
 .case-title {
-  color: #e0e0e0;
-  margin: 12px 0;
-  font-size: 1.2rem;
+  margin: 14px 0;
+  font-size: 1.4rem;
 }
 
 .case-description {
-  color: #a0a0a0;
-  margin: 12px 0;
-  line-height: 1.5;
+  color: #b5b5b5;
+  min-height: 58px;
+  line-height: 1.7;
 }
 
 .case-meta {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-dim);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid #404040;
+  gap: 10px;
 }
 
 .crime-level {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
-.crime-level.level-0 {
-  background-color: #3a1010;
-  color: #ff6666;
-}
-
-.crime-level.level-1 {
-  background-color: #3a2010;
-  color: #ffaa66;
-}
-
-.crime-level.level-2 {
-  background-color: #3a3010;
-  color: #ffdd66;
-}
-
-.crime-level.level-3 {
-  background-color: #103a10;
-  color: #66ff66;
-}
+.crime-level.level-0 { background: rgba(239, 68, 68, 0.14); color: #f87171; }
+.crime-level.level-1 { background: rgba(251, 146, 60, 0.14); color: #fb923c; }
+.crime-level.level-2 { background: rgba(250, 204, 21, 0.14); color: #facc15; }
+.crime-level.level-3 { background: rgba(34, 197, 94, 0.14); color: #4ade80; }
 
 .case-date {
-  color: #707070;
-  font-size: 0.9rem;
+  color: #7f7f7f;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 992px) {
+  .cases-container {
+    padding: 40px;
+  }
+
+  .cases-header h1 {
+    font-size: 2.2rem;
+  }
 }
 
 @media (max-width: 768px) {
   .cases-container {
-    padding: 80px 80px 20px 20px;
+    padding: 24px;
   }
 
   .cases-header {
@@ -233,7 +143,7 @@
   }
 
   .cases-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.9rem;
   }
 
   .cases-actions {

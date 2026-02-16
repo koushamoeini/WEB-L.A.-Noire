@@ -59,22 +59,13 @@ export default function Suspects() {
     }
   };
 
-  const handleToggleBoard = async (id: number) => {
-    try {
-      await investigationAPI.toggleSuspectBoard(id);
-      fetchData();
-    } catch (error) {
-      console.error('Failed to toggle board:', error);
-    }
-  };
-
   return (
     <div className="layout-with-sidebar">
       <Sidebar />
       <div className="main-content">
         <div className="suspects-header">
           <h1>مدیریت متهمان {caseId ? `- پرونده ${caseId}` : ''}</h1>
-          <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
+          <button className="btn-gold-outline" onClick={() => setShowForm(!showForm)}>
             {showForm ? 'لغو' : 'افزودن متهم جدید'}
           </button>
         </div>
@@ -130,7 +121,7 @@ export default function Suspects() {
               <label htmlFor="is_main_suspect">متهم اصلی</label>
             </div>
 
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="btn-gold-solid" style={{ width: '100%', marginTop: '20px' }}>
               ذخیره متهم
             </button>
           </form>

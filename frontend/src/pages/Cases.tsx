@@ -46,17 +46,17 @@ const Cases = () => {
       <div className="main-content">
         <div className="cases-container">
           <div className="cases-header">
-            <h1>پرونده‌ها</h1>
+            <h1 className="gold-text">پرونده‌ها</h1>
             <div className="cases-actions">
               <button 
                 onClick={() => navigate('/cases/create-complaint')}
-                className="case-button primary"
+                className="btn-gold-solid"
               >
                 ثبت شکایت جدید
               </button>
               <button 
                 onClick={() => navigate('/cases/create-scene')}
-                className="case-button secondary"
+                className="btn-gold-outline"
               >
                 ثبت صحنه جرم
               </button>
@@ -74,17 +74,17 @@ const Cases = () => {
               {cases.map((caseItem) => (
                 <div 
                   key={caseItem.id} 
-                  className="case-card"
+                  className="lux-card case-card-lux"
                   onClick={() => navigate(`/cases/${caseItem.id}`)}
                 >
                   <div className="case-header">
-                    <h3>پرونده #{caseItem.id}</h3>
+                    <span className="red-badge">#{caseItem.id}</span>
                     <span className={`case-status ${caseItem.status}`}>
                       {CASE_STATUS[caseItem.status as keyof typeof CASE_STATUS]}
                     </span>
                   </div>
 
-                  <h4 className="case-title">{caseItem.title}</h4>
+                  <h3 className="gold-text case-title">{caseItem.title}</h3>
                   
                   <p className="case-description">
                     {caseItem.description.substring(0, 150)}...

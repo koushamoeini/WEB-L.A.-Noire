@@ -97,12 +97,12 @@ const CreateCaseComplaint = () => {
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn-submit" disabled={loading}>
+            <button type="submit" className="btn-gold-solid" disabled={loading}>
               {loading ? 'در حال ثبت...' : 'ثبت شکایت'}
             </button>
             <button 
               type="button" 
-              className="btn-cancel"
+              className="btn-gold-outline"
               onClick={() => navigate('/cases')}
             >
               انصراف

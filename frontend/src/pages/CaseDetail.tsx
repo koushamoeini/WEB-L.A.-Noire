@@ -321,7 +321,7 @@ export default function CaseDetail() {
             <div className="info-section">
               <div className="section-header-row">
                 <h3>لیست شواهد</h3>
-                <button className="btn btn-sm" onClick={() => navigate(`/evidence/create?case=${caseData.id}`)}>ثبت جدید</button>
+                <button className="btn-gold-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => navigate(`/evidence/create?case=${caseData.id}`)}>ثبت جدید</button>
               </div>
               <div className="mini-list">
                 {evidences.length > 0 ? evidences.map(e => (
@@ -336,7 +336,7 @@ export default function CaseDetail() {
             <div className="info-section">
               <div className="section-header-row">
                 <h3>لیست مظنونین</h3>
-                <button className="btn btn-sm" onClick={() => navigate(`/suspects?case=${caseData.id}`)}>مدیریت</button>
+                <button className="btn-gold-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => navigate(`/suspects?case=${caseData.id}`)}>مدیریت</button>
               </div>
               <div className="mini-list">
                 {suspects.length > 0 ? suspects.map(s => (
@@ -366,9 +366,10 @@ export default function CaseDetail() {
                   className="complainant-input"
                 />
                 <button
-                  className="btn btn-primary"
+                  className="btn-gold-solid"
                   onClick={handleAddComplainant}
                   disabled={addingComplainant || !newComplainantId}
+                  style={{ padding: '12px 24px', borderRadius: '12px' }}
                 >
                   {addingComplainant ? 'در حال افزودن...' : 'افزودن شاکی'}
                 </button>
@@ -393,16 +394,18 @@ export default function CaseDetail() {
                 {canTraineeReview && (
                   <>
                     <button
-                      className="btn btn-success"
+                      className="btn-gold-solid"
                       onClick={() => handleTraineeReview(true)}
                       disabled={processing}
+                      style={{ flex: 1, padding: '14px' }}
                     >
                       تایید و ارسال به افسر
                     </button>
                     <button
-                      className="btn btn-danger"
+                      className="btn-gold-outline"
                       onClick={() => handleTraineeReview(false)}
                       disabled={processing}
+                      style={{ flex: 1, padding: '14px', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
                     >
                       رد کردن
                     </button>
@@ -411,16 +414,18 @@ export default function CaseDetail() {
                 {canOfficerReview && (
                   <>
                     <button
-                      className="btn btn-success"
+                      className="btn-gold-solid"
                       onClick={() => handleOfficerReview(true)}
                       disabled={processing}
+                      style={{ flex: 1, padding: '14px' }}
                     >
                       تایید و فعال‌سازی
                     </button>
                     <button
-                      className="btn btn-danger"
+                      className="btn-gold-outline"
                       onClick={() => handleOfficerReview(false)}
                       disabled={processing}
+                      style={{ flex: 1, padding: '14px', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
                     >
                       بازگشت به کارآموز
                     </button>
@@ -429,16 +434,18 @@ export default function CaseDetail() {
                 {canSergeantReview && (
                   <>
                     <button
-                      className="btn btn-success"
+                      className="btn-gold-solid"
                       onClick={() => handleSergeantReview(true)}
                       disabled={processing}
+                      style={{ flex: 1, padding: '14px' }}
                     >
                       تایید
                     </button>
                     <button
-                      className="btn btn-danger"
+                      className="btn-gold-outline"
                       onClick={() => handleSergeantReview(false)}
                       disabled={processing}
+                      style={{ flex: 1, padding: '14px', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
                     >
                       بازگشت به کارآگاه
                     </button>
@@ -447,16 +454,18 @@ export default function CaseDetail() {
                 {canChiefReview && (
                   <>
                     <button
-                      className="btn btn-success"
+                      className="btn-gold-solid"
                       onClick={() => handleChiefReview(true)}
                       disabled={processing}
+                      style={{ flex: 1, padding: '14px' }}
                     >
                       تایید نهایی
                     </button>
                     <button
-                      className="btn btn-danger"
+                      className="btn-gold-outline"
                       onClick={() => handleChiefReview(false)}
                       disabled={processing}
+                      style={{ flex: 1, padding: '14px', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
                     >
                       بازگشت به کارآگاه
                     </button>
@@ -469,11 +478,12 @@ export default function CaseDetail() {
           {canDetectiveSubmit && (
             <div className="review-section">
               <h3>ارسال برای بررسی</h3>
-              <p>پرونده برای بررسی گروهبان ارسال شود؟</p>
+              <p style={{ color: 'var(--text-dim)', marginBottom: '20px' }}>پرونده برای بررسی گروهبان ارسال شود؟</p>
               <button
-                className="btn btn-primary"
+                className="btn-gold-solid"
                 onClick={handleSubmitResolution}
                 disabled={processing}
+                style={{ width: '100%', padding: '16px' }}
               >
                 ارسال برای بررسی گروهبان
               </button>
@@ -491,23 +501,26 @@ export default function CaseDetail() {
               </p>
               {!resubmitMode ? (
                 <button
-                  className="btn btn-warning"
+                  className="btn-gold-solid"
                   onClick={() => setResubmitMode(true)}
+                  style={{ width: '100%', padding: '16px' }}
                 >
                   ویرایش و ارسال مجدد
                 </button>
               ) : (
                 <div className="review-actions">
                   <button
-                    className="btn btn-primary"
+                    className="btn-gold-solid"
                     onClick={handleResubmit}
                     disabled={processing}
+                    style={{ flex: 1 }}
                   >
                     ارسال مجدد
                   </button>
                   <button
-                    className="btn btn-secondary"
+                    className="btn-gold-outline"
                     onClick={() => setResubmitMode(false)}
+                    style={{ flex: 1 }}
                   >
                     انصراف
                   </button>
@@ -518,14 +531,16 @@ export default function CaseDetail() {
 
           <div className="case-actions">
             <button
-              className="btn btn-secondary"
+              className="btn-gold-outline"
               onClick={() => navigate(`/evidence?case=${caseData.id}`)}
+              style={{ flex: 1, padding: '14px' }}
             >
               مشاهده شواهد پرونده
             </button>
             <button
-              className="btn btn-secondary"
+              className="btn-gold-outline"
               onClick={() => navigate(`/investigation?case=${caseData.id}`)}
+              style={{ flex: 1, padding: '14px' }}
             >
               مشاهده تخته تحقیقات
             </button>

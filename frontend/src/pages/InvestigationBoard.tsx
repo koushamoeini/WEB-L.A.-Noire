@@ -25,7 +25,6 @@ export default function InvestigationBoard() {
   const caseId = searchParams.get('case');
   const [boardItems, setBoardItems] = useState<BoardItem[]>([]);
   const [connections, setConnections] = useState<BoardConnection[]>([]);
-  const [loading, setLoading] = useState(true);
   const [cases, setCases] = useState<Case[]>([]);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [connectMode, setConnectMode] = useState(false);
@@ -75,7 +74,6 @@ export default function InvestigationBoard() {
     if (!caseId) return;
     
     try {
-      if (boardItems.length === 0) setLoading(true); // Only show loader on initial fetch
       const [evidences, suspects, conns] = await Promise.all([
         evidenceAPI.listAllEvidence(parseInt(caseId)),
         investigationAPI.listSuspects(parseInt(caseId)),
@@ -129,8 +127,6 @@ export default function InvestigationBoard() {
       setConnections(conns);
     } catch (error) {
       console.error('Failed to fetch board data:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -231,16 +227,6 @@ export default function InvestigationBoard() {
     }
   };
 
-  const deleteConnection = async (id: number) => {
-    if (!window.confirm('آیا از حذف این رشته اتصال اطمینان دارید؟')) return;
-    try {
-      await investigationAPI.deleteConnection(id);
-      fetchBoardData();
-    } catch (error) {
-      console.error('Failed to delete connection:', error);
-    }
-  };
-
   const exportAsImage = async () => {
     if (!boardRef.current) return;
     try {
@@ -311,11 +297,21 @@ export default function InvestigationBoard() {
             </div>
             <div className="evidence-grid">
               {cases.map((c) => (
-                <div key={c.id} className="evidence-card" onClick={() => navigate(`/investigation?case=${c.id}`)}>
-                  <div className="evidence-card-header"><span className="evidence-type-badge">#{c.id}</span></div>
-                  <h3>{c.title}</h3>
-                  <p className="evidence-description">{c.description.substring(0, 100)}...</p>
-                  <button className="btn btn-secondary" style={{ width: '100%' }}>نمایش تخته پرونده</button>
+                <div
+                  key={c.id}
+                  className="lux-card case-select-card"
+                  onClick={() => navigate(`/investigation?case=${c.id}`)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                    <span className="red-badge">#{c.id}</span>
+                  </div>
+                  <h3 className="gold-text case-select-title">{c.title}</h3>
+                  <p className="case-select-description">
+                    {c.description.substring(0, 100)}...
+                  </p>
+                  <button className="btn-gold-outline case-select-btn">
+                    نمایش تخته پرونده
+                  </button>
                 </div>
               ))}
             </div>

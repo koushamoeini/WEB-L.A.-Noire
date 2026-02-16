@@ -334,8 +334,9 @@ const CreateCaseScene = () => {
               <button 
                 type="button" 
                 onClick={addWitness}
-                className="btn-add-witness"
+                className="btn-gold-solid"
                 disabled={!witnessForm.phone || !witnessForm.national_code}
+                style={{ padding: '13px 20px' }}
               >
                 افزودن
               </button>
@@ -360,12 +361,12 @@ const CreateCaseScene = () => {
           </div>
 
           <div className="form-actions">
-            <button type="submit" className="btn-submit" disabled={loading}>
+            <button type="submit" className="btn-gold-solid" disabled={loading}>
               {loading ? 'در حال ثبت...' : 'ثبت صحنه جرم'}
             </button>
             <button 
               type="button" 
-              className="btn-cancel"
+              className="btn-gold-outline"
               onClick={() => navigate('/cases')}
             >
               انصراف

@@ -105,12 +105,12 @@ export default function OtherEvidenceForm() {
         </div>
 
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={loading}>
+          <button type="submit" className="submit-btn" disabled={loading}>
             {loading ? 'در حال ثبت...' : 'ثبت شواهد'}
           </button>
           <button
             type="button"
-            className="btn btn-secondary"
+            className="cancel-btn"
             onClick={() => navigate(-1)}
           >
             انصراف
