@@ -322,7 +322,7 @@ export default function InvestigationBoard() {
                 <div className="item-list">
                   {availableSuspects.map(s => (
                     <div key={s.id} className={`item-mini-card ${s.is_on_board ? 'active' : ''}`} onClick={() => toggleSuspectOnBoard(s.id)}>
-                      <span className="item-icon">👤</span>
+                      <div className="item-avatar">👤</div>
                       <div className="item-info">
                         <span className="item-name">{s.name}</span>
                         <span className="item-status">{s.is_on_board ? 'روی تخته' : 'افزودن'}</span>
@@ -336,8 +336,14 @@ export default function InvestigationBoard() {
                 <h3>شواهد</h3>
                 <div className="item-list">
                   {availableEvidence.map(e => (
-                    <div key={e.id} className={`item-mini-card ${e.is_on_board ? 'active' : ''}`} onClick={() => toggleEvidenceOnBoard(e.type, e.id)}>
-                      <span className="item-icon">🔍</span>
+                    <div key={e.id} className={`item-mini-card ${e.is_on_board ? 'active' : ''}`} onClick={() => toggleEvidenceOnBoard('all', e.id)}>
+                      <div className="item-avatar">
+                        {e.images && e.images.length > 0 ? (
+                          <img src={e.images[0].image} alt="" className="mini-thumb" />
+                        ) : (
+                          '🔍'
+                        )}
+                      </div>
                       <div className="item-info">
                         <span className="item-name">{e.title}</span>
                         <span className="item-status">{e.is_on_board ? 'روی تخته' : 'افزودن'}</span>
