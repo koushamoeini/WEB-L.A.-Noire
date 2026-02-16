@@ -32,9 +32,33 @@
 
 .home-description {
   font-size: 1.25rem;
-  margin-bottom: 48px;
+  margin-bottom: 30px;
   color: #e0e0e0;
   line-height: 1.6;
+}
+
+.intro-section {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #8b0000;
+  padding: 30px;
+  border-radius: 8px;
+  margin-bottom: 40px;
+  text-align: right;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.intro-section h3 {
+  color: #d4af37;
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  padding-bottom: 10px;
+}
+
+.intro-section p {
+  color: #bbb;
+  line-height: 1.8;
+  font-size: 1rem;
 }
 
 .home-actions {

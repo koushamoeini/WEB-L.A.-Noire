@@ -30,6 +30,8 @@ export default function InvestigationBoard() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [connectMode, setConnectMode] = useState(false);
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [deleteFrom, setDeleteFrom] = useState<string | null>(null);
   const [draggingItem, setDraggingItem] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
@@ -174,8 +176,38 @@ export default function InvestigationBoard() {
         setConnectFrom(null);
         setConnectMode(false);
       }
+    } else if (deleteMode) {
+      if (!deleteFrom) {
+        setDeleteFrom(itemId);
+      } else {
+        handleTwoItemsDelete(deleteFrom, itemId);
+        setDeleteFrom(null);
+        setDeleteMode(false);
+      }
     } else {
       setSelectedItem(itemId === selectedItem ? null : itemId);
+    }
+  };
+
+  const handleTwoItemsDelete = async (id1: string, id2: string) => {
+    if (!caseId || id1 === id2) return;
+    
+    // Find connection between these two items
+    const conn = connections.find(c => {
+      const cFrom = c.from_evidence ? `evidence-${c.from_evidence}` : `suspect-${c.from_suspect}`;
+      const cTo = c.to_evidence ? `evidence-${c.to_evidence}` : `suspect-${c.to_suspect}`;
+      return (cFrom === id1 && cTo === id2) || (cFrom === id2 && cTo === id1);
+    });
+
+    if (conn) {
+      try {
+        await investigationAPI.deleteConnection(conn.id);
+        fetchBoardData();
+      } catch (error) {
+        console.error('Failed to delete connection:', error);
+      }
+    } else {
+      alert('اتصالی میان این دو مورد یافت نشد.');
     }
   };
 
@@ -196,6 +228,16 @@ export default function InvestigationBoard() {
       fetchBoardData();
     } catch (error) {
       console.error('Failed to create connection:', error);
+    }
+  };
+
+  const deleteConnection = async (id: number) => {
+    if (!window.confirm('آیا از حذف این رشته اتصال اطمینان دارید؟')) return;
+    try {
+      await investigationAPI.deleteConnection(id);
+      fetchBoardData();
+    } catch (error) {
+      console.error('Failed to delete connection:', error);
     }
   };
 
@@ -235,7 +277,7 @@ export default function InvestigationBoard() {
   };
 
   const renderConnections = () => {
-    return connections.map((conn, index) => {
+    return connections.map((conn) => {
       const fromId = conn.from_evidence ? `evidence-${conn.from_evidence}` : `suspect-${conn.from_suspect}`;
       const toId = conn.to_evidence ? `evidence-${conn.to_evidence}` : `suspect-${conn.to_suspect}`;
 
@@ -245,14 +287,15 @@ export default function InvestigationBoard() {
       if (!fromItem || !toItem) return null;
 
       return (
-        <line
-          key={index}
-          x1={fromItem.position.x + 75}
-          y1={fromItem.position.y + 75}
-          x2={toItem.position.x + 75}
-          y2={toItem.position.y + 75}
-          className="yarn-connection"
-        />
+        <g key={conn.id} className="connection-group">
+          <line
+            x1={fromItem.position.x + 75}
+            y1={fromItem.position.y}
+            x2={toItem.position.x + 75}
+            y2={toItem.position.y}
+            className="yarn-connection"
+          />
+        </g>
       );
     });
   };
@@ -295,8 +338,19 @@ export default function InvestigationBoard() {
             <button className="btn-lux" onClick={() => setShowItemSidebars(!showItemSidebars)}>
               {showItemSidebars ? 'مخفی‌سازی لیست‌ها' : 'نمایش لیست مدارک'}
             </button>
-            <button className={`btn-lux ${connectMode ? 'active' : ''}`} onClick={() => setConnectMode(!connectMode)}>
-              {connectMode ? 'در حال اتصال...' : 'ایجاد اتصال میان مدارک'}
+            <button className={`btn-lux ${connectMode ? 'active' : ''}`} onClick={() => {
+              setConnectMode(!connectMode);
+              setDeleteMode(false);
+              setConnectFrom(null);
+            }}>
+              {connectMode ? 'در حال اتصال...' : 'ایجاد اتصال'}
+            </button>
+            <button className={`btn-lux ${deleteMode ? 'active' : ''}`} onClick={() => {
+              setDeleteMode(!deleteMode);
+              setConnectMode(false);
+              setDeleteFrom(null);
+            }}>
+              {deleteMode ? 'آماده حذف...' : 'حذف اتصال'}
             </button>
             <button className="btn-lux export" onClick={exportAsImage}>
               خروجی تصویر (گزارش)
@@ -322,7 +376,7 @@ export default function InvestigationBoard() {
             {boardItems.map((item) => (
               <div
                 key={item.id}
-                className={`polaroid ${item.type} ${selectedItem === item.id ? 'selected' : ''} ${connectFrom === item.id ? 'connecting' : ''}`}
+                className={`polaroid ${item.type} ${selectedItem === item.id ? 'selected' : ''} ${connectFrom === item.id || deleteFrom === item.id ? 'connecting' : ''}`}
                 style={{ left: item.position.x, top: item.position.y }}
                 onMouseDown={(e) => handleMouseDown(e, item.id)}
                 onClick={() => handleItemClick(item.id)}

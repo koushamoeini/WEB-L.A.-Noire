@@ -17,6 +17,8 @@ import VehicleEvidenceForm from './pages/VehicleEvidenceForm';
 import IdentificationDocumentForm from './pages/IdentificationDocumentForm';
 import OtherEvidenceForm from './pages/OtherEvidenceForm';
 import InvestigationBoard from './pages/InvestigationBoard';
+import Ranking from './pages/Ranking';
+import Stats from './pages/Stats';
 import Suspects from './pages/Suspects';
 import './App.css';
 
@@ -129,6 +131,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <InvestigationBoard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ranking"
+            element={
+              <ProtectedRoute>
+                <Ranking />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/stats"
+            element={
+              <ProtectedRoute>
+                <Stats />
               </ProtectedRoute>
             }
           />
