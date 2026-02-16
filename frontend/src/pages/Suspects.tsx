@@ -158,18 +158,13 @@ export default function Suspects() {
                 <p className="suspect-details">{suspect.details}</p>
                 <div className="suspect-actions">
                   <button
-                    className="btn btn-secondary"
-                    onClick={() => handleToggleBoard(suspect.id)}
-                  >
-                    {suspect.is_on_board ? 'حذف از تخته' : 'افزودن به تخته'}
-                  </button>
-                  <button
                     className="btn btn-info"
+                    style={{ width: '100%' }}
                     onClick={() =>
                       navigate(`/investigation?case=${suspect.case}`)
                     }
                   >
-                    مشاهده تخته
+                    مشاهده در تخته کارآگاه
                   </button>
                 </div>
               </div>

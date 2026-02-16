@@ -34,6 +34,11 @@ export default function InvestigationBoard() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
 
+  // Lists for sidebar
+  const [availableEvidence, setAvailableEvidence] = useState<any[]>([]);
+  const [availableSuspects, setAvailableSuspects] = useState<any[]>([]);
+  const [showItemSidebars, setShowItemSidebars] = useState(true);
+
   useEffect(() => {
     fetchCases();
   }, []);
@@ -63,6 +68,9 @@ export default function InvestigationBoard() {
         investigationAPI.listSuspects(parseInt(caseId)),
         investigationAPI.listConnections(parseInt(caseId)),
       ]);
+
+      setAvailableEvidence(evidences);
+      setAvailableSuspects(suspects);
 
       const evidenceItems: BoardItem[] = evidences
         .filter((e) => e.is_on_board)
@@ -169,6 +177,7 @@ export default function InvestigationBoard() {
       const canvas = await html2canvas(boardRef.current, {
         backgroundColor: '#2c1a12',
         useCORS: true,
+        scale: 2, // Better quality
       });
       const link = document.createElement('a');
       link.download = `detective-board-${caseId}.png`;
@@ -176,6 +185,24 @@ export default function InvestigationBoard() {
       link.click();
     } catch (err) {
       console.error('Export failed:', err);
+    }
+  };
+
+  const toggleSuspectOnBoard = async (id: number) => {
+    try {
+      await investigationAPI.toggleSuspectBoard(id);
+      fetchBoardData();
+    } catch (error) {
+      console.error('Failed to toggle suspect:', error);
+    }
+  };
+
+  const toggleEvidenceOnBoard = async (type: string, id: number) => {
+    try {
+      await evidenceAPI.toggleBoard(type, id);
+      fetchBoardData();
+    } catch (error) {
+      console.error('Failed to toggle evidence:', error);
     }
   };
 
@@ -237,6 +264,9 @@ export default function InvestigationBoard() {
             <span>شناسه پرونده: {caseId}</span>
           </div>
           <div className="board-actions">
+            <button className="btn-lux" onClick={() => setShowItemSidebars(!showItemSidebars)}>
+              {showItemSidebars ? 'مخفی‌سازی لیست‌ها' : 'نمایش لیست مدارک'}
+            </button>
             <button className={`btn-lux ${connectMode ? 'active' : ''}`} onClick={() => setConnectMode(!connectMode)}>
               {connectMode ? 'در حال اتصال...' : 'ایجاد اتصال میان مدارک'}
             </button>
@@ -249,39 +279,75 @@ export default function InvestigationBoard() {
           </div>
         </div>
 
-        <div 
-          className="cork-board" 
-          ref={boardRef}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-        >
-          <svg className="yarn-svg">
-            {renderConnections()}
-          </svg>
+        <div className="investigation-layout">
+          <div 
+            className="cork-board" 
+            ref={boardRef}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+            <svg className="yarn-svg">
+              {renderConnections()}
+            </svg>
 
-          {boardItems.map((item) => (
-            <div
-              key={item.id}
-              className={`polaroid ${item.type} ${selectedItem === item.id ? 'selected' : ''} ${connectFrom === item.id ? 'connecting' : ''}`}
-              style={{ left: item.position.x, top: item.position.y }}
-              onMouseDown={(e) => handleMouseDown(e, item.id)}
-              onClick={() => handleItemClick(item.id)}
-            >
-              <div className="thumbtack" />
-              <div className="photo">
-                {item.image ? (
-                  <img src={item.image} alt={item.title} />
-                ) : (
-                  <div className="no-photo">{item.type === 'suspect' ? '👤' : '🔍'}</div>
-                )}
+            {boardItems.map((item) => (
+              <div
+                key={item.id}
+                className={`polaroid ${item.type} ${selectedItem === item.id ? 'selected' : ''} ${connectFrom === item.id ? 'connecting' : ''}`}
+                style={{ left: item.position.x, top: item.position.y }}
+                onMouseDown={(e) => handleMouseDown(e, item.id)}
+                onClick={() => handleItemClick(item.id)}
+              >
+                <div className="thumbtack" />
+                <div className="photo">
+                  {item.image ? (
+                    <img src={item.image} alt={item.title} />
+                  ) : (
+                    <div className="no-photo">{item.type === 'suspect' ? '👤' : '🔍'}</div>
+                  )}
+                </div>
+                <div className="caption">
+                  <p className="label">{item.description}</p>
+                  <p className="title">{item.title}</p>
+                </div>
               </div>
-              <div className="caption">
-                <p className="label">{item.description}</p>
-                <p className="title">{item.title}</p>
+            ))}
+          </div>
+
+          {showItemSidebars && (
+            <div className="board-item-sidebars">
+              <div className="item-sidebar">
+                <h3>مظنونین</h3>
+                <div className="item-list">
+                  {availableSuspects.map(s => (
+                    <div key={s.id} className={`item-mini-card ${s.is_on_board ? 'active' : ''}`} onClick={() => toggleSuspectOnBoard(s.id)}>
+                      <span className="item-icon">👤</span>
+                      <div className="item-info">
+                        <span className="item-name">{s.name}</span>
+                        <span className="item-status">{s.is_on_board ? 'روی تخته' : 'افزودن'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="item-sidebar">
+                <h3>شواهد</h3>
+                <div className="item-list">
+                  {availableEvidence.map(e => (
+                    <div key={e.id} className={`item-mini-card ${e.is_on_board ? 'active' : ''}`} onClick={() => toggleEvidenceOnBoard(e.type, e.id)}>
+                      <span className="item-icon">🔍</span>
+                      <div className="item-info">
+                        <span className="item-name">{e.title}</span>
+                        <span className="item-status">{e.is_on_board ? 'روی تخته' : 'افزودن'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

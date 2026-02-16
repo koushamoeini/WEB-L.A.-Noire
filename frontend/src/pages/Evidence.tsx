@@ -103,14 +103,11 @@ export default function Evidence() {
                     </div>
                   )}
                   <button
-                    className={`btn btn-toggle ${evidence.is_on_board ? 'active' : ''}`}
-                    onClick={() => {
-                      const typeKey = Object.entries(EVIDENCE_TYPE_LABELS)
-                        .find(([_, label]) => label === evidence.type_display)?.[0];
-                      if (typeKey) handleToggleBoard(typeKey, evidence.id);
-                    }}
+                    className="btn btn-secondary"
+                    style={{ width: '100%', marginTop: '10px' }}
+                    onClick={() => navigate(`/investigation?case=${evidence.case}`)}
                   >
-                    {evidence.is_on_board ? 'حذف از تخته' : 'افزودن به تخته'}
+                    مشاهده در تخته کارآگاه
                   </button>
                 </div>
               ))}
