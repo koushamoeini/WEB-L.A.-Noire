@@ -45,9 +45,12 @@ def seed_data():
         ('captain', 'captain', '3333333333', '09333333333'),
         ('sergeant', 'sergeant', '4444444444', '09444444444'),
         ('detective', 'detective', '5555555555', '09555555555'),
+        ('officer', 'police_officer', '1010101010', '09101010101'),
+        ('trainee_user', 'trainee', '1212121212', '09121212121'),
         ('doctor', 'forensic_doctor', '6666666666', '09666666666'),
         ('judge_user', 'judge', '7777777777', '09777777777'),
         ('citizen', 'complainant', '8888888888', '09888888888'),
+        ('base', 'base_user', '1313131313', '09131313131'),
     ]
     
     user_objs = {}

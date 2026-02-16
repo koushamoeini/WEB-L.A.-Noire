@@ -16,6 +16,8 @@ export default function Sidebar() {
 
   const closeSidebar = () => setIsOpen(false);
 
+  const isDetective = user?.roles?.some(role => role.code === 'detective');
+
   const menuItems = [
     {
       icon: '🏠',
@@ -36,6 +38,7 @@ export default function Sidebar() {
       icon: '🎯',
       label: 'تخته کارآگاه',
       path: '/investigation',
+      hidden: !isDetective,
     },
     {
       icon: '👥',
@@ -63,17 +66,20 @@ export default function Sidebar() {
         </div>
 
         <nav className="sidebar-nav">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
-              onClick={closeSidebar}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-            </Link>
-          ))}
+          {menuItems.map((item) => {
+            if (item.hidden) return null;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                onClick={closeSidebar}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="sidebar-footer">
