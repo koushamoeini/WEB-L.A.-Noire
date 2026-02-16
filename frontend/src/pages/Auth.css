@@ -125,7 +125,5 @@
 
 .auth-link:hover {
   text-decoration: underline;
-  color: #e6c200
-.auth-link:hover {
-  text-decoration: underline;
+  color: #e6c200;
 }

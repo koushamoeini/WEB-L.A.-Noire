@@ -155,16 +155,3 @@ button {
   font-weight: 700;
 }
 
-.gold-text {
-  color: var(--primary);
-}
-
-.red-badge {
-  background: var(--accent);
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
-

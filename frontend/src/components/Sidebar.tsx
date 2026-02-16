@@ -30,6 +30,11 @@ export default function Sidebar() {
       path: '/cases',
     },
     {
+      icon: '⚖️',
+      label: 'تحت پیگیری شدید',
+      path: '/ranking',
+    },
+    {
       icon: '🎯',
       label: 'تخته کارآگاه',
       path: '/investigation',

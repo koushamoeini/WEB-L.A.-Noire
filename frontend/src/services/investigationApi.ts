@@ -36,6 +36,11 @@ export const investigationAPI = {
     return response.data;
   },
 
+  listMostWanted: async (): Promise<any[]> => {
+    const response = await api.get('/investigation/suspects/most_wanted/');
+    return response.data;
+  },
+
   // Interrogations
   listInterrogations: async (): Promise<Interrogation[]> => {
     const response = await api.get('/investigation/interrogations/');
