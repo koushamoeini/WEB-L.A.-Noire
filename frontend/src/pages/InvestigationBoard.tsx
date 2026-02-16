@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import html2canvas from 'html2canvas';
 import { investigationAPI } from '../services/investigationApi';
 import { evidenceAPI } from '../services/evidenceApi';
 import { caseAPI } from '../services/caseApi';
@@ -15,6 +16,7 @@ interface BoardItem {
   description: string;
   position: { x: number; y: number };
   actualId: number;
+  image?: string;
 }
 
 export default function InvestigationBoard() {
@@ -28,6 +30,8 @@ export default function InvestigationBoard() {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [connectMode, setConnectMode] = useState(false);
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
+  const [draggingItem, setDraggingItem] = useState<string | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const boardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -60,7 +64,6 @@ export default function InvestigationBoard() {
         investigationAPI.listConnections(parseInt(caseId)),
       ]);
 
-      // Only show items that are marked as "on board"
       const evidenceItems: BoardItem[] = evidences
         .filter((e) => e.is_on_board)
         .map((e, index) => ({
@@ -68,8 +71,9 @@ export default function InvestigationBoard() {
           type: 'evidence',
           title: e.title,
           description: e.type_display,
-          position: { x: 100 + (index % 4) * 220, y: 80 + Math.floor(index / 4) * 180 },
+          position: { x: 50 + (index % 3) * 200, y: 50 + Math.floor(index / 3) * 220 },
           actualId: e.id,
+          image: e.images?.[0]?.image,
         }));
 
       const suspectItems: BoardItem[] = suspects
@@ -79,7 +83,7 @@ export default function InvestigationBoard() {
           type: 'suspect',
           title: s.name,
           description: s.is_main_suspect ? 'متهم اصلی' : 'مظنون',
-          position: { x: 600 + (index % 3) * 220, y: 100 + Math.floor(index / 3) * 200 },
+          position: { x: 700 + (index % 2) * 200, y: 50 + Math.floor(index / 2) * 250 },
           actualId: s.id,
         }));
 
@@ -90,6 +94,39 @@ export default function InvestigationBoard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMouseDown = (e: React.MouseEvent, itemId: string) => {
+    if (connectMode) return;
+    const item = boardItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    setDraggingItem(itemId);
+    setDragOffset({
+      x: e.clientX - item.position.x,
+      y: e.clientY - item.position.y
+    });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!draggingItem) return;
+
+    setBoardItems(prev => prev.map(item => {
+      if (item.id === draggingItem) {
+        return {
+          ...item,
+          position: {
+            x: e.clientX - dragOffset.x,
+            y: e.clientY - dragOffset.y
+          }
+        };
+      }
+      return item;
+    }));
+  };
+
+  const handleMouseUp = () => {
+    setDraggingItem(null);
   };
 
   const handleItemClick = (itemId: string) => {
@@ -108,10 +145,8 @@ export default function InvestigationBoard() {
 
   const createConnection = async (fromId: string, toId: string) => {
     if (!caseId || fromId === toId) return;
-
-    const fromItem = boardItems.find((item) => item.id === fromId);
-    const toItem = boardItems.find((item) => item.id === toId);
-
+    const fromItem = boardItems.find(i => i.id === fromId);
+    const toItem = boardItems.find(i => i.id === toId);
     if (!fromItem || !toItem) return;
 
     try {
@@ -128,34 +163,40 @@ export default function InvestigationBoard() {
     }
   };
 
+  const exportAsImage = async () => {
+    if (!boardRef.current) return;
+    try {
+      const canvas = await html2canvas(boardRef.current, {
+        backgroundColor: '#2c1a12',
+        useCORS: true,
+      });
+      const link = document.createElement('a');
+      link.download = `detective-board-${caseId}.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+    } catch (err) {
+      console.error('Export failed:', err);
+    }
+  };
+
   const renderConnections = () => {
     return connections.map((conn, index) => {
-      const fromId = conn.from_evidence
-        ? `evidence-${conn.from_evidence}`
-        : conn.from_suspect
-        ? `suspect-${conn.from_suspect}`
-        : null;
-      const toId = conn.to_evidence
-        ? `evidence-${conn.to_evidence}`
-        : conn.to_suspect
-        ? `suspect-${conn.to_suspect}`
-        : null;
+      const fromId = conn.from_evidence ? `evidence-${conn.from_evidence}` : `suspect-${conn.from_suspect}`;
+      const toId = conn.to_evidence ? `evidence-${conn.to_evidence}` : `suspect-${conn.to_suspect}`;
 
-      if (!fromId || !toId) return null;
-
-      const fromItem = boardItems.find((item) => item.id === fromId);
-      const toItem = boardItems.find((item) => item.id === toId);
+      const fromItem = boardItems.find(i => i.id === fromId);
+      const toItem = boardItems.find(i => i.id === toId);
 
       if (!fromItem || !toItem) return null;
 
       return (
         <line
           key={index}
-          x1={fromItem.position.x + 60}
-          y1={fromItem.position.y + 60}
-          x2={toItem.position.x + 60}
-          y2={toItem.position.y + 60}
-          className="board-connection-line"
+          x1={fromItem.position.x + 75}
+          y1={fromItem.position.y + 75}
+          x2={toItem.position.x + 75}
+          y2={toItem.position.y + 75}
+          className="yarn-connection"
         />
       );
     });
@@ -168,55 +209,18 @@ export default function InvestigationBoard() {
         <div className="main-content">
           <div className="evidence-container">
             <div className="evidence-header">
-              <h1>تخته تحقیقات جنایی</h1>
-              <div className="evidence-actions">
-                <button
-                  className="btn btn-primary"
-                  onClick={() => navigate('/cases/create-scene')}
-                >
-                  ثبت پرونده جدید
-                </button>
-              </div>
+              <h1>انتخاب پرونده برای تخته تحقیقات</h1>
             </div>
-
             <div className="evidence-grid">
               {cases.map((c) => (
-                <div 
-                  key={c.id} 
-                  className="evidence-card"
-                  onClick={() => navigate(`/investigation?case=${c.id}`)}
-                >
-                  <div className="evidence-card-header">
-                    <span className="evidence-type-badge">پرونده #{c.id}</span>
-                  </div>
+                <div key={c.id} className="evidence-card" onClick={() => navigate(`/investigation?case=${c.id}`)}>
+                  <div className="evidence-card-header"><span className="evidence-type-badge">#{c.id}</span></div>
                   <h3>{c.title}</h3>
-                  <p className="evidence-description">
-                    {c.description.substring(0, 150)}...
-                  </p>
-                  <div className="evidence-meta">
-                    <div>
-                      <small>ثبت‌کننده:</small>
-                      <span>{c.creator_name}</span>
-                    </div>
-                    <div>
-                      <small>تاریخ:</small>
-                      <span>{new Date(c.created_at).toLocaleDateString('fa-IR')}</span>
-                    </div>
-                  </div>
-                  <button
-                    className="btn btn-secondary"
-                    style={{ width: '100%', marginTop: '10px' }}
-                  >
-                    مشاهده جزئیات و تخته
-                  </button>
+                  <p className="evidence-description">{c.description.substring(0, 100)}...</p>
+                  <button className="btn btn-secondary" style={{ width: '100%' }}>بازگشایی پرونده</button>
                 </div>
               ))}
             </div>
-            {cases.length === 0 && (
-              <div className="no-data">
-                <p>هیچ پرونده‌ای برای نمایش وجود ندارد.</p>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -227,50 +231,58 @@ export default function InvestigationBoard() {
     <div className="layout-with-sidebar">
       <Sidebar />
       <div className="main-content">
-        <div className="board-header">
-          <h1>تخته کارآگاه - پرونده {caseId}</h1>
-          <div className="board-controls">
-            <button
-              className={`btn ${connectMode ? 'btn-active' : 'btn-secondary'}`}
-              onClick={() => {
-                setConnectMode(!connectMode);
-                setConnectFrom(null);
-              }}
-            >
-              {connectMode ? 'لغو اتصال' : 'ایجاد اتصال'}
+        <div className="board-header-luxury">
+          <div className="case-info">
+            <h2>{cases.find(c => c.id === parseInt(caseId))?.title}</h2>
+            <span>شناسه پرونده: {caseId}</span>
+          </div>
+          <div className="board-actions">
+            <button className={`btn-lux ${connectMode ? 'active' : ''}`} onClick={() => setConnectMode(!connectMode)}>
+              {connectMode ? 'در حال اتصال...' : 'ایجاد اتصال میان مدارک'}
+            </button>
+            <button className="btn-lux export" onClick={exportAsImage}>
+              خروجی تصویر (گزارش)
+            </button>
+            <button className="btn-lux back" onClick={() => navigate('/cases/' + caseId)}>
+              بازگشت به پرونده
             </button>
           </div>
         </div>
 
-        {loading ? (
-          <div className="loading">در حال بارگذاری...</div>
-        ) : (
-          <div className="investigation-board" ref={boardRef}>
-            <svg className="board-connections">
-              {renderConnections()}
-            </svg>
+        <div 
+          className="cork-board" 
+          ref={boardRef}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          <svg className="yarn-svg">
+            {renderConnections()}
+          </svg>
 
-            {boardItems.map((item) => (
-              <div
-                key={item.id}
-                className={`board-item ${item.type} ${
-                  selectedItem === item.id ? 'selected' : ''
-                } ${connectFrom === item.id ? 'connecting' : ''}`}
-                style={{
-                  left: item.position.x,
-                  top: item.position.y,
-                }}
-                onClick={() => handleItemClick(item.id)}
-              >
-                <div className="pin" />
-                <div className="item-content">
-                  <div className="item-type-badge">{item.description}</div>
-                  <h4>{item.title}</h4>
-                </div>
+          {boardItems.map((item) => (
+            <div
+              key={item.id}
+              className={`polaroid ${item.type} ${selectedItem === item.id ? 'selected' : ''} ${connectFrom === item.id ? 'connecting' : ''}`}
+              style={{ left: item.position.x, top: item.position.y }}
+              onMouseDown={(e) => handleMouseDown(e, item.id)}
+              onClick={() => handleItemClick(item.id)}
+            >
+              <div className="thumbtack" />
+              <div className="photo">
+                {item.image ? (
+                  <img src={item.image} alt={item.title} />
+                ) : (
+                  <div className="no-photo">{item.type === 'suspect' ? '👤' : '🔍'}</div>
+                )}
               </div>
-            ))}
-          </div>
-        )}
+              <div className="caption">
+                <p className="label">{item.description}</p>
+                <p className="title">{item.title}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
