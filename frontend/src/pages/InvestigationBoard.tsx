@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { investigationAPI } from '../services/investigationApi';
 import { evidenceAPI } from '../services/evidenceApi';
+import { caseAPI } from '../services/caseApi';
 import type { BoardConnection } from '../types/investigation';
+import type { Case } from '../types/case';
 import Sidebar from '../components/Sidebar';
 import './InvestigationBoard.css';
 
@@ -17,20 +19,35 @@ interface BoardItem {
 
 export default function InvestigationBoard() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const caseId = searchParams.get('case');
   const [boardItems, setBoardItems] = useState<BoardItem[]>([]);
   const [connections, setConnections] = useState<BoardConnection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cases, setCases] = useState<Case[]>([]);
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [connectMode, setConnectMode] = useState(false);
   const [connectFrom, setConnectFrom] = useState<string | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    fetchCases();
+  }, []);
+
+  useEffect(() => {
     if (caseId) {
       fetchBoardData();
     }
   }, [caseId]);
+
+  const fetchCases = async () => {
+    try {
+      const data = await caseAPI.listCases();
+      setCases(data);
+    } catch (error) {
+      console.error('Failed to fetch cases:', error);
+    }
+  };
 
   const fetchBoardData = async () => {
     if (!caseId) return;
@@ -149,8 +166,57 @@ export default function InvestigationBoard() {
       <div className="layout-with-sidebar">
         <Sidebar />
         <div className="main-content">
-          <div className="no-case-selected">
-            <p>لطفاً یک پرونده را انتخاب کنید</p>
+          <div className="evidence-container">
+            <div className="evidence-header">
+              <h1>تخته تحقیقات جنایی</h1>
+              <div className="evidence-actions">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => navigate('/cases/create-scene')}
+                >
+                  ثبت پرونده جدید
+                </button>
+              </div>
+            </div>
+
+            <div className="evidence-grid">
+              {cases.map((c) => (
+                <div 
+                  key={c.id} 
+                  className="evidence-card"
+                  onClick={() => navigate(`/investigation?case=${c.id}`)}
+                >
+                  <div className="evidence-card-header">
+                    <span className="evidence-type-badge">پرونده #{c.id}</span>
+                  </div>
+                  <h3>{c.title}</h3>
+                  <p className="evidence-description">
+                    {c.description.substring(0, 150)}...
+                  </p>
+                  <div className="evidence-meta">
+                    <div>
+                      <small>ثبت‌کننده:</small>
+                      <span>{c.creator_name}</span>
+                    </div>
+                    <div>
+                      <small>تاریخ:</small>
+                      <span>{new Date(c.created_at).toLocaleDateString('fa-IR')}</span>
+                    </div>
+                  </div>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ width: '100%', marginTop: '10px' }}
+                  >
+                    مشاهده جزئیات و تخته
+                  </button>
+                </div>
+              ))}
+            </div>
+            {cases.length === 0 && (
+              <div className="no-data">
+                <p>هیچ پرونده‌ای برای نمایش وجود ندارد.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
