@@ -52,7 +52,7 @@ const Home = () => {
           سامانه‌ای جامع برای مدیریت پرونده‌های جنایی، مدارک، تحقیقات و کاربران
         </p>
 
-        <section className="intro-section">
+        <section className="intro-section module-card-luxury">
           <h3>درباره اداره پلیس و سامانه</h3>
           <p>
             اداره پلیس مرکزی با هدف برقراری عدالت و امنیت، این سامانه پیشرفته را برای تسریع در روند پیگیری پرونده‌ها طراحی کرده است. 
@@ -64,15 +64,15 @@ const Home = () => {
           <div className="stats-section">
             <h3 className="stats-title">آمار سیستم</h3>
             <div className="stats-grid">
-              <div className="stat-item">
+              <div className="stat-item module-card-luxury">
                 <div className="stat-value">{stats.solvedCases}</div>
                 <div className="stat-label">تعداد کل پرونده‌های حل شده</div>
               </div>
-              <div className="stat-item">
+              <div className="stat-item module-card-luxury">
                 <div className="stat-value">{stats.totalUsers}</div>
                 <div className="stat-label">تعداد کل کارمندان سازمان</div>
               </div>
-              <div className="stat-item">
+              <div className="stat-item module-card-luxury">
                 <div className="stat-value">{stats.activeCases}</div>
                 <div className="stat-label">تعداد پرونده‌های فعال</div>
               </div>
@@ -82,15 +82,15 @@ const Home = () => {
 
         <div className="home-actions">
           {isAuthenticated ? (
-            <Link to="/dashboard" className="home-button primary">
+            <Link to="/dashboard" className="btn-gold-solid">
               رفتن به داشبورد
             </Link>
           ) : (
             <>
-              <Link to="/login" className="home-button primary">
+              <Link to="/login" className="btn-gold-solid">
                 ورود
               </Link>
-              <Link to="/register" className="home-button secondary">
+              <Link to="/register" className="btn-gold-outline">
                 ثبت‌نام
               </Link>
             </>

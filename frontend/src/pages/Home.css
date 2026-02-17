@@ -3,164 +3,137 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+  background-color: #050505;
+  background-image:
+    radial-gradient(circle at center, rgba(44, 26, 18, 0.2) 0%, rgba(5, 5, 5, 1) 100%),
+    url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
   padding: 40px;
   direction: rtl;
 }
 
 .home-content {
   text-align: center;
-  max-width: 850px;
+  max-width: 960px;
 }
 
 .home-title {
-  font-size: 4rem;
+  font-family: 'Cinzel', serif;
+  font-size: 3.2rem;
   font-weight: 800;
   margin-bottom: 5px;
   color: var(--primary);
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   text-transform: uppercase;
 }
 
 .home-subtitle {
-  font-size: 2rem;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 40px;
-  color: var(--accent);
-  letter-spacing: 4px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
 }
 
 .home-description {
-  font-size: 1.2rem;
-  margin-bottom: 50px;
+  font-size: 1.1rem;
+  margin-bottom: 40px;
   color: var(--text-dim);
-  line-height: 1.8;
+  line-height: 1.7;
 }
 
 .intro-section {
-  background: var(--bg-card);
-  border: 1px solid var(--border-gold);
   padding: 40px;
-  border-radius: 16px;
   margin-bottom: 50px;
   text-align: right;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  position: relative;
-  overflow: hidden;
-}
-
-.intro-section::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0;
-  width: 4px; height: 100%;
-  background: var(--primary);
 }
 
 .intro-section h3 {
+  font-family: 'Cinzel', serif;
   color: var(--primary);
   margin-bottom: 20px;
-  font-size: 1.6rem;
+  font-size: 1.35rem;
   font-weight: 700;
+  letter-spacing: 2px;
 }
 
 .intro-section p {
-  color: #ccc;
-  line-height: 2;
-  font-size: 1.05rem;
+  color: var(--text-main);
+  line-height: 1.9;
+  font-size: 1rem;
 }
 
 .home-actions {
   display: flex;
   gap: 20px;
   justify-content: center;
+  margin-top: 30px;
 }
 
-.home-button {
-  padding: 16px 40px;
-  border-radius: 8px;
-  font-size: 1.2rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-  display: inline-block;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.home-button.primary {
-  background-color: var(--primary);
-  color: #000;
-  border: none;
-}
-
-.home-button.primary:hover {
-  background-color: var(--primary-light);
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
-}
-
-.home-button.secondary {
-  background-color: transparent;
-  color: var(--primary);
-  border: 2px solid var(--primary);
-}
-
-.home-button.secondary:hover {
-  background: var(--primary-dim);
-  transform: translateY(-5px);
-}
-
-.home-button.secondary:hover {
-  background-color: rgba(212, 175, 55, 0.1);
+.home-actions a {
+  min-width: 180px;
 }
 
 .stats-section {
   margin-top: 60px;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
 }
 
 .stats-title {
-  color: #d4af37;
+  font-family: 'Cinzel', serif;
+  color: var(--primary);
   text-align: center;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+  letter-spacing: 2px;
   margin-bottom: 30px;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  max-width: 900px;
-  margin: 0 auto;
 }
 
 .stat-item {
-  background: rgba(139, 0, 0, 0.2);
-  border: 2px solid #8b0000;
-  border-radius: 8px;
   padding: 30px 20px;
   text-align: center;
 }
 
 .stat-value {
-  color: #d4af37;
+  color: var(--primary);
+  font-family: 'Cinzel', serif;
   font-size: 3rem;
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: 12px;
 }
 
 .stat-label {
-  color: #e0e0e0;
-  font-size: 0.95rem;
+  color: var(--text-dim);
+  font-size: 0.9rem;
   line-height: 1.5;
 }
+
+@media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    padding: 22px;
+  }
+
+  .intro-section {
+    padding: 24px;
+  }
+
   .home-title {
     font-size: 2rem;
   }
 
   .home-subtitle {
-    font-size: 1.75rem;
+    font-size: 1.25rem;
   }
 
   .home-description {
@@ -169,9 +142,10 @@
 
   .home-actions {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .home-button {
+  .home-actions a {
     width: 100%;
   }
 }
