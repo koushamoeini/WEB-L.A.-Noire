@@ -16,7 +16,7 @@ const Dashboard = () => {
       icon: '📁',
       path: '/cases',
       description: 'مشاهده، ثبت و پیگیری پرونده‌های جنایی فعال و مختومه.',
-      roles: ['trainee', 'police_officer', 'detective', 'sergeant', 'captain', 'police_chief', 'judge'],
+      roles: ['trainee', 'police_officer', 'detective', 'sergeant', 'captain', 'police_chief', 'judge', 'complainant', 'base_user'],
     },
     {
       id: 'investigation',
@@ -32,7 +32,7 @@ const Dashboard = () => {
       icon: '🔥',
       path: '/ranking',
       description: 'لیست سیاه خطرناک‌ترین مجرمان که تحت پیگرد قانونی ویژه هستند.',
-      roles: ['police_officer', 'detective', 'sergeant', 'captain', 'police_chief'],
+      roles: ['trainee', 'police_officer', 'detective', 'sergeant', 'captain', 'police_chief', 'judge', 'complainant', 'base_user'],
     },
     {
       id: 'stats',
@@ -45,6 +45,8 @@ const Dashboard = () => {
   ];
 
   const visibleModules = modules.filter(m => 
+    // Everyone sees Cases and Ranking
+    m.id === 'cases' || m.id === 'ranking' || 
     m.roles.some(role => userRoles.includes(role))
   );
 
