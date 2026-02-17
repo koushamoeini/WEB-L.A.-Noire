@@ -51,6 +51,20 @@ export interface BoardItem {
   position?: { x: number; y: number };
 }
 
+export interface Verdict {
+  id: number;
+  case: number;
+  suspect: number;
+  judge?: number;
+  judge_username?: string;
+  title: string;
+  result: 'INNOCENT' | 'GUILTY';
+  result_display?: string;
+  punishment?: string;
+  description: string;
+  created_at: string;
+}
+
 // Request types
 export interface CreateSuspectRequest {
   case: number;

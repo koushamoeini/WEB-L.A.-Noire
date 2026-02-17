@@ -4,6 +4,7 @@ import type {
   Interrogation,
   Board,
   BoardConnection,
+  Verdict,
   CreateSuspectRequest,
   CreateInterrogationRequest,
   CreateBoardConnectionRequest,
@@ -78,5 +79,16 @@ export const investigationAPI = {
 
   deleteConnection: async (id: number): Promise<void> => {
     await api.delete(`/investigation/board-connections/${id}/`);
+  },
+
+  // Verdicts
+  createVerdict: async (data: any): Promise<Verdict> => {
+    const response = await api.post('/investigation/verdicts/', data);
+    return response.data;
+  },
+
+  listVerdicts: async (caseId: number): Promise<Verdict[]> => {
+    const response = await api.get(`/investigation/verdicts/?case=${caseId}`);
+    return response.data;
   },
 };
