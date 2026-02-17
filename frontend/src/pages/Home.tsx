@@ -46,13 +46,15 @@ const Home = () => {
   return (
     <div className="home-container">
       <div className="home-content">
-        <h1 className="home-title">سیستم مدیریت پرونده‌های جنایی</h1>
-        <h2 className="home-subtitle">L.A. Noire</h2>
-        <p className="home-description">
-          سامانه‌ای جامع برای مدیریت پرونده‌های جنایی، مدارک، تحقیقات و کاربران
-        </p>
+        <header className="home-hero">
+          <h1 className="home-title">سیستم مدیریت پرونده‌های جنایی</h1>
+          <h2 className="home-subtitle">L.A. Noire</h2>
+          <p className="home-description">
+            سامانه‌ای جامع برای مدیریت پرونده‌های جنایی، مدارک، تحقیقات و کاربران
+          </p>
+        </header>
 
-        <section className="intro-section module-card-luxury">
+        <section className="intro-section">
           <h3>درباره اداره پلیس و سامانه</h3>
           <p>
             اداره پلیس مرکزی با هدف برقراری عدالت و امنیت، این سامانه پیشرفته را برای تسریع در روند پیگیری پرونده‌ها طراحی کرده است. 
@@ -64,15 +66,15 @@ const Home = () => {
           <div className="stats-section">
             <h3 className="stats-title">آمار سیستم</h3>
             <div className="stats-grid">
-              <div className="stat-item module-card-luxury">
+              <div className="stat-item">
                 <div className="stat-value">{stats.solvedCases}</div>
                 <div className="stat-label">تعداد کل پرونده‌های حل شده</div>
               </div>
-              <div className="stat-item module-card-luxury">
+              <div className="stat-item">
                 <div className="stat-value">{stats.totalUsers}</div>
                 <div className="stat-label">تعداد کل کارمندان سازمان</div>
               </div>
-              <div className="stat-item module-card-luxury">
+              <div className="stat-item">
                 <div className="stat-value">{stats.activeCases}</div>
                 <div className="stat-label">تعداد پرونده‌های فعال</div>
               </div>
