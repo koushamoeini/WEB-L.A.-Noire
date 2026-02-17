@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap');
+
 :root {
   /* Color Palette - Luxury Noir */
   --bg-deep: #0a0a0a;
@@ -46,6 +48,39 @@ body {
   color: var(--text-main);
   direction: rtl;
   overflow-x: hidden;
+  font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body:lang(fa),
+[dir='rtl'],
+input,
+textarea,
+select,
+button {
+  font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+[dir='rtl'] h1,
+[dir='rtl'] h2,
+[dir='rtl'] h3,
+[dir='rtl'] h4,
+[dir='rtl'] h5,
+[dir='rtl'] h6,
+[dir='rtl'] .gold-text,
+[dir='rtl'] .subtitle-lux,
+[dir='rtl'] .welcome-text,
+[dir='rtl'] .case-title,
+[dir='rtl'] .home-title,
+[dir='rtl'] .home-subtitle {
+  font-family: 'Vazirmatn', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+[dir='rtl'] h1,
+[dir='rtl'] .home-title,
+[dir='rtl'] .cases-top-header h1,
+[dir='rtl'] .case-detail-header h1,
+[dir='rtl'] .evidence-header h1 {
+  font-weight: 800;
 }
 
 a {
@@ -153,5 +188,66 @@ button {
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 700;
+}
+
+.btn,
+.submit-btn,
+.cancel-btn,
+.btn-primary,
+.btn-secondary {
+  border-radius: 12px;
+  border: 1px solid transparent;
+  padding: 0.8em 1.6em;
+  font-size: 0.95em;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary,
+.submit-btn {
+  background: linear-gradient(180deg, #e5c767 0%, var(--primary) 100%);
+  color: #000;
+  border: 1px solid rgba(212, 175, 55, 0.85);
+}
+
+.btn-primary:hover,
+.submit-btn:hover {
+  background: linear-gradient(180deg, #f0d98e 0%, var(--primary-light) 100%);
+  box-shadow: 0 10px 20px rgba(212, 175, 55, 0.22);
+  transform: translateY(-2px);
+}
+
+.btn-secondary,
+.cancel-btn {
+  background: rgba(212, 175, 55, 0.03);
+  color: var(--primary-light);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+}
+
+.btn-secondary:hover,
+.cancel-btn:hover {
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.25), 0 8px 18px rgba(0, 0, 0, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn-primary:disabled,
+.submit-btn:disabled,
+.btn-secondary:disabled,
+.cancel-btn:disabled,
+.btn-gold-solid:disabled,
+.btn-gold-outline:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
