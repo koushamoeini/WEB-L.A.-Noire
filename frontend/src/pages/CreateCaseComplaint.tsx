@@ -44,12 +44,12 @@ const CreateCaseComplaint = () => {
     <div className="layout-with-sidebar">
       <Sidebar />
       <div className="main-content">
-        <div className="create-case-container">
-      <div className="create-case-card">
-        <h1 className="create-case-title">ثبت شکایت جدید</h1>
-        <p className="create-case-subtitle">
-          برای ثبت شکایت خود، فرم زیر را تکمیل کنید
-        </p>
+        <div className="create-case-container luxury-form-container">
+      <div className="create-case-card module-card-luxury">
+        <header className="page-header-lux">
+          <h1 className="gold-text">ثبت شکایت جدید</h1>
+          <p className="subtitle-lux">برای ثبت شکایت، اطلاعات پرونده را کامل وارد کنید</p>
+        </header>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -96,7 +96,7 @@ const CreateCaseComplaint = () => {
             />
           </div>
 
-          <div className="form-actions">
+          <div className="form-actions form-actions-lux">
             <button type="submit" className="btn-gold-solid" disabled={loading}>
               {loading ? 'در حال ثبت...' : 'ثبت شکایت'}
             </button>

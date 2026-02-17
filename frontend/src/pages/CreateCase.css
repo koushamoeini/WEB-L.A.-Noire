@@ -6,6 +6,21 @@
   direction: rtl;
 }
 
+.luxury-form-container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.page-header-lux {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.subtitle-lux {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
 .create-case-card {
   width: 100%;
   max-width: 860px;
@@ -226,8 +241,13 @@
   margin-top: 8px;
 }
 
+.form-actions-lux {
+  margin-top: 18px;
+}
+
 .form-actions button {
   flex: 1;
+  min-height: 48px;
 }
 
 @media (max-width: 992px) {
