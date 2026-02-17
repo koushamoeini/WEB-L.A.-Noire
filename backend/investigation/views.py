@@ -346,6 +346,13 @@ class VerdictViewSet(viewsets.ModelViewSet):
     serializer_class = VerdictSerializer
     permission_classes = [permissions.IsAuthenticated, IsJudge]
 
+    def create(self, request, *args, **kwargs):
+        case_id = request.data.get('case')
+        suspect_id = request.data.get('suspect')
+        if Verdict.objects.filter(case_id=case_id, suspect_id=suspect_id).exists():
+            return Response({'error': 'برای این متهم قبلاً حکم صادر شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        return super().create(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         serializer.save(judge=self.request.user)
 

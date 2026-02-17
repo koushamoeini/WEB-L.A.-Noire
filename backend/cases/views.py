@@ -27,17 +27,17 @@ class CaseViewSet(viewsets.ModelViewSet):
         if 'trainee' in roles:
             queryset |= Case.objects.filter(status=Case.Status.PENDING_TRAINEE)
             
-        # Officers see cases pending their review
+        # Officers see cases pending their review and solved cases
         if 'police_officer' in roles:
-            queryset |= Case.objects.filter(status=Case.Status.PENDING_OFFICER)
+            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.SOLVED])
 
-        # Sergeants see cases pending resolution review
+        # Sergeants see cases pending resolution review and completed/solved cases
         if 'sergeant' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.PENDING_SERGEANT])
+            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
 
-        # Detectives see active cases to investigate
+        # Detectives see active cases to investigate and solved cases
         if 'detective' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT])
+            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT, Case.Status.SOLVED])
 
         # Judges see all active cases
         if 'judge' in roles or 'qazi' in roles:

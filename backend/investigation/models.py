@@ -67,6 +67,11 @@ class Verdict(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('case', 'suspect')
+        verbose_name = "حکم قضایی"
+        verbose_name_plural = "احکام قضایی"
+
     def __str__(self):
         return f"Verdict for {self.suspect.name}: {self.result}"
 
