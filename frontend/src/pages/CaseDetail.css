@@ -68,7 +68,45 @@
 
 .review-section {
   border-color: rgba(212, 175, 55, 0.3);
+  margin-top: 30px;
 }
+
+.verdict-form {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  margin-top: 25px;
+}
+
+.verdict-form select,
+.verdict-form input,
+.verdict-form textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: 10px;
+  color: white;
+  margin-top: 6px;
+  font-family: 'Vazirmatn', sans-serif;
+}
+
+.verdict-form select option {
+  background: #1a1a1a;
+  color: white;
+}
+
+.verdict-form select:focus,
+.verdict-form input:focus,
+.verdict-form textarea:focus {
+  border-color: var(--primary);
+  outline: none;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.status-rejected { background: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+.status-active { background: rgba(34, 197, 94, 0.15); color: #22c55e; border-color: rgba(34, 197, 94, 0.3); }
 
 .info-section h3,
 .review-section h3 {
