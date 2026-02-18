@@ -28,19 +28,65 @@ export default function Evidence() {
 
   useEffect(() => {
     fetchEvidences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
+
+  const bioMap = useMemo(() => {
+    const map = new Map<number, BiologicalEvidence>();
+    bioEvidences.forEach((b) => map.set(b.id, b));
+    return map;
+  }, [bioEvidences]);
 
   const fetchEvidences = async () => {
     try {
       setLoading(true);
-      const data = await evidenceAPI.listAllEvidence(
-        caseId ? parseInt(caseId) : undefined
-      );
-      setEvidences(data);
-    } catch (error) {
-      console.error('Failed to fetch evidences:', error);
+      setError(null);
+      const cid = caseId ? parseInt(caseId) : undefined;
+
+      const [all, biological] = await Promise.all([
+        evidenceAPI.listAllEvidence(cid),
+        evidenceAPI.listBiologicalEvidence(cid).catch(() => [] as BiologicalEvidence[]),
+      ]);
+
+      setEvidences(all);
+      setBioEvidences(biological);
+    } catch (err) {
+      console.error('Failed to fetch evidences:', err);
+      setError('خطا در دریافت لیست شواهد');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openVerify = (bio: BiologicalEvidence) => {
+    setVerifyId(bio.id);
+    setMedicalFollowUp(bio.medical_follow_up ?? '');
+    setDatabaseFollowUp(bio.database_follow_up ?? '');
+    setVerifyOpen(true);
+  };
+
+  const closeVerify = () => {
+    setVerifyOpen(false);
+    setVerifyId(null);
+    setMedicalFollowUp('');
+    setDatabaseFollowUp('');
+  };
+
+  const submitVerify = async () => {
+    if (!verifyId) return;
+    try {
+      setVerifyLoading(true);
+      await evidenceAPI.verifyBiologicalEvidence(verifyId, {
+        medical_follow_up: medicalFollowUp,
+        database_follow_up: databaseFollowUp,
+      });
+      closeVerify();
+      await fetchEvidences();
+    } catch (err) {
+      console.error(err);
+      setError('خطا در تایید مدرک زیستی');
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
