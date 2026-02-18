@@ -180,14 +180,36 @@ export default function Evidence() {
             </div>
           ) : (
             <div className="evidence-grid">
-              {evidences.map((evidence) => (
+              {evidences.map((evidence) => {
+                const bio = bioMap.get(evidence.id);
+                const isBio = !!bio;
+                const verified = bio?.is_verified;
+
+                return (
                 <div key={evidence.id} className="evidence-card module-card-luxury">
                   <div className="evidence-card-header">
                     <span className="evidence-type-badge">{evidence.type_display}</span>
-                    {evidence.is_on_board && (
-                      <span className="board-badge">روی تخته</span>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        {evidence.is_on_board && <span className="board-badge">روی تخته</span>}
+                        {isBio && (
+                          <span
+                            style={{
+                              fontSize: 12,
+                              padding: '4px 10px',
+                              borderRadius: 999,
+                              border: verified
+                                ? '1px solid rgba(120,255,120,0.35)'
+                                : '1px solid rgba(255,200,120,0.35)',
+                              background: verified ? 'rgba(120,255,120,0.08)' : 'rgba(255,200,120,0.08)',
+                              color: verified ? '#c7ffd1' : '#ffe1c2',
+                            }}
+                          >
+                            {verified ? 'تایید شد' : 'در انتظار تایید'}
+                          </span>
                     )}
                   </div>
+                    </div>
+
                   <h3>{evidence.title}</h3>
                   <p className="evidence-description">{evidence.description}</p>
                   <div className="evidence-meta">
@@ -200,6 +222,22 @@ export default function Evidence() {
                       <span>{new Date(evidence.recorded_at).toLocaleDateString('fa-IR')}</span>
                     </div>
                   </div>
+
+                    {isBio && bio && (bio.medical_follow_up || bio.database_follow_up) && (
+                      <div style={{ marginTop: 10, color: '#ddd', fontSize: 12, lineHeight: 1.8 }}>
+                        {bio.medical_follow_up && (
+                          <div>
+                            <b>پیگیری پزشکی:</b> {bio.medical_follow_up}
+                          </div>
+                        )}
+                        {bio.database_follow_up && (
+                          <div>
+                            <b>پیگیری بانک داده:</b> {bio.database_follow_up}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                   {evidence.images && evidence.images.length > 0 && (
                     <div className="evidence-images">
                       {evidence.images.map((img) => (
@@ -207,9 +245,11 @@ export default function Evidence() {
                       ))}
                     </div>
                   )}
+
+                    <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
                   <button
                     className="btn-gold-outline"
-                    style={{ width: '100%', marginTop: '10px' }}
+                        style={{ width: '100%' }}
                     onClick={() => navigate(`/investigation?case=${evidence.case}`)}
                   >
                     مشاهده در تخته کارآگاه
