@@ -101,26 +101,78 @@ export default function Evidence() {
         <div className="evidence-container">
           <header className="evidence-header page-header-lux">
             <div>
-              <h1 className="gold-text">شواهد {caseId ? `پرونده ${caseId}` : ''}</h1>
+              <h1 className="gold-text">ثبت و بررسی مدارک (۵.۸){caseId ? ` — پرونده ${caseId}` : ''}</h1>
               <p className="subtitle-lux">مشاهده، مدیریت و ارجاع شواهد پرونده</p>
             </div>
             <div className="evidence-actions">
-              <button
-                className="btn-gold-solid"
-                onClick={() => navigate('/evidence/create')}
-              >
+              <button className="btn-gold-solid" onClick={() => navigate('/evidence/create')}>
                 ثبت شواهد جدید
               </button>
               {caseId && (
-                <button
-                  className="btn-gold-outline"
-                  onClick={() => navigate(`/cases/${caseId}`)}
-                >
+                <button className="btn-gold-outline" onClick={() => navigate(`/cases/${caseId}`)}>
                   بازگشت به پرونده
                 </button>
               )}
             </div>
           </header>
+
+          {error && (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                border: '1px solid rgba(255,90,90,0.35)',
+                background: 'rgba(255,90,90,0.08)',
+                color: '#ffd2d2',
+                marginBottom: 12,
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {isForensicDoctor && (
+            <div className="lux-card" style={{ padding: 16, marginBottom: 16 }}>
+              <h3 className="gold-text" style={{ marginTop: 0 }}>
+                شواهد زیستیِ در انتظار تایید
+              </h3>
+
+              {bioEvidences.filter((b) => !b.is_verified).length === 0 ? (
+                <p style={{ color: '#ccc', margin: 0, lineHeight: 1.8 }}>فعلاً مدرک زیستیِ تایید نشده‌ای وجود ندارد.</p>
+              ) : (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {bioEvidences
+                    .filter((b) => !b.is_verified)
+                    .map((b) => (
+                      <div
+                        key={b.id}
+                        style={{
+                          padding: 12,
+                          borderRadius: 12,
+                          background: 'rgba(0,0,0,0.18)',
+                          border: '1px solid rgba(255,255,255,0.10)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 800, color: '#fff' }}>{b.title}</div>
+                          <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>
+                            ثبت‌کننده: {b.recorder_name} • تاریخ: {new Date(b.recorded_at).toLocaleDateString('fa-IR')}
+                          </div>
+                        </div>
+                        <button className="btn-gold-solid" onClick={() => openVerify(b)}>
+                          تایید پزشکی
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {evidences.length === 0 ? (
             <div className="no-data">
