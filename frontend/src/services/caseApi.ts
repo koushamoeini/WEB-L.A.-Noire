@@ -1,5 +1,6 @@
 import api from './api';
 import type { Case, CreateCaseRequest, CreateCaseFromSceneRequest, ReviewRequest } from '../types/case';
+import type { TrialHistoryReport } from '../types/report';
 
 export const caseAPI = {
   // List all cases
@@ -65,6 +66,12 @@ export const caseAPI = {
   // Add complainant to case
   addComplainant: async (id: number, userId: number): Promise<{ status: string }> => {
     const response = await api.post(`/cases/${id}/add_complainant/`, { user_id: userId });
+    return response.data;
+  },
+
+  // Section 5.7 - Aggregate report for judges/captain/chief
+  getTrialHistory: async (id: number): Promise<TrialHistoryReport> => {
+    const response = await api.get<TrialHistoryReport>(`/cases/${id}/trial_history/`);
     return response.data;
   },
 };
