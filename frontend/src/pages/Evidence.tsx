@@ -186,9 +186,9 @@ export default function Evidence() {
                 const verified = bio?.is_verified;
 
                 return (
-                <div key={evidence.id} className="evidence-card module-card-luxury">
-                  <div className="evidence-card-header">
-                    <span className="evidence-type-badge">{evidence.type_display}</span>
+                  <div key={evidence.id} className="evidence-card module-card-luxury">
+                    <div className="evidence-card-header">
+                      <span className="evidence-type-badge">{evidence.type_display}</span>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                         {evidence.is_on_board && <span className="board-badge">روی تخته</span>}
                         {isBio && (
@@ -206,22 +206,22 @@ export default function Evidence() {
                           >
                             {verified ? 'تایید شد' : 'در انتظار تایید'}
                           </span>
-                    )}
-                  </div>
+                        )}
+                      </div>
                     </div>
 
-                  <h3>{evidence.title}</h3>
-                  <p className="evidence-description">{evidence.description}</p>
-                  <div className="evidence-meta">
-                    <div>
-                      <small>ثبت‌کننده:</small>
-                      <span>{evidence.recorder_name}</span>
+                    <h3>{evidence.title}</h3>
+                    <p className="evidence-description">{evidence.description}</p>
+                    <div className="evidence-meta">
+                      <div>
+                        <small>ثبت‌کننده:</small>
+                        <span>{evidence.recorder_name}</span>
+                      </div>
+                      <div>
+                        <small>تاریخ:</small>
+                        <span>{new Date(evidence.recorded_at).toLocaleDateString('fa-IR')}</span>
+                      </div>
                     </div>
-                    <div>
-                      <small>تاریخ:</small>
-                      <span>{new Date(evidence.recorded_at).toLocaleDateString('fa-IR')}</span>
-                    </div>
-                  </div>
 
                     {isBio && bio && (bio.medical_follow_up || bio.database_follow_up) && (
                       <div style={{ marginTop: 10, color: '#ddd', fontSize: 12, lineHeight: 1.8 }}>
@@ -238,22 +238,22 @@ export default function Evidence() {
                       </div>
                     )}
 
-                  {evidence.images && evidence.images.length > 0 && (
-                    <div className="evidence-images">
-                      {evidence.images.map((img) => (
-                        <img key={img.id} src={img.image} alt="Evidence" />
-                      ))}
-                    </div>
-                  )}
+                    {evidence.images && evidence.images.length > 0 && (
+                      <div className="evidence-images">
+                        {evidence.images.map((img) => (
+                          <img key={img.id} src={img.image} alt="Evidence" />
+                        ))}
+                      </div>
+                    )}
 
                     <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
-                  <button
-                    className="btn-gold-outline"
+                      <button
+                        className="btn-gold-outline"
                         style={{ width: '100%' }}
-                    onClick={() => navigate(`/investigation?case=${evidence.case}`)}
-                  >
-                    مشاهده در تخته کارآگاه
-                  </button>
+                        onClick={() => navigate(`/investigation?case=${evidence.case}`)}
+                      >
+                        مشاهده در تخته کارآگاه
+                      </button>
 
                       {isForensicDoctor && isBio && bio && !bio.is_verified && (
                         <button
@@ -265,7 +265,7 @@ export default function Evidence() {
                         </button>
                       )}
                     </div>
-                </div>
+                  </div>
                 );
               })}
             </div>
