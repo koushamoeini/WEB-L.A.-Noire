@@ -56,10 +56,22 @@ export default function Sidebar() {
       path: '/ranking',
     },
     {
+      icon: '🧾',
+      label: 'مدارک و شواهد',
+      path: '/evidence',
+      hidden: !canSeeEvidence,
+    },
+    {
       icon: '🎯',
       label: 'تخته کارآگاه',
       path: '/investigation',
       hidden: !isDetective,
+    },
+    {
+      icon: '📊',
+      label: 'گزارش‌گیری کلی',
+      path: '/stats',
+      hidden: !canSeeStats,
     },
   ];
 
