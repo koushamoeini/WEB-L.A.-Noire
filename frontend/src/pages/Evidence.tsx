@@ -254,11 +254,94 @@ export default function Evidence() {
                   >
                     مشاهده در تخته کارآگاه
                   </button>
+
+                      {isForensicDoctor && isBio && bio && !bio.is_verified && (
+                        <button
+                          className="btn-gold-solid"
+                          style={{ width: '100%' }}
+                          onClick={() => openVerify(bio)}
+                        >
+                          تایید پزشکی این مدرک
+                        </button>
+                      )}
+                    </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
+
+        {verifyOpen && (
+          <div
+            onClick={closeVerify}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.55)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 16,
+              zIndex: 999,
+            }}
+          >
+            <div onClick={(e) => e.stopPropagation()} className="lux-card" style={{ width: 'min(720px, 100%)', padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+                <h3 className="gold-text" style={{ margin: 0 }}>
+                  تایید مدرک زیستی
+                </h3>
+                <button className="btn-gold-outline" onClick={closeVerify}>
+                  بستن
+                </button>
+              </div>
+
+              <div style={{ marginTop: 12, display: 'grid', gap: 12 }}>
+                <div>
+                  <label style={{ color: '#ddd', fontSize: 12 }}>پیگیری پزشکی</label>
+                  <textarea
+                    value={medicalFollowUp}
+                    onChange={(e) => setMedicalFollowUp(e.target.value)}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      marginTop: 6,
+                      padding: 10,
+                      borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'rgba(0,0,0,0.22)',
+                      color: '#fff',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ color: '#ddd', fontSize: 12 }}>پیگیری بانک داده</label>
+                  <textarea
+                    value={databaseFollowUp}
+                    onChange={(e) => setDatabaseFollowUp(e.target.value)}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      marginTop: 6,
+                      padding: 10,
+                      borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'rgba(0,0,0,0.22)',
+                      color: '#fff',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <button className="btn-gold-solid" onClick={submitVerify} disabled={verifyLoading}>
+                  {verifyLoading ? 'در حال ارسال...' : 'ثبت تایید'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
