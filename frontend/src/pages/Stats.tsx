@@ -78,14 +78,183 @@ const Stats = () => {
   return (
     <div className="layout-with-sidebar">
       <Sidebar />
-      <div className="main-content" style={{ padding: '60px', color: '#fff' }}>
-        <h1 className="gold-text" style={{ fontSize: '3rem', marginBottom: '40px' }}>آمار و گزارشات</h1>
-        <div className="lux-card">
-          <h3 className="gold-text" style={{ marginBottom: '20px' }}>تحلیل داده‌های آماری</h3>
-          <p style={{ color: '#ccc', lineHeight: '1.8' }}>
-            تحلیل داده‌های آماری کلانتری در حال بارگذاری است. نمودارهای وقوع جرم، تراکم پرونده‌ها و عملکرد افسران در این بخش قرار می‌گیرد.
+      <div className="main-content" style={{ padding: '24px' }}>
+        <h1 className="gold-text" style={{ fontSize: '2.2rem', marginBottom: 16 }}>
+          گزارش‌گیری کلی (۵.۷)
+        </h1>
+
+        {!allowed && (
+          <div className="lux-card" style={{ padding: 16, color: '#fff' }}>
+            <p style={{ color: '#ccc', lineHeight: 1.8, margin: 0 }}>
+              این صفحه برای نقش‌های <b>قاضی</b>، <b>کاپیتان</b> و <b>رئیس پلیس</b> طراحی شده است.
+              <br />
+              اگر فکر می‌کنید باید دسترسی داشته باشید، از مدیر سامانه بخواهید نقش مناسب را به حساب شما اضافه کند.
           </p>
         </div>
+        )}
+
+        {allowed && (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '360px 1fr',
+              gap: 16,
+              alignItems: 'start',
+            }}
+          >
+            <div className="lux-card" style={{ padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 className="gold-text" style={{ margin: 0 }}>
+                  پرونده‌ها
+                </h3>
+                <span style={{ color: '#999', fontSize: 12 }}>{cases.length}</span>
+              </div>
+
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="جستجو: عنوان، توضیحات، وضعیت، شماره"
+                style={{
+                  width: '100%',
+                  marginTop: 12,
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'rgba(0,0,0,0.25)',
+                  color: '#fff',
+                  outline: 'none',
+                }}
+              />
+
+              <div style={{ marginTop: 12, maxHeight: '65vh', overflow: 'auto' }}>
+                {loadingCases ? (
+                  <div style={{ color: '#ccc', padding: 12 }}>در حال بارگذاری لیست...</div>
+                ) : filteredCases.length === 0 ? (
+                  <div style={{ color: '#ccc', padding: 12 }}>پرونده‌ای پیدا نشد.</div>
+                ) : (
+                  filteredCases.map((c) => {
+                    const active = c.id === selectedId;
+                    return (
+                      <button
+                        key={c.id}
+                        onClick={() => setSelectedId(c.id)}
+                        style={{
+                          width: '100%',
+                          textAlign: 'right',
+                          padding: 12,
+                          borderRadius: 12,
+                          border: active
+                            ? '1px solid rgba(212,175,55,0.55)'
+                            : '1px solid rgba(255,255,255,0.10)',
+                          background: active ? 'rgba(212,175,55,0.12)' : 'rgba(0,0,0,0.18)',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          marginTop: 10,
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                          <div style={{ fontWeight: 700 }}>
+                            #{c.id} — {c.title}
+                          </div>
+                          <div style={{ color: '#aaa', fontSize: 12 }}>{c.level_label}</div>
+                        </div>
+                        <div style={{ color: '#bbb', fontSize: 12, marginTop: 6 }}>
+                          {c.status_label}
+                          {' • '}
+                          {new Date(c.created_at).toLocaleDateString('fa-IR')}
+                        </div>
+                        <div style={{ color: '#ccc', fontSize: 12, marginTop: 6, lineHeight: 1.6 }}>
+                          {c.description?.slice(0, 90)}
+                          {c.description && c.description.length > 90 ? '…' : ''}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div className="lux-card" style={{ padding: 16 }}>
+              <h3 className="gold-text" style={{ marginTop: 0 }}>
+                گزارش پرونده
+              </h3>
+
+              {error && (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 12,
+                    border: '1px solid rgba(255,90,90,0.35)',
+                    background: 'rgba(255,90,90,0.08)',
+                    color: '#ffd2d2',
+                    marginBottom: 12,
+                  }}
+                >
+                  {error}
+                </div>
+              )}
+
+              {!selectedId && (
+                <div style={{ color: '#ccc', lineHeight: 1.8 }}>
+                  یک پرونده از ستون سمت چپ انتخاب کنید تا گزارش کامل آن نمایش داده شود.
+                </div>
+              )}
+
+              {selectedId && loadingReport && <div style={{ color: '#ccc' }}>در حال بارگذاری گزارش...</div>}
+
+              {selectedId && !loadingReport && report && (
+                <div style={{ display: 'grid', gap: 14 }}>
+                  <section style={{ border: '1px solid rgba(255,255,255,0.10)', borderRadius: 14, padding: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ color: '#aaa', fontSize: 12 }}>پرونده</div>
+                        <div style={{ fontWeight: 800, color: '#fff' }}>
+                          #{report.case.id} — {report.case.title}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#aaa', fontSize: 12 }}>وضعیت</div>
+                        <div style={{ color: '#fff' }}>{report.case.status_label}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#aaa', fontSize: 12 }}>سطح جرم</div>
+                        <div style={{ color: '#fff' }}>{report.case.level_label}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#aaa', fontSize: 12 }}>تاریخ تشکیل</div>
+                        <div style={{ color: '#fff' }}>
+                          {new Date(report.case.created_at).toLocaleDateString('fa-IR')}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: 10, color: '#ddd', lineHeight: 1.8 }}>{report.case.description}</div>
+                  </section>
+
+                  <section style={{ border: '1px solid rgba(255,255,255,0.10)', borderRadius: 14, padding: 12 }}>
+                    <h4 className="gold-text" style={{ marginTop: 0 }}>
+                      شواهد و استشهادها ({report.evidence?.length ?? 0})
+                    </h4>
+                    {report.evidence?.length ? (
+                      <div style={{ display: 'grid', gap: 10 }}>
+                        {report.evidence.map((ev) => (
+                          <div key={ev.id} style={{ padding: 10, borderRadius: 12, background: 'rgba(0,0,0,0.18)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                              <div style={{ fontWeight: 700, color: '#fff' }}>{ev.title}</div>
+                              <div style={{ color: '#aaa', fontSize: 12 }}>{ev.type_display}</div>
+                            </div>
+                            <div style={{ color: '#ccc', marginTop: 6, lineHeight: 1.7 }}>{ev.description}</div>
+                            <div style={{ color: '#999', fontSize: 12, marginTop: 6 }}>
+                              ثبت‌کننده: {ev.recorder_name} • تاریخ: {new Date(ev.recorded_at).toLocaleDateString('fa-IR')}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: '#ccc' }}>مدرکی ثبت نشده است.</div>
+                    )}
+                  </section>
+
       </div>
     </div>
   );
