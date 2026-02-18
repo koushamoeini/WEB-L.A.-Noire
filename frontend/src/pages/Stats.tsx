@@ -255,6 +255,95 @@ const Stats = () => {
                     )}
                   </section>
 
+                  <section style={{ border: '1px solid rgba(255,255,255,0.10)', borderRadius: 14, padding: 12 }}>
+                    <h4 className="gold-text" style={{ marginTop: 0 }}>
+                      مظنونین ({report.suspects?.length ?? 0})
+                    </h4>
+                    {report.suspects?.length ? (
+                      <div style={{ display: 'grid', gap: 10 }}>
+                        {report.suspects.map((s) => (
+                          <div key={s.id} style={{ padding: 10, borderRadius: 12, background: 'rgba(0,0,0,0.18)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                              <div style={{ fontWeight: 700, color: '#fff' }}>{s.name}</div>
+                              <div style={{ color: '#aaa', fontSize: 12 }}>{s.is_main_suspect ? 'مظنون اصلی' : 'مظنون'}</div>
+                            </div>
+                            <div style={{ color: '#ccc', marginTop: 6, lineHeight: 1.7 }}>{s.details}</div>
+
+                            {s.interrogations && s.interrogations.length > 0 && (
+                              <div style={{ marginTop: 10, borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 10 }}>
+                                <div style={{ color: '#aaa', fontSize: 12, marginBottom: 6 }}>
+                                  بازجویی‌ها ({s.interrogations.length})
+                                </div>
+                                <div style={{ display: 'grid', gap: 8 }}>
+                                  {s.interrogations.map((i) => (
+                                    <div key={i.id} style={{ padding: 8, borderRadius: 10, background: 'rgba(255,255,255,0.05)' }}>
+                                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                                        <div style={{ color: '#ddd' }}>
+                                          بازجو: {i.interrogator_name ?? i.interrogator}
+                                        </div>
+                                        <div style={{ color: '#ddd' }}>امتیاز: {i.score}</div>
+                                      </div>
+                                      <div style={{ color: '#bbb', fontSize: 12, marginTop: 6, lineHeight: 1.7 }}>
+                                        {i.transcript?.slice(0, 160)}
+                                        {i.transcript && i.transcript.length > 160 ? '…' : ''}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: '#ccc' }}>مظنونی ثبت نشده است.</div>
+                    )}
+                  </section>
+
+                  <section style={{ border: '1px solid rgba(255,255,255,0.10)', borderRadius: 14, padding: 12 }}>
+                    <h4 className="gold-text" style={{ marginTop: 0 }}>
+                      احکام / نتایج دادگاه ({report.verdicts?.length ?? 0})
+                    </h4>
+                    {report.verdicts?.length ? (
+                      <div style={{ display: 'grid', gap: 10 }}>
+                        {report.verdicts.map((v) => (
+                          <div key={v.id} style={{ padding: 10, borderRadius: 12, background: 'rgba(0,0,0,0.18)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                              <div style={{ fontWeight: 800, color: '#fff' }}>{v.title}</div>
+                              <div style={{ color: '#aaa', fontSize: 12 }}>{v.result_display ?? v.result}</div>
+                            </div>
+                            <div style={{ color: '#ccc', marginTop: 6, lineHeight: 1.7 }}>{v.description}</div>
+                            {v.punishment && <div style={{ color: '#ddd', marginTop: 6 }}>مجازات: {v.punishment}</div>}
+                            <div style={{ color: '#999', fontSize: 12, marginTop: 6 }}>
+                              قاضی: {v.judge_username ?? v.judge ?? '-'} • تاریخ: {new Date(v.created_at).toLocaleDateString('fa-IR')}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ color: '#ccc' }}>حکمی ثبت نشده است.</div>
+                    )}
+                  </section>
+
+                  <section style={{ border: '1px solid rgba(255,255,255,0.10)', borderRadius: 14, padding: 12 }}>
+                    <h4 className="gold-text" style={{ marginTop: 0 }}>
+                      افراد دخیل ({report.officers_involved?.length ?? 0})
+                    </h4>
+                    {report.officers_involved?.length ? (
+                      <ul style={{ margin: 0, paddingInlineStart: 18, color: '#ddd', lineHeight: 1.9 }}>
+                        {report.officers_involved.map((o) => (
+                          <li key={o}>{o}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div style={{ color: '#ccc' }}>اطلاعاتی ثبت نشده است.</div>
+                    )}
+                  </section>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
