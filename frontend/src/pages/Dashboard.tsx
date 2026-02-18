@@ -36,18 +36,34 @@ const Dashboard = () => {
     },
     {
       id: 'stats',
-      title: 'آمار و گزارشات',
+      title: 'گزارش‌گیری کلی',
       icon: '📊',
       path: '/stats',
-      description: 'تحلیل داده‌های کل سامانه و وضعیت کلی اداره پلیس.',
-      roles: ['sergeant', 'captain', 'police_chief'],
+      description: 'گزارش جامع پرونده‌ها برای بررسی قضایی و مدیریتی (۵.۷).',
+      roles: ['judge', 'qazi', 'captain', 'police_chief'],
+    },
+    {
+      id: 'evidence',
+      title: 'ثبت و بررسی مدارک',
+      icon: '🧾',
+      path: '/evidence',
+      description: 'مدیریت شواهد پرونده‌ها و تایید مدارک زیستی توسط پزشک قانونی (۵.۸).',
+      roles: [
+        'trainee',
+        'police_officer',
+        'detective',
+        'sergeant',
+        'captain',
+        'police_chief',
+        'forensic_doctor',
+        'judge',
+        'qazi',
+      ],
     },
   ];
 
-  const visibleModules = modules.filter(m => 
-    // Everyone sees Cases and Ranking
-    m.id === 'cases' || m.id === 'ranking' || 
-    m.roles.some(role => userRoles.includes(role))
+  const visibleModules = modules.filter(
+    (m) => m.id === 'cases' || m.id === 'ranking' || m.roles.some((role) => userRoles.includes(role))
   );
 
   return (
