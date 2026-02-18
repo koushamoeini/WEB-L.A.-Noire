@@ -1,16 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { evidenceAPI } from '../services/evidenceApi';
-import type { Evidence } from '../types/evidence';
+import type { Evidence, BiologicalEvidence } from '../types/evidence';
 import Sidebar from '../components/Sidebar';
 import './Evidence.css';
+import { useAuth } from '../context/AuthContext';
 
 export default function Evidence() {
+  const { user } = useAuth();
+  const isForensicDoctor = user?.roles?.some((r) => r.code === 'forensic_doctor') || false;
+
   const [searchParams] = useSearchParams();
   const caseId = searchParams.get('case');
   const navigate = useNavigate();
+
   const [evidences, setEvidences] = useState<Evidence[]>([]);
+  const [bioEvidences, setBioEvidences] = useState<BiologicalEvidence[]>([]);
+
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyId, setVerifyId] = useState<number | null>(null);
+  const [medicalFollowUp, setMedicalFollowUp] = useState('');
+  const [databaseFollowUp, setDatabaseFollowUp] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
 
   useEffect(() => {
     fetchEvidences();
