@@ -1,32 +1,92 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { evidenceAPI } from '../services/evidenceApi';
-import type { Evidence } from '../types/evidence';
+import type { Evidence, BiologicalEvidence } from '../types/evidence';
 import Sidebar from '../components/Sidebar';
 import './Evidence.css';
+import { useAuth } from '../context/AuthContext';
 
 export default function Evidence() {
+  const { user } = useAuth();
+  const isForensicDoctor = user?.roles?.some((r) => r.code === 'forensic_doctor') || false;
+
   const [searchParams] = useSearchParams();
   const caseId = searchParams.get('case');
   const navigate = useNavigate();
+
   const [evidences, setEvidences] = useState<Evidence[]>([]);
+  const [bioEvidences, setBioEvidences] = useState<BiologicalEvidence[]>([]);
+
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [verifyOpen, setVerifyOpen] = useState(false);
+  const [verifyId, setVerifyId] = useState<number | null>(null);
+  const [medicalFollowUp, setMedicalFollowUp] = useState('');
+  const [databaseFollowUp, setDatabaseFollowUp] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
 
   useEffect(() => {
     fetchEvidences();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [caseId]);
+
+  const bioMap = useMemo(() => {
+    const map = new Map<number, BiologicalEvidence>();
+    bioEvidences.forEach((b) => map.set(b.id, b));
+    return map;
+  }, [bioEvidences]);
 
   const fetchEvidences = async () => {
     try {
       setLoading(true);
-      const data = await evidenceAPI.listAllEvidence(
-        caseId ? parseInt(caseId) : undefined
-      );
-      setEvidences(data);
-    } catch (error) {
-      console.error('Failed to fetch evidences:', error);
+      setError(null);
+      const cid = caseId ? parseInt(caseId) : undefined;
+
+      const [all, biological] = await Promise.all([
+        evidenceAPI.listAllEvidence(cid),
+        evidenceAPI.listBiologicalEvidence(cid).catch(() => [] as BiologicalEvidence[]),
+      ]);
+
+      setEvidences(all);
+      setBioEvidences(biological);
+    } catch (err) {
+      console.error('Failed to fetch evidences:', err);
+      setError('خطا در دریافت لیست شواهد');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openVerify = (bio: BiologicalEvidence) => {
+    setVerifyId(bio.id);
+    setMedicalFollowUp(bio.medical_follow_up ?? '');
+    setDatabaseFollowUp(bio.database_follow_up ?? '');
+    setVerifyOpen(true);
+  };
+
+  const closeVerify = () => {
+    setVerifyOpen(false);
+    setVerifyId(null);
+    setMedicalFollowUp('');
+    setDatabaseFollowUp('');
+  };
+
+  const submitVerify = async () => {
+    if (!verifyId) return;
+    try {
+      setVerifyLoading(true);
+      await evidenceAPI.verifyBiologicalEvidence(verifyId, {
+        medical_follow_up: medicalFollowUp,
+        database_follow_up: databaseFollowUp,
+      });
+      closeVerify();
+      await fetchEvidences();
+    } catch (err) {
+      console.error(err);
+      setError('خطا در تایید مدرک زیستی');
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
@@ -41,26 +101,78 @@ export default function Evidence() {
         <div className="evidence-container">
           <header className="evidence-header page-header-lux">
             <div>
-              <h1 className="gold-text">شواهد {caseId ? `پرونده ${caseId}` : ''}</h1>
+              <h1 className="gold-text">ثبت و بررسی مدارک (۵.۸){caseId ? ` — پرونده ${caseId}` : ''}</h1>
               <p className="subtitle-lux">مشاهده، مدیریت و ارجاع شواهد پرونده</p>
             </div>
             <div className="evidence-actions">
-              <button
-                className="btn-gold-solid"
-                onClick={() => navigate('/evidence/create')}
-              >
+              <button className="btn-gold-solid" onClick={() => navigate('/evidence/create')}>
                 ثبت شواهد جدید
               </button>
               {caseId && (
-                <button
-                  className="btn-gold-outline"
-                  onClick={() => navigate(`/cases/${caseId}`)}
-                >
+                <button className="btn-gold-outline" onClick={() => navigate(`/cases/${caseId}`)}>
                   بازگشت به پرونده
                 </button>
               )}
             </div>
           </header>
+
+          {error && (
+            <div
+              style={{
+                padding: 12,
+                borderRadius: 12,
+                border: '1px solid rgba(255,90,90,0.35)',
+                background: 'rgba(255,90,90,0.08)',
+                color: '#ffd2d2',
+                marginBottom: 12,
+              }}
+            >
+              {error}
+            </div>
+          )}
+
+          {isForensicDoctor && (
+            <div className="lux-card" style={{ padding: 16, marginBottom: 16 }}>
+              <h3 className="gold-text" style={{ marginTop: 0 }}>
+                شواهد زیستیِ در انتظار تایید
+              </h3>
+
+              {bioEvidences.filter((b) => !b.is_verified).length === 0 ? (
+                <p style={{ color: '#ccc', margin: 0, lineHeight: 1.8 }}>فعلاً مدرک زیستیِ تایید نشده‌ای وجود ندارد.</p>
+              ) : (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {bioEvidences
+                    .filter((b) => !b.is_verified)
+                    .map((b) => (
+                      <div
+                        key={b.id}
+                        style={{
+                          padding: 12,
+                          borderRadius: 12,
+                          background: 'rgba(0,0,0,0.18)',
+                          border: '1px solid rgba(255,255,255,0.10)',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 800, color: '#fff' }}>{b.title}</div>
+                          <div style={{ color: '#ccc', fontSize: 12, marginTop: 4 }}>
+                            ثبت‌کننده: {b.recorder_name} • تاریخ: {new Date(b.recorded_at).toLocaleDateString('fa-IR')}
+                          </div>
+                        </div>
+                        <button className="btn-gold-solid" onClick={() => openVerify(b)}>
+                          تایید پزشکی
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {evidences.length === 0 ? (
             <div className="no-data">
@@ -68,45 +180,168 @@ export default function Evidence() {
             </div>
           ) : (
             <div className="evidence-grid">
-              {evidences.map((evidence) => (
-                <div key={evidence.id} className="evidence-card module-card-luxury">
-                  <div className="evidence-card-header">
-                    <span className="evidence-type-badge">{evidence.type_display}</span>
-                    {evidence.is_on_board && (
-                      <span className="board-badge">روی تخته</span>
+              {evidences.map((evidence) => {
+                const bio = bioMap.get(evidence.id);
+                const isBio = !!bio;
+                const verified = bio?.is_verified;
+
+                return (
+                  <div key={evidence.id} className="evidence-card module-card-luxury">
+                    <div className="evidence-card-header">
+                      <span className="evidence-type-badge">{evidence.type_display}</span>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        {evidence.is_on_board && <span className="board-badge">روی تخته</span>}
+                        {isBio && (
+                          <span
+                            style={{
+                              fontSize: 12,
+                              padding: '4px 10px',
+                              borderRadius: 999,
+                              border: verified
+                                ? '1px solid rgba(120,255,120,0.35)'
+                                : '1px solid rgba(255,200,120,0.35)',
+                              background: verified ? 'rgba(120,255,120,0.08)' : 'rgba(255,200,120,0.08)',
+                              color: verified ? '#c7ffd1' : '#ffe1c2',
+                            }}
+                          >
+                            {verified ? 'تایید شد' : 'در انتظار تایید'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <h3>{evidence.title}</h3>
+                    <p className="evidence-description">{evidence.description}</p>
+                    <div className="evidence-meta">
+                      <div>
+                        <small>ثبت‌کننده:</small>
+                        <span>{evidence.recorder_name}</span>
+                      </div>
+                      <div>
+                        <small>تاریخ:</small>
+                        <span>{new Date(evidence.recorded_at).toLocaleDateString('fa-IR')}</span>
+                      </div>
+                    </div>
+
+                    {isBio && bio && (bio.medical_follow_up || bio.database_follow_up) && (
+                      <div style={{ marginTop: 10, color: '#ddd', fontSize: 12, lineHeight: 1.8 }}>
+                        {bio.medical_follow_up && (
+                          <div>
+                            <b>پیگیری پزشکی:</b> {bio.medical_follow_up}
+                          </div>
+                        )}
+                        {bio.database_follow_up && (
+                          <div>
+                            <b>پیگیری بانک داده:</b> {bio.database_follow_up}
+                          </div>
+                        )}
+                      </div>
                     )}
+
+                    {evidence.images && evidence.images.length > 0 && (
+                      <div className="evidence-images">
+                        {evidence.images.map((img) => (
+                          <img key={img.id} src={img.image} alt="Evidence" />
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
+                      <button
+                        className="btn-gold-outline"
+                        style={{ width: '100%' }}
+                        onClick={() => navigate(`/investigation?case=${evidence.case}`)}
+                      >
+                        مشاهده در تخته کارآگاه
+                      </button>
+
+                      {isForensicDoctor && isBio && bio && !bio.is_verified && (
+                        <button
+                          className="btn-gold-solid"
+                          style={{ width: '100%' }}
+                          onClick={() => openVerify(bio)}
+                        >
+                          تایید پزشکی این مدرک
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <h3>{evidence.title}</h3>
-                  <p className="evidence-description">{evidence.description}</p>
-                  <div className="evidence-meta">
-                    <div>
-                      <small>ثبت‌کننده:</small>
-                      <span>{evidence.recorder_name}</span>
-                    </div>
-                    <div>
-                      <small>تاریخ:</small>
-                      <span>{new Date(evidence.recorded_at).toLocaleDateString('fa-IR')}</span>
-                    </div>
-                  </div>
-                  {evidence.images && evidence.images.length > 0 && (
-                    <div className="evidence-images">
-                      {evidence.images.map((img) => (
-                        <img key={img.id} src={img.image} alt="Evidence" />
-                      ))}
-                    </div>
-                  )}
-                  <button
-                    className="btn-gold-outline"
-                    style={{ width: '100%', marginTop: '10px' }}
-                    onClick={() => navigate(`/investigation?case=${evidence.case}`)}
-                  >
-                    مشاهده در تخته کارآگاه
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
+
+        {verifyOpen && (
+          <div
+            onClick={closeVerify}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.55)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 16,
+              zIndex: 999,
+            }}
+          >
+            <div onClick={(e) => e.stopPropagation()} className="lux-card" style={{ width: 'min(720px, 100%)', padding: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+                <h3 className="gold-text" style={{ margin: 0 }}>
+                  تایید مدرک زیستی
+                </h3>
+                <button className="btn-gold-outline" onClick={closeVerify}>
+                  بستن
+                </button>
+              </div>
+
+              <div style={{ marginTop: 12, display: 'grid', gap: 12 }}>
+                <div>
+                  <label style={{ color: '#ddd', fontSize: 12 }}>پیگیری پزشکی</label>
+                  <textarea
+                    value={medicalFollowUp}
+                    onChange={(e) => setMedicalFollowUp(e.target.value)}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      marginTop: 6,
+                      padding: 10,
+                      borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'rgba(0,0,0,0.22)',
+                      color: '#fff',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ color: '#ddd', fontSize: 12 }}>پیگیری بانک داده</label>
+                  <textarea
+                    value={databaseFollowUp}
+                    onChange={(e) => setDatabaseFollowUp(e.target.value)}
+                    rows={3}
+                    style={{
+                      width: '100%',
+                      marginTop: 6,
+                      padding: 10,
+                      borderRadius: 12,
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      background: 'rgba(0,0,0,0.22)',
+                      color: '#fff',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <button className="btn-gold-solid" onClick={submitVerify} disabled={verifyLoading}>
+                  {verifyLoading ? 'در حال ارسال...' : 'ثبت تایید'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -17,6 +17,27 @@ export default function Sidebar() {
   const closeSidebar = () => setIsOpen(false);
 
   const isDetective = user?.roles?.some(role => role.code === 'detective');
+  const canSeeStats =
+    user?.is_superuser ||
+    user?.roles?.some((role) =>
+      ['judge', 'qazi', 'captain', 'police_chief'].includes(role.code)
+    );
+
+  const canSeeEvidence =
+    user?.is_superuser ||
+    user?.roles?.some((role) =>
+      [
+        'trainee',
+        'police_officer',
+        'detective',
+        'sergeant',
+        'captain',
+        'police_chief',
+        'forensic_doctor',
+        'judge',
+        'qazi',
+      ].includes(role.code)
+    );
 
   const menuItems = [
     {
@@ -35,10 +56,22 @@ export default function Sidebar() {
       path: '/ranking',
     },
     {
+      icon: '🧾',
+      label: 'مدارک و شواهد',
+      path: '/evidence',
+      hidden: !canSeeEvidence,
+    },
+    {
       icon: '🎯',
       label: 'تخته کارآگاه',
       path: '/investigation',
       hidden: !isDetective,
+    },
+    {
+      icon: '📊',
+      label: 'گزارش‌گیری کلی',
+      path: '/stats',
+      hidden: !canSeeStats,
     },
   ];
 

@@ -13,6 +13,11 @@ import type {
   CreateOtherEvidenceRequest,
 } from '../types/evidence';
 
+export interface VerifyBiologicalEvidenceRequest {
+  medical_follow_up?: string;
+  database_follow_up?: string;
+}
+
 export const evidenceAPI = {
   // List all evidence (optionally filtered by case)
   listAllEvidence: async (caseId?: number): Promise<Evidence[]> => {
@@ -60,6 +65,15 @@ export const evidenceAPI = {
 
   updateBiologicalEvidence: async (id: number, data: Partial<BiologicalEvidence>): Promise<BiologicalEvidence> => {
     const response = await api.patch(`/evidence/biological/${id}/`, data);
+    return response.data;
+  },
+
+  // Forensic doctor verification (section 5.8)
+  verifyBiologicalEvidence: async (
+    id: number,
+    data: VerifyBiologicalEvidenceRequest
+  ): Promise<{ status: string; id: number }> => {
+    const response = await api.post(`/evidence/biological/${id}/verify/`, data);
     return response.data;
   },
 

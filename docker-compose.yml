@@ -1,12 +1,33 @@
-# docker-compose placeholder
-# Uncomment and edit when you want to run services with Docker
-# version: '3.8'
-# services:
-#   backend:
-#     build: ./backend
-#     ports:
-#       - "8000:8000"
-#     volumes:
-#       - ./backend:/app
-#     env_file:
-#       - .env
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: la-noire-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_db:/app/db.sqlite3
+    environment:
+      - DJANGO_DEBUG=1
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: la-noire-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+
+volumes:
+  backend_db:
