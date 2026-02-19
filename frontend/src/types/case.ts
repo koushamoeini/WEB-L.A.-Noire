@@ -1,5 +1,8 @@
 export interface CaseComplainant {
   user: number;
+  username: string;
+  first_name: string;
+  last_name: string;
   is_confirmed: boolean;
 }
 

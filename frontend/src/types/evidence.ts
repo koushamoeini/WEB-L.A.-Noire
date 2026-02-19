@@ -7,6 +7,7 @@ export interface Evidence {
   recorder: number;
   recorder_name: string;
   is_on_board: boolean;
+  type: 'witness' | 'biological' | 'vehicle' | 'identification' | 'other';
   type_display: string;
   images?: EvidenceImage[];
 }

@@ -1,13 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { caseAPI } from '../services/caseApi';
 import { CRIME_LEVELS } from '../types/case';
 import type { CreateCaseFromSceneRequest, SceneWitness } from '../types/case';
 import Sidebar from '../components/Sidebar';
 import './CreateCase.css';
+import { useAuth } from '../context/AuthContext';
 
 const CreateCaseScene = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const roles = user?.roles?.map(r => r.code) || [];
+    const isPolice = roles.some(r => ['police_officer', 'sergeant', 'detective', 'captain', 'police_chief'].includes(r));
+    if (!isPolice && !user?.is_superuser) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
+
   const currentYear = 1404; // Current Persian year
   const [formData, setFormData] = useState<CreateCaseFromSceneRequest>({
     title: '',

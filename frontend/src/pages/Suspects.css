@@ -54,6 +54,26 @@
   border-color: var(--accent);
 }
 
+.suspect-image-container {
+  width: 100%;
+  height: 200px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.suspect-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.suspect-card:hover .suspect-image-container img {
+  transform: scale(1.05);
+}
+
 .suspect-card.main-suspect::after {
   content: 'متهم اصلی';
   position: absolute;
@@ -220,4 +240,20 @@
   .suspect-actions {
     flex-direction: column;
   }
+}
+
+.file-input-gold {
+  width: 100%;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px dashed var(--primary);
+  border-radius: 8px;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-input-gold:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-style: solid;
 }

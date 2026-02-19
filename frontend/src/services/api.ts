@@ -5,9 +5,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Add JWT token to requests if available
@@ -43,6 +40,23 @@ export const authAPI = {
   getUserStats: async (): Promise<{ total_users: number }> => {
     const response = await api.get<{ total_users: number }>('/users/stats/');
     return response.data;
+  },
+
+  getNotifications: async (): Promise<any[]> => {
+    const response = await api.get('/notifications/');
+    return response.data;
+  },
+
+  markNotificationRead: async (id: number): Promise<void> => {
+    await api.post(`/notifications/${id}/mark_as_read/`);
+  },
+
+  markAllNotificationsRead: async (): Promise<void> => {
+    await api.post('/notifications/mark_all_as_read/');
+  },
+
+  clearAllNotifications: async (): Promise<void> => {
+    await api.delete('/notifications/clear_all/');
   },
 };
 

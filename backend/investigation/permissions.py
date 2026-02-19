@@ -13,3 +13,6 @@ class IsJudge(HasRole):
 class IsSergeant(HasRole):
     def __init__(self): super().__init__(['sergeant', 'captain', 'police_chief'])
 
+class IsPoliceChief(HasRole):
+    def __init__(self): super().__init__(['police_chief'])
+

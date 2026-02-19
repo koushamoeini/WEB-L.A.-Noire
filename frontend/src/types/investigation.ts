@@ -2,6 +2,10 @@ export interface Suspect {
   id: number;
   case: number;
   name: string;
+  first_name: string;
+  last_name: string;
+  national_code: string;
+  image?: string;
   details: string;
   is_main_suspect: boolean;
   is_on_board: boolean;
@@ -12,8 +16,13 @@ export interface Interrogation {
   suspect: number;
   interrogator: number;
   interrogator_name?: string;
+  supervisor?: number;
+  supervisor_name?: string;
   transcript: string;
-  score: number;
+  interrogator_score: number;
+  supervisor_score?: number;
+  final_score: number;
+  feedback?: InterrogationFeedback;
   created_at: string;
 }
 
@@ -21,9 +30,13 @@ export interface InterrogationFeedback {
   id: number;
   interrogation: number;
   captain: number;
-  final_score: number;
+  captain_name?: string;
   is_confirmed: boolean;
   notes?: string;
+  is_chief_confirmed?: boolean;
+  chief_notes?: string;
+  chief?: number;
+  chief_name?: string;
 }
 
 export interface Board {
@@ -68,7 +81,9 @@ export interface Verdict {
 // Request types
 export interface CreateSuspectRequest {
   case: number;
-  name: string;
+  first_name: string;
+  last_name: string;
+  national_code?: string;
   details: string;
   is_main_suspect?: boolean;
 }
@@ -76,7 +91,7 @@ export interface CreateSuspectRequest {
 export interface CreateInterrogationRequest {
   suspect: number;
   transcript: string;
-  score: number;
+  interrogator_score: number;
 }
 
 export interface CreateBoardConnectionRequest {

@@ -10,6 +10,7 @@ class Suspect(models.Model):
     first_name = models.CharField(max_length=150, blank=True, verbose_name="نام")
     last_name = models.CharField(max_length=150, blank=True, verbose_name="نام خانوادگی")
     national_code = models.CharField(max_length=10, blank=True, verbose_name="کد ملی")
+    image = models.ImageField(upload_to='suspects/', null=True, blank=True, verbose_name="تصویر متهم")
     details = models.TextField(verbose_name="جزئیات")
     created_at = models.DateTimeField(default=timezone.now, verbose_name="تاریخ شناسایی")
     is_main_suspect = models.BooleanField(default=False, verbose_name="متهم اصلی")
@@ -20,17 +21,39 @@ class Suspect(models.Model):
 
 class Interrogation(models.Model):
     suspect = models.ForeignKey(Suspect, on_delete=models.CASCADE, related_name='interrogations')
-    interrogator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    interrogator = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='interrogations', verbose_name="کارآگاه")
+    supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='supervised_interrogations', verbose_name="گروهبان")
     transcript = models.TextField(verbose_name="متن بازجویی")
-    score = models.PositiveSmallIntegerField(default=1, verbose_name="امتیاز (۱-۱۰)")
+    interrogator_score = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="امتیاز کارآگاه (۱-۱۰)")
+    supervisor_score = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="امتیاز گروهبان (۱-۱۰)")
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def score(self):
+        """Average score between interrogator and supervisor (weighted towards supervisor)"""
+        i_score = self.interrogator_score or 0
+        s_score = self.supervisor_score or 0
+        
+        if self.interrogator_score is not None and self.supervisor_score is not None:
+            return round((i_score + 2 * s_score) / 3, 1)
+        elif self.supervisor_score is not None:
+            return float(s_score)
+        elif self.interrogator_score is not None:
+            return float(i_score)
+        return 0.0
 
 class InterrogationFeedback(models.Model):
     interrogation = models.OneToOneField(Interrogation, on_delete=models.CASCADE, related_name='feedback')
-    captain = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    final_score = models.PositiveSmallIntegerField(verbose_name="امتیاز نهایی")
-    is_confirmed = models.BooleanField(default=False, verbose_name="تایید شده")
-    notes = models.TextField(blank=True, null=True)
+    captain = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='captain_feedbacks')
+    is_confirmed = models.BooleanField(default=False, verbose_name="تایید شده توسط کاپیتان")
+    notes = models.TextField(blank=True, null=True, verbose_name="نظر نهایی کاپیتان")
+    
+    # Adding Police Chief Confirmation for Critical Crimes
+    is_chief_confirmed = models.BooleanField(null=True, blank=True, verbose_name="تایید شده توسط رئیس پلیس")
+    chief_notes = models.TextField(blank=True, null=True, verbose_name="یادداشت رئیس پلیس")
+    chief = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='chief_feedbacks')
+
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class Board(models.Model):
     case = models.OneToOneField(Case, on_delete=models.CASCADE, related_name='board')

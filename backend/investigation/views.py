@@ -19,8 +19,8 @@ from .serializers import (
     InterrogationFeedbackSerializer, BoardConnectionSerializer, BoardSerializer,
     VerdictSerializer, WarrantSerializer, RewardReportSerializer
 )
-from .permissions import IsCaptain, IsDetective, IsJudge, IsSergeant
-from cases.permissions import IsOfficerOrHigher
+from .permissions import IsCaptain, IsDetective, IsJudge, IsSergeant, IsPoliceChief
+from cases.permissions import IsOfficerOrHigher, IsInvestigator
 
 
 
@@ -303,20 +303,80 @@ class SuspectViewSet(viewsets.ModelViewSet):
         return Response({'is_on_board': suspect.is_on_board})
 
 class InterrogationViewSet(viewsets.ModelViewSet):
-    queryset = Interrogation.objects.all()
+    queryset = Interrogation.objects.all().order_by('-created_at')
     serializer_class = InterrogationSerializer
     permission_classes = [permissions.IsAuthenticated, IsOfficerOrHigher]
 
+    def get_permissions(self):
+        """
+        Allow Detectives and Sergeants to perform CRUD.
+        Captain/Chief have additional permissions via @action decorators.
+        """
+        if self.action in ['update', 'partial_update', 'destroy']:
+            # We can be more specific: only allowed roles or owners
+            return [permissions.IsAuthenticated(), IsInvestigator()]
+        return super().get_permissions()
+
     def perform_create(self, serializer):
-        serializer.save(interrogator=self.request.user)
+        user = self.request.user
+        roles = [r.code for r in user.roles.all()]
+        
+        # If user is detective, they fill the interrogator slot
+        if 'detective' in roles:
+            serializer.save(interrogator=user)
+        # If user is sergeant, they fill the supervisor slot
+        elif 'sergeant' in roles:
+            serializer.save(supervisor=user)
+        else:
+            serializer.save()
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        roles = [r.code for r in user.roles.all()]
+        instance = self.get_object()
+
+        if 'detective' in roles:
+            # Detectives update their own score and potentially empty interrogator field
+            save_kwargs = {}
+            if not instance.interrogator:
+                save_kwargs['interrogator'] = user
+            serializer.save(**save_kwargs)
+        elif 'sergeant' in roles or 'captain' in roles or 'police_chief' in roles:
+            # Supervisors update their score and supervisor field
+            save_kwargs = {}
+            if not instance.supervisor:
+                save_kwargs['supervisor'] = user
+            serializer.save(**save_kwargs)
+        else:
+            serializer.save()
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsCaptain])
     def feedback(self, request, pk=None):
         interrogation = self.get_object()
-        serializer = InterrogationFeedbackSerializer(data=request.data)
+        
+        # Check if already has feedback
+        feedback_obj = getattr(interrogation, 'feedback', None)
+        if feedback_obj:
+            serializer = InterrogationFeedbackSerializer(feedback_obj, data=request.data, partial=True)
+        else:
+            serializer = InterrogationFeedbackSerializer(data=request.data)
+            
         serializer.is_valid(raise_exception=True)
         serializer.save(interrogation=interrogation, captain=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsPoliceChief])
+    def chief_confirm(self, request, pk=None):
+        interrogation = self.get_object()
+        if not hasattr(interrogation, 'feedback'):
+            return Response({'error': 'ابتدا کاپیتان باید نظر خود را ثبت کند.'}, status=400)
+            
+        feedback = interrogation.feedback
+        feedback.is_chief_confirmed = request.data.get('is_confirmed', True)
+        feedback.chief_notes = request.data.get('notes', '')
+        feedback.chief = request.user
+        feedback.save()
+        return Response({'status': 'confirmed by chief'})
 
 class BoardConnectionViewSet(viewsets.ModelViewSet):
     queryset = BoardConnection.objects.all()

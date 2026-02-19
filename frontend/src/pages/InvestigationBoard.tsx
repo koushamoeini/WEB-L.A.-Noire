@@ -20,6 +20,7 @@ interface BoardItem {
 }
 
 export default function InvestigationBoard() {
+  const BACKEND_URL = 'http://localhost:8000';
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const caseId = searchParams.get('case');
@@ -114,10 +115,11 @@ export default function InvestigationBoard() {
             return {
               id: itemId,
               type: 'suspect',
-              title: s.name,
-              description: s.is_main_suspect ? 'متهم اصلی' : 'مظنون',
+              title: `${s.first_name} ${s.last_name}`,
+              description: s.is_main_suspect ? 'عنصر کلیدی' : 'مظنون',
               position,
               actualId: s.id,
+              image: s.image,
             };
           });
 
@@ -262,6 +264,16 @@ export default function InvestigationBoard() {
     }
   };
 
+  const getImageUrl = (path: string | undefined) => {
+    if (!path) return undefined;
+    if (path.startsWith('http')) return path;
+    let fullUrl = `${BACKEND_URL}${path}`;
+    if (!path.includes('/media/')) {
+      fullUrl = `${BACKEND_URL}/media${path.startsWith('/') ? '' : '/'}${path}`;
+    }
+    return fullUrl;
+  };
+
   const renderConnections = () => {
     return connections.map((conn) => {
       const fromId = conn.from_evidence ? `evidence-${conn.from_evidence}` : `suspect-${conn.from_suspect}`;
@@ -380,7 +392,7 @@ export default function InvestigationBoard() {
                 <div className="thumbtack" />
                 <div className="photo">
                   {item.image ? (
-                    <img src={item.image} alt={item.title} />
+                    <img src={getImageUrl(item.image)} alt={item.title} />
                   ) : (
                     <div className="no-photo">{item.type === 'suspect' ? '👤' : '🔍'}</div>
                   )}
@@ -400,9 +412,13 @@ export default function InvestigationBoard() {
                 <div className="item-list">
                   {availableSuspects.map(s => (
                     <div key={s.id} className={`item-mini-card ${s.is_on_board ? 'active' : ''}`} onClick={() => toggleSuspectOnBoard(s.id)}>
-                      <div className="item-avatar">👤</div>
+                      <div className="item-avatar">
+                        {s.image ? (
+                          <img src={getImageUrl(s.image)} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                        ) : '👤'}
+                      </div>
                       <div className="item-info">
-                        <span className="item-name">{s.name}</span>
+                        <span className="item-name">{s.first_name} {s.last_name}</span>
                         <span className="item-status">{s.is_on_board ? 'روی تخته' : 'افزودن'}</span>
                       </div>
                     </div>
@@ -417,7 +433,7 @@ export default function InvestigationBoard() {
                     <div key={e.id} className={`item-mini-card ${e.is_on_board ? 'active' : ''}`} onClick={() => toggleEvidenceOnBoard('all', e.id)}>
                       <div className="item-avatar">
                         {e.images && e.images.length > 0 ? (
-                          <img src={e.images[0].image} alt="" className="mini-thumb" />
+                          <img src={getImageUrl(e.images[0].image)} alt="" className="mini-thumb" />
                         ) : (
                           '🔍'
                         )}

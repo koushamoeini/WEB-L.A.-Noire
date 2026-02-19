@@ -27,17 +27,21 @@ class CaseViewSet(viewsets.ModelViewSet):
         if 'trainee' in roles:
             queryset |= Case.objects.filter(status=Case.Status.PENDING_TRAINEE)
             
-        # Officers see cases pending their review and solved cases
+        # Officers see cases pending their review, active cases, and solved cases
         if 'police_officer' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.SOLVED])
+            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.SOLVED])
 
-        # Sergeants see cases pending resolution review and completed/solved cases
+        # Sergeants see cases pending resolution review, active cases, and completed/solved cases
         if 'sergeant' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
+            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
 
         # Detectives see active cases to investigate and solved cases
         if 'detective' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT, Case.Status.SOLVED])
+            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
+
+        # Forensic doctors see active and solved cases to manage evidence
+        if 'forensic_doctor' in roles:
+            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.SOLVED])
 
         # Judges see all active cases
         if 'judge' in roles or 'qazi' in roles:
@@ -163,8 +167,35 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsOfficerOrHigher])
     def officer_review(self, request, pk=None):
-        """Officer review logic (Section 4.2.1)"""
+        """Officer review logic (Section 4.2.1 & 4.2.4)"""
         case = self.get_object()
+        
+        # Implement Superior Officer Logic (Section 4.2.4)
+        ROLE_SENIORITY = {
+            'trainee': 1,
+            'police_officer': 2,
+            'sergeant': 3,
+            'detective': 4,
+            'captain': 5,
+            'police_chief': 6,
+        }
+        
+        def get_max_seniority(user):
+            if user.is_superuser: return 100
+            user_roles = user.roles.values_list('code', flat=True)
+            return max([ROLE_SENIORITY.get(r, 0) for r in user_roles] + [0])
+
+        reviewer_seniority = get_max_seniority(request.user)
+        creator_seniority = get_max_seniority(case.creator) if case.creator else 0
+        
+        # Chief bypasses seniority check, others must be strictly higher than creator
+        is_chief = request.user.roles.filter(code='police_chief').exists()
+        if not is_chief and reviewer_seniority <= creator_seniority:
+            return Response(
+                {'error': 'فقط افسر با رده بالاتر از ثبت‌کننده پرونده می‌تواند این عمل را انجام دهد.'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+
         approved = request.data.get('approved', False)
         if approved:
             case.status = Case.Status.ACTIVE
@@ -179,17 +210,29 @@ class CaseViewSet(viewsets.ModelViewSet):
     def add_complainant(self, request, pk=None):
         """Add plaintiff to an existing case (Section 4.2.2)"""
         case = self.get_object()
-        user_id = request.data.get('user_id')
+        identifier = request.data.get('user_id')  # This can be ID, username, or national code
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        try:
-            user = User.objects.get(id=user_id)
-            case.complainants.add(user)
-            from .models import CaseComplainant
-            CaseComplainant.objects.get_or_create(case=case, user=user)
-            return Response({'status': 'complainant added'})
-        except User.DoesNotExist:
-            return Response({'error': 'user not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        user = None
+        # 1. Try by ID
+        if str(identifier).isdigit():
+            user = User.objects.filter(id=identifier).first()
+        
+        # 2. Try by username or national code
+        if not user:
+            user = User.objects.filter(
+                Q(username=identifier) |
+                Q(profile__national_code=identifier)
+            ).distinct().first()
+
+        if not user:
+            return Response({'error': 'کاربری با این مشخصات یافت نشد (نام کاربری یا کد ملی)'}, status=status.HTTP_404_NOT_FOUND)
+
+        case.complainants.add(user)
+        from .models import CaseComplainant
+        CaseComplainant.objects.get_or_create(case=case, user=user)
+        return Response({'status': 'complainant added'})
 
     @action(detail=True, methods=['post'], permission_classes=[IsDetective])
     def submit_resolution(self, request, pk=None):

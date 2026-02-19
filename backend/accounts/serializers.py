@@ -1,13 +1,20 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import Role, UserProfile
+from .models import Role, UserProfile, Notification
 
 
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role
         fields = ['id', 'code', 'name', 'description']
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Notification
+        fields = ['id', 'title', 'message', 'link', 'is_read', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
 
 class UserRoleSerializer(serializers.Serializer):

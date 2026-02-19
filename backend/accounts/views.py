@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import CreateAPIView
 
@@ -9,8 +10,8 @@ from django.shortcuts import redirect
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Role
-from .serializers import RegistrationSerializer, RoleSerializer, UserRoleSerializer
+from .models import Role, Notification
+from .serializers import RegistrationSerializer, RoleSerializer, UserRoleSerializer, NotificationSerializer
 from .serializers_user_read import UserReadSerializer
 from rest_framework.generics import ListAPIView
 
@@ -144,3 +145,28 @@ class LoginView(APIView):
     def get(self, request, *args, **kwargs):
         # Redirect browser GETs to the HTML login page for convenience
         return redirect('login')
+
+
+class NotificationViewSet(viewsets.ModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def mark_as_read(self, request, pk=None):
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({'status': 'marked as read'})
+
+    @action(detail=False, methods=['post'])
+    def mark_all_as_read(self, request):
+        Notification.objects.filter(user=self.request.user, is_read=False).update(is_read=True)
+        return Response({'status': 'all marked as read'})
+
+    @action(detail=False, methods=['delete'])
+    def clear_all(self, request):
+        Notification.objects.filter(user=self.request.user).delete()
+        return Response({'status': 'all notifications cleared'}, status=status.HTTP_204_NO_CONTENT)

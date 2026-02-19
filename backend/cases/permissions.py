@@ -13,6 +13,10 @@ class IsTrainee(HasRole):
 class IsOfficerOrHigher(HasRole):
     def __init__(self): super().__init__(['police_officer', 'captain', 'police_chief', 'sergeant', 'detective', 'forensic_doctor', 'judge', 'qazi'])
 
+class IsInvestigator(HasRole):
+    """Roles allowed to register evidence and modify investigation markers (Excludes Judges)"""
+    def __init__(self): super().__init__(['police_officer', 'captain', 'police_chief', 'sergeant', 'detective', 'forensic_doctor'])
+
 
 class IsChief(HasRole):
     def __init__(self): super().__init__(['police_chief'])

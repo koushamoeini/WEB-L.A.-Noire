@@ -20,6 +20,8 @@ import InvestigationBoard from './pages/InvestigationBoard';
 import Ranking from './pages/Ranking';
 import Stats from './pages/Stats';
 import Suspects from './pages/Suspects';
+import Interrogations from './pages/Interrogations';
+import Notifications from './pages/Notifications';
 import './App.css';
 
 function App() {
@@ -87,15 +89,15 @@ function App() {
             }
           />
           <Route
-            path="/evidence/create/witness"
+            path="/evidence/create/biological"
             element={
               <ProtectedRoute>
-                <WitnessTestimonyForm />
+                <BiologicalEvidenceForm />
               </ProtectedRoute>
             }
           />
           <Route
-            path="/evidence/create/biological"
+            path="/evidence/edit/biological/:id"
             element={
               <ProtectedRoute>
                 <BiologicalEvidenceForm />
@@ -111,7 +113,23 @@ function App() {
             }
           />
           <Route
+            path="/evidence/edit/vehicle/:id"
+            element={
+              <ProtectedRoute>
+                <VehicleEvidenceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/evidence/create/id-document"
+            element={
+              <ProtectedRoute>
+                <IdentificationDocumentForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/edit/id-document/:id"
             element={
               <ProtectedRoute>
                 <IdentificationDocumentForm />
@@ -123,6 +141,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <OtherEvidenceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/edit/other/:id"
+            element={
+              <ProtectedRoute>
+                <OtherEvidenceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/create/witness"
+            element={
+              <ProtectedRoute>
+                <WitnessTestimonyForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/edit/witness/:id"
+            element={
+              <ProtectedRoute>
+                <WitnessTestimonyForm />
               </ProtectedRoute>
             }
           />
@@ -151,10 +193,26 @@ function App() {
             }
           />
           <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/suspects"
             element={
               <ProtectedRoute>
                 <Suspects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cases/:caseId/interrogations"
+            element={
+              <ProtectedRoute>
+                <Interrogations />
               </ProtectedRoute>
             }
           />

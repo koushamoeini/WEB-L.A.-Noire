@@ -73,6 +73,11 @@ export default function Sidebar() {
       path: '/stats',
       hidden: !canSeeStats,
     },
+    {
+      icon: '🔔',
+      label: 'اعلان‌ها',
+      path: '/notifications',
+    },
   ];
 
   return (

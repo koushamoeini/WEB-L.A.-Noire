@@ -264,7 +264,7 @@ const Stats = () => {
                         {report.suspects.map((s) => (
                           <div key={s.id} style={{ padding: 10, borderRadius: 12, background: 'rgba(0,0,0,0.18)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                              <div style={{ fontWeight: 700, color: '#fff' }}>{s.name}</div>
+                              <div style={{ fontWeight: 700, color: '#fff' }}>{s.first_name} {s.last_name}</div>
                               <div style={{ color: '#aaa', fontSize: 12 }}>{s.is_main_suspect ? 'مظنون اصلی' : 'مظنون'}</div>
                             </div>
                             <div style={{ color: '#ccc', marginTop: 6, lineHeight: 1.7 }}>{s.details}</div>
@@ -281,7 +281,7 @@ const Stats = () => {
                                         <div style={{ color: '#ddd' }}>
                                           بازجو: {i.interrogator_name ?? i.interrogator}
                                         </div>
-                                        <div style={{ color: '#ddd' }}>امتیاز: {i.score}</div>
+                                        <div style={{ color: '#ddd' }}>امتیاز نهایی: {i.final_score}</div>
                                       </div>
                                       <div style={{ color: '#bbb', fontSize: 12, marginTop: 6, lineHeight: 1.7 }}>
                                         {i.transcript?.slice(0, 160)}
