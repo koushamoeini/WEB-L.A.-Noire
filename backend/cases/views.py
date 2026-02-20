@@ -218,8 +218,10 @@ class CaseViewSet(viewsets.ModelViewSet):
         if approved:
             case.status = Case.Status.ACTIVE
         else:
-            # If officer rejects, it goes back to trainee, NOT plaintiff
-            case.status = Case.Status.PENDING_TRAINEE
+            # If officer rejects, it goes back to requester/creator for revision
+            # Increment attempts (follow 3-strike rule like trainee review)
+            case.submission_attempts += 1
+            case.status = Case.Status.CANCELLED if case.submission_attempts >= 3 else Case.Status.REJECTED
         case.review_notes = request.data.get('notes', '')
         case.save()
         return Response({'new_status': case.get_status_display()})
