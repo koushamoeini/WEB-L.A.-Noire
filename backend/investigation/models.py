@@ -15,6 +15,7 @@ class Suspect(models.Model):
     created_at = models.DateTimeField(default=timezone.now, verbose_name="تاریخ شناسایی")
     is_main_suspect = models.BooleanField(default=False, verbose_name="متهم اصلی")
     is_on_board = models.BooleanField(default=False, verbose_name="روی تخته")
+    is_arrested = models.BooleanField(default=False, verbose_name="دستگیر شده")
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.case.id})"

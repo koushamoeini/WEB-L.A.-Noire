@@ -58,7 +58,11 @@ class SuspectSerializer(serializers.ModelSerializer):
     interrogations = InterrogationSerializer(many=True, read_only=True)
     class Meta:
         model = Suspect
-        fields = '__all__'
+        fields = [
+            'id', 'case', 'name', 'first_name', 'last_name', 
+            'national_code', 'image', 'details', 'created_at', 
+            'is_main_suspect', 'is_on_board', 'is_arrested', 'interrogations'
+        ]
 
 class BoardConnectionSerializer(serializers.ModelSerializer):
     class Meta:
