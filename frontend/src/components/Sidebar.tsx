@@ -16,16 +16,19 @@ export default function Sidebar() {
 
   const closeSidebar = () => setIsOpen(false);
 
-  const isDetective = user?.roles?.some(role => role.code === 'detective');
+  const userRoles = user?.roles?.map(r => r.code) || [];
+  const isOnlyCitizen = userRoles.length === 0 || (userRoles.length === 1 && userRoles.includes('complainant'));
+
+  const isDetective = userRoles.includes('detective');
   const canSeeStats =
     user?.is_superuser ||
-    user?.roles?.some((role) =>
-      ['judge', 'qazi', 'captain', 'police_chief'].includes(role.code)
+    userRoles.some((role) =>
+      ['judge', 'qazi', 'captain', 'police_chief'].includes(role)
     );
 
   const canSeeEvidence =
     user?.is_superuser ||
-    user?.roles?.some((role) =>
+    userRoles.some((role) =>
       [
         'trainee',
         'police_officer',
@@ -36,7 +39,7 @@ export default function Sidebar() {
         'forensic_doctor',
         'judge',
         'qazi',
-      ].includes(role.code)
+      ].includes(role)
     );
 
   const menuItems = [
@@ -59,24 +62,25 @@ export default function Sidebar() {
       icon: '🧾',
       label: 'مدارک و شواهد',
       path: '/evidence',
-      hidden: !canSeeEvidence,
+      hidden: isOnlyCitizen || !canSeeEvidence,
     },
     {
       icon: '🎯',
       label: 'تخته کارآگاه',
       path: '/investigation',
-      hidden: !isDetective,
+      hidden: isOnlyCitizen || !isDetective,
     },
     {
       icon: '📊',
       label: 'گزارش‌گیری کلی',
       path: '/stats',
-      hidden: !canSeeStats,
+      hidden: isOnlyCitizen || !canSeeStats,
     },
     {
       icon: '🔔',
       label: 'اعلان‌ها',
       path: '/notifications',
+      hidden: isOnlyCitizen,
     },
   ];
 

@@ -88,9 +88,18 @@ const Dashboard = () => {
     },
   ];
 
-  const visibleModules = modules.filter(
-    (m) => m.id === 'cases' || m.id === 'ranking' || m.roles.some((role) => userRoles.includes(role))
-  );
+  const visibleModules = modules.filter((m) => {
+    // Check if the user is only a basic citizen/complainant without a role
+    const isOnlyCitizen = userRoles.length === 0 || (userRoles.length === 1 && userRoles.includes('complainant'));
+
+    if (isOnlyCitizen) {
+      // Basic users can only see "Cases" (to submit/track) and "Ranking"
+      return m.id === 'cases' || m.id === 'ranking';
+    }
+
+    // Official staff see modules based on their roles
+    return m.roles.some((role) => userRoles.includes(role));
+  });
 
   return (
     <div className="layout-with-sidebar">

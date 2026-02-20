@@ -44,7 +44,11 @@ const Cases = () => {
 
   const userRoles = user?.roles?.map(r => r.code) || [];
   const isPolice = userRoles.some(r => ['police_officer', 'sergeant', 'detective', 'captain', 'police_chief'].includes(r));
-  const isCitizen = userRoles.length === 0;
+  const isTraineeOrInternal = userRoles.some(r => ['trainee', 'forensic_doctor', 'judge', 'qazi'].includes(r));
+  
+  // Normal users (citizens) are those who are not police or internal staff
+  // We also check for base_user or complainant roles explicitly just in case
+  const isCitizen = user?.is_superuser || (!isPolice && !isTraineeOrInternal) || userRoles.includes('base_user') || userRoles.includes('complainant');
 
   return (
     <div className="layout-with-sidebar">
@@ -61,7 +65,7 @@ const Cases = () => {
 
           <div className="cases-actions-bar">
             <div className="actions-left">
-              {(isCitizen || user?.is_superuser) && (
+              {isCitizen && (
                 <button 
                   onClick={() => navigate('/cases/create-complaint')}
                   className="btn-gold-solid"
