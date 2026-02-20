@@ -10,7 +10,7 @@ class Case(models.Model):
 
     class Status(models.TextChoices):
         PENDING_TRAINEE = 'PT', 'در انتظار بررسی کارآموز'
-        PENDING_OFFICER = 'PO', 'در انتظار تایید افسر'
+        PENDING_OFFICER = 'PO', 'در انتظار تایید مقام مافوق'
         ACTIVE = 'AC', 'در جریان'
         PENDING_SERGEANT = 'PS', 'در انتظار تایید گروهبان (حل پرونده)'
         PENDING_CHIEF = 'PC', 'در انتظار تایید نهایی رئیس پلیس'
