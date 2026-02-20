@@ -119,9 +119,10 @@ class CaseViewSet(viewsets.ModelViewSet):
         if case.status != Case.Status.REJECTED:
             return Response({'error': 'Only rejected cases can be resubmitted'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Allow updating title and description during resubmission
+        # Allow updating title, description, and crime_level during resubmission
         case.title = request.data.get('title', case.title)
         case.description = request.data.get('description', case.description)
+        case.crime_level = request.data.get('crime_level', case.crime_level)
         case.status = Case.Status.PENDING_TRAINEE
         case.save()
         return Response({'status': 'resubmitted', 'title': case.title})

@@ -21,7 +21,7 @@ export default function CaseDetail() {
   const [selectedComplainants, setSelectedComplainants] = useState<number[]>([]);
   const [processing, setProcessing] = useState(false);
   const [resubmitMode, setResubmitMode] = useState(false);
-  const [resubmitData, setResubmitData] = useState({ title: '', description: '' });
+  const [resubmitData, setResubmitData] = useState({ title: '', description: '', crime_level: 3 });
   const [newComplainantId, setNewComplainantId] = useState('');
   const [addingComplainant, setAddingComplainant] = useState(false);
 
@@ -52,7 +52,11 @@ export default function CaseDetail() {
       // 1. Fetch the main case data first. This MUST succeed.
       const caseResult = await caseAPI.getCase(Number(id));
       setCaseData(caseResult);
-      setResubmitData({ title: caseResult.title, description: caseResult.description });
+      setResubmitData({ 
+        title: caseResult.title, 
+        description: caseResult.description,
+        crime_level: caseResult.crime_level
+      });
       setSelectedComplainants(caseResult.complainants);
 
       // 2. Fetch supplementary data. These might fail based on permissions (e.g. for Trainees).
@@ -193,7 +197,7 @@ export default function CaseDetail() {
       await caseAPI.resubmitCase(caseData.id, {
         title: resubmitData.title,
         description: resubmitData.description,
-        crime_level: caseData.crime_level,
+        crime_level: resubmitData.crime_level,
       });
       alert('پرونده مجددا ارسال شد');
       setResubmitMode(false);
@@ -306,14 +310,27 @@ export default function CaseDetail() {
                       rows={6}
                     />
                   </div>
+                  <div className="form-group">
+                    <label>سطح جرم</label>
+                    <select
+                      value={resubmitData.crime_level}
+                      onChange={(e) => setResubmitData({ ...resubmitData, crime_level: Number(e.target.value) })}
+                      className="form-control"
+                    >
+                      <option value={3}>سطح ۳ (جرائم خرد)</option>
+                      <option value={2}>سطح ۲ (جرائم بزرگ)</option>
+                      <option value={1}>سطح ۱ (جرائم کلان)</option>
+                      <option value={0}>سطح بحرانی</option>
+                    </select>
+                  </div>
                 </>
               ) : (
                 <>
                   <p><strong>عنوان:</strong> {caseData.title}</p>
                   <p><strong>توضیحات:</strong> {caseData.description}</p>
+                  <p><strong>سطح جرم:</strong> {caseData.level_label}</p>
                 </>
               )}
-              <p><strong>سطح جرم:</strong> {caseData.level_label}</p>
               <p><strong>تاریخ ثبت:</strong> {new Date(caseData.created_at).toLocaleDateString('fa-IR')}</p>
               {caseData.submission_attempts > 0 && (
                 <p className="warning-text">
