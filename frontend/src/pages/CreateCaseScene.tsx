@@ -286,19 +286,6 @@ const CreateCaseScene = () => {
             <label>ساعت وقوع</label>
             <div className="time-inputs">
               <div className="time-input-group">
-                <label htmlFor="hour">ساعت</label>
-                <input
-                  type="number"
-                  id="hour"
-                  min="0"
-                  max="23"
-                  value={selectedTime.hour}
-                  onChange={(e) => setSelectedTime({ ...selectedTime, hour: e.target.value.padStart(2, '0') })}
-                  placeholder="12"
-                />
-              </div>
-              <span className="time-separator">:</span>
-              <div className="time-input-group">
                 <label htmlFor="minute">دقیقه</label>
                 <input
                   type="number"
@@ -308,6 +295,19 @@ const CreateCaseScene = () => {
                   value={selectedTime.minute}
                   onChange={(e) => setSelectedTime({ ...selectedTime, minute: e.target.value.padStart(2, '0') })}
                   placeholder="00"
+                />
+              </div>
+              <span className="time-separator">:</span>
+              <div className="time-input-group">
+                <label htmlFor="hour">ساعت</label>
+                <input
+                  type="number"
+                  id="hour"
+                  min="0"
+                  max="23"
+                  value={selectedTime.hour}
+                  onChange={(e) => setSelectedTime({ ...selectedTime, hour: e.target.value.padStart(2, '0') })}
+                  placeholder="12"
                 />
               </div>
             </div>
