@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { caseAPI } from '../services/caseApi';
 import type { Case } from '../types/case';
 import { CASE_STATUS } from '../types/case';
@@ -12,7 +12,20 @@ const Cases = () => {
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccess(location.state.message);
+      // Clear location state to prevent message from showing again on refresh
+      window.history.replaceState({}, document.title);
+      
+      const timer = setTimeout(() => setSuccess(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
 
   useEffect(() => {
     const fetchCases = async () => {
@@ -64,6 +77,7 @@ const Cases = () => {
           </div>
 
           <div className="cases-actions-bar">
+            {success && <div className="success-message">{success}</div>}
             <div className="actions-left">
               {isCitizen && (
                 <button 

@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { evidenceAPI } from '../services/evidenceApi';
 import type { BiologicalEvidence } from '../types/evidence';
@@ -9,11 +9,22 @@ import './Dashboard.css';
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [pendingBiological, setPendingBiological] = useState<BiologicalEvidence[]>([]);
   const [loadingTasks, setLoadingTasks] = useState(false);
+  const [success, setSuccess] = useState('');
 
   const userRoles = user?.roles?.map(r => r.code) || [];
   const isForensicDoctor = userRoles.includes('forensic_doctor');
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccess(location.state.message);
+      window.history.replaceState({}, document.title);
+      const timer = setTimeout(() => setSuccess(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
 
   useEffect(() => {
     if (isForensicDoctor) {
@@ -106,6 +117,7 @@ const Dashboard = () => {
       <Sidebar />
       <div className="main-content">
         <div className="dashboard-content">
+          {success && <div className="success-message-global">{success}</div>}
           <header className="dashboard-welcome">
             <div>
               <h1>خوش آمدید، {user?.username}</h1>

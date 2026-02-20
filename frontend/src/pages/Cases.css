@@ -45,6 +45,23 @@
   margin-bottom: 24px;
 }
 
+.success-message {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+  padding: 14px 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  width: 100%;
+  text-align: right;
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 .empty-state {
   text-align: center;
   padding: 80px 24px;

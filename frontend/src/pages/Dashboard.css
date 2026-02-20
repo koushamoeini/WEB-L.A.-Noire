@@ -4,6 +4,24 @@
   margin: 0 auto;
 }
 
+.success-message-global {
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.2);
+  color: #6ee7b7;
+  padding: 16px 24px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  text-align: right;
+  font-weight: 500;
+  animation: fadeInDown 0.5s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .dashboard-welcome {
   display: flex;
   justify-content: space-between;

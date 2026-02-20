@@ -87,8 +87,7 @@ export default function CaseDetail() {
         notes: reviewNotes,
         confirmed_complainants: selectedComplainants,
       });
-      alert(approved ? 'پرونده تایید و به افسر ارسال شد' : 'پرونده رد شد');
-      navigate('/cases');
+      navigate('/cases', { state: { message: approved ? 'پرونده با موفقیت تایید و به افسر ارسال شد' : 'پرونده رد شد و برای اصلاح به شاکی بازگشت' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -105,8 +104,7 @@ export default function CaseDetail() {
         approved,
         notes: reviewNotes,
       });
-      alert(approved ? 'پرونده فعال شد' : 'پرونده به کارآموز بازگردانده شد');
-      navigate('/cases');
+      navigate('/cases', { state: { message: approved ? 'پرونده تایید نهایی شد و به جریان افتاد' : 'پرونده برای بررسی مجدد به کارآموز بازگشت' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -120,8 +118,7 @@ export default function CaseDetail() {
     setError('');
     try {
       await caseAPI.submitResolution(caseData.id);
-      alert('پرونده برای بررسی گروهبان ارسال شد');
-      fetchCase();
+      navigate('/dashboard', { state: { message: 'پرونده برای بررسی نهایی و صدور حکم به گروهبان ارسال شد' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در ارسال پرونده');
     } finally {
@@ -138,8 +135,7 @@ export default function CaseDetail() {
         approved,
         notes: reviewNotes,
       });
-      alert(approved ? 'پرونده تایید شد' : 'پرونده به کارآگاه بازگردانده شد');
-      navigate('/cases');
+      navigate('/cases', { state: { message: approved ? 'پرونده توسط گروهبان تایید و به رئیس پلیس ارسال شد' : 'پرونده برای اصلاح به کارآگاه بازگشت' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -156,8 +152,7 @@ export default function CaseDetail() {
         approved,
         notes: reviewNotes,
       });
-      alert(approved ? 'پرونده مختومه شد' : 'پرونده به کارآگاه بازگردانده شد');
-      navigate('/cases');
+      navigate('/cases', { state: { message: approved ? 'پرونده مختومه شد و آماده صدور حکم توسط قاضی است' : 'پرونده برای اصلاح به کارآگاه بازگشت' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -179,9 +174,7 @@ export default function CaseDetail() {
         case: caseData.id,
         suspect: Number(verdictForm.suspect),
       });
-      alert('حکم با موفقیت صادر شد');
-      setVerdictForm({ suspect: '', title: '', result: 'GUILTY', punishment: '', description: '' });
-      fetchCase();
+      navigate('/dashboard', { state: { message: 'حکم قضایی با موفقیت صادر و ثبت شد' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در صدور حکم');
     } finally {
@@ -199,9 +192,7 @@ export default function CaseDetail() {
         description: resubmitData.description,
         crime_level: resubmitData.crime_level,
       });
-      alert('پرونده مجددا ارسال شد');
-      setResubmitMode(false);
-      fetchCase();
+      navigate('/cases', { state: { message: 'شکایت پس از اصلاح مجددا برای بررسی ارسال شد' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در ارسال مجدد پرونده');
     } finally {
