@@ -24,6 +24,7 @@ export default function CaseDetail() {
   const [resubmitData, setResubmitData] = useState({ title: '', description: '', crime_level: 3 });
   const [newComplainantId, setNewComplainantId] = useState('');
   const [addingComplainant, setAddingComplainant] = useState(false);
+  const [success, setSuccess] = useState('');
 
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [suspects, setSuspects] = useState<Suspect[]>([]);
@@ -212,9 +213,11 @@ export default function CaseDetail() {
     setError('');
     try {
       await caseAPI.addComplainant(caseData.id, newComplainantId);
-      alert('شاکی با موفقیت اضافه شد');
+      setSuccess('شاکی با موفقیت به پرونده اضافه شد');
       setNewComplainantId('');
       fetchCase();
+      // Hide success after a few seconds
+      setTimeout(() => setSuccess(''), 5000);
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در افزودن شاکی');
     } finally {
@@ -279,6 +282,7 @@ export default function CaseDetail() {
           </div>
 
           {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
 
           <div className="case-info-grid">
             <div className="info-section">
@@ -421,7 +425,8 @@ export default function CaseDetail() {
 
           {/* Add Complainant Section */}
           {(userRoles.includes('police_officer') || userRoles.includes('sergeant') || 
-            userRoles.includes('police_chief') || user?.is_superuser) && (
+            userRoles.includes('police_chief') || userRoles.includes('trainee') ||
+            user?.is_superuser || caseData.creator === user?.id) && (
             <div className="info-section">
               <h3>مدیریت شاکیان</h3>
               <p className="section-description">

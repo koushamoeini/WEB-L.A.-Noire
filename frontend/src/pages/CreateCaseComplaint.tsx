@@ -12,9 +12,28 @@ const CreateCaseComplaint = () => {
     title: '',
     description: '',
     crime_level: 3,
+    additional_complainants: [],
   });
+  const [complainantInput, setComplainantInput] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const addComplainant = () => {
+    if (complainantInput.trim() && !formData.additional_complainants?.includes(complainantInput)) {
+      setFormData({
+        ...formData,
+        additional_complainants: [...(formData.additional_complainants || []), complainantInput.trim()],
+      });
+      setComplainantInput('');
+    }
+  };
+
+  const removeComplainant = (index: number) => {
+    setFormData({
+      ...formData,
+      additional_complainants: formData.additional_complainants?.filter((_, i) => i !== index),
+    });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -94,6 +113,34 @@ const CreateCaseComplaint = () => {
               placeholder="توضیحات کامل شکایت را وارد کنید"
               rows={6}
             />
+          </div>
+
+          <div className="form-group">
+            <label>شاکیان دیگر (اختیاری)</label>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+              <input
+                type="text"
+                value={complainantInput}
+                onChange={(e) => setComplainantInput(e.target.value)}
+                placeholder="نام کاربری یا کد ملی شاکی دیگر"
+              />
+              <button 
+                type="button" 
+                onClick={addComplainant} 
+                className="btn-gold-outline" 
+                style={{ padding: '0 20px', whiteSpace: 'nowrap' }}
+              >
+                افزودن
+              </button>
+            </div>
+            <div className="witness-list">
+              {formData.additional_complainants?.map((c, index) => (
+                <div key={index} className="witness-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '5px 10px', borderRadius: '5px', marginBottom: '5px' }}>
+                  <span>{c}</span>
+                  <button type="button" onClick={() => removeComplainant(index)} style={{ color: '#f87171', background: 'none', border: 'none', cursor: 'pointer' }}>حذف</button>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="form-actions form-actions-lux">

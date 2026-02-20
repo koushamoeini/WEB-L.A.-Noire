@@ -104,11 +104,28 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         case = serializer.save(creator=self.request.user)
-        # If it's a complaint (not from scene), add creator as first complainant
+        # If it's a complaint (not from scene), handle complainants
         if case.status == Case.Status.PENDING_TRAINEE:
+            # 1. Add creator as first complainant
             case.complainants.add(self.request.user)
             from .models import CaseComplainant
-            CaseComplainant.objects.create(case=case, user=self.request.user)
+            CaseComplainant.objects.get_or_create(case=case, user=self.request.user)
+
+            # 2. Add additional complainants from request data (IDs, usernames, or National Codes)
+            additional = self.request.data.get('additional_complainants', [])
+            if isinstance(additional, list):
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                for item in additional:
+                    # identifier can be id, username, or national code
+                    u = User.objects.filter(
+                        Q(id=item if str(item).isdigit() else -1) | 
+                        Q(username=item) | 
+                        Q(profile__national_code=item)
+                    ).distinct().first()
+                    if u:
+                        case.complainants.add(u)
+                        CaseComplainant.objects.get_or_create(case=case, user=u)
 
     @action(detail=True, methods=['post'])
     def resubmit(self, request, pk=None):
@@ -211,6 +228,14 @@ class CaseViewSet(viewsets.ModelViewSet):
     def add_complainant(self, request, pk=None):
         """Add plaintiff to an existing case (Section 4.2.2)"""
         case = self.get_object()
+        
+        # Permission check: Only creator, trainee (if PT), or Police can add
+        user_roles = request.user.roles.values_list('code', flat=True)
+        is_police = any(r in ['police_officer', 'sergeant', 'detective', 'captain', 'police_chief'] for r in user_roles)
+        
+        if not (request.user == case.creator or 'trainee' in user_roles or is_police or request.user.is_superuser):
+            return Response({'error': 'شما دسترسی برای افزودن شاکی به این پرونده را ندارید.'}, status=status.HTTP_403_FORBIDDEN)
+            
         identifier = request.data.get('user_id')  # This can be ID, username, or national code
         from django.contrib.auth import get_user_model
         User = get_user_model()

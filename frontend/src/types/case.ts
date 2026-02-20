@@ -37,6 +37,7 @@ export interface CreateCaseRequest {
   title: string;
   description: string;
   crime_level: number;
+  additional_complainants?: string[];
 }
 
 export interface SceneWitness {
