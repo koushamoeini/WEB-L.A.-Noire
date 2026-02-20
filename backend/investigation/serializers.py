@@ -30,17 +30,29 @@ class BoardSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class InterrogationFeedbackSerializer(serializers.ModelSerializer):
+    captain_name = serializers.ReadOnlyField(source='captain.username')
+    chief_name = serializers.ReadOnlyField(source='chief.username')
+    
     class Meta:
         model = InterrogationFeedback
         fields = '__all__'
-        read_only_fields = ['captain']
+        read_only_fields = ['interrogation', 'captain', 'chief']
 
 class InterrogationSerializer(serializers.ModelSerializer):
     feedback = InterrogationFeedbackSerializer(read_only=True)
+    interrogator_name = serializers.ReadOnlyField(source='interrogator.username')
+    supervisor_name = serializers.ReadOnlyField(source='supervisor.username')
+    final_score = serializers.ReadOnlyField(source='score')
+
     class Meta:
         model = Interrogation
-        fields = '__all__'
-        read_only_fields = ['interrogator']
+        fields = [
+            'id', 'suspect', 'interrogator', 'interrogator_name', 
+            'supervisor', 'supervisor_name', 'transcript', 
+            'interrogator_score', 'supervisor_score', 'final_score', 
+            'feedback', 'created_at'
+        ]
+        read_only_fields = ['interrogator', 'supervisor']
 
 class SuspectSerializer(serializers.ModelSerializer):
     interrogations = InterrogationSerializer(many=True, read_only=True)

@@ -64,8 +64,8 @@ export const caseAPI = {
   },
 
   // Add complainant to case
-  addComplainant: async (id: number, userId: number): Promise<{ status: string }> => {
-    const response = await api.post(`/cases/${id}/add_complainant/`, { user_id: userId });
+  addComplainant: async (id: number, identifier: string | number): Promise<{ status: string }> => {
+    const response = await api.post(`/cases/${id}/add_complainant/`, { user_id: identifier });
     return response.data;
   },
 

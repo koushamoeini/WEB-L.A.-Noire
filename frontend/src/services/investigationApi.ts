@@ -53,6 +53,25 @@ export const investigationAPI = {
     return response.data;
   },
 
+  updateInterrogation: async (id: number, data: Partial<Interrogation>): Promise<Interrogation> => {
+    const response = await api.patch(`/investigation/interrogations/${id}/`, data);
+    return response.data;
+  },
+
+  deleteInterrogation: async (id: number): Promise<void> => {
+    await api.delete(`/investigation/interrogations/${id}/`);
+  },
+
+  interrogationFeedback: async (id: number, data: any): Promise<any> => {
+    const response = await api.post(`/investigation/interrogations/${id}/feedback/`, data);
+    return response.data;
+  },
+
+  chiefConfirmInterrogation: async (id: number, data: { is_confirmed: boolean; notes: string }): Promise<any> => {
+    const response = await api.post(`/investigation/interrogations/${id}/chief_confirm/`, data);
+    return response.data;
+  },
+
   // Boards
   listBoards: async (caseId?: number): Promise<Board[]> => {
     const url = caseId ? `/investigation/boards/?case=${caseId}` : '/investigation/boards/';

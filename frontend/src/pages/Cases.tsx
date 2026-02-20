@@ -5,8 +5,10 @@ import type { Case } from '../types/case';
 import { CASE_STATUS } from '../types/case';
 import Sidebar from '../components/Sidebar';
 import './Cases.css';
+import { useAuth } from '../context/AuthContext';
 
 const Cases = () => {
+  const { user } = useAuth();
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -40,6 +42,10 @@ const Cases = () => {
     );
   }
 
+  const userRoles = user?.roles?.map(r => r.code) || [];
+  const isPolice = userRoles.some(r => ['police_officer', 'sergeant', 'detective', 'captain', 'police_chief'].includes(r));
+  const isCitizen = userRoles.length === 0;
+
   return (
     <div className="layout-with-sidebar">
       <Sidebar />
@@ -55,18 +61,22 @@ const Cases = () => {
 
           <div className="cases-actions-bar">
             <div className="actions-left">
-              <button 
-                onClick={() => navigate('/cases/create-complaint')}
-                className="btn-gold-solid"
-              >
-                + ثبت شکایت جدید
-              </button>
-              <button 
-                onClick={() => navigate('/cases/create-scene')}
-                className="btn-gold-outline"
-              >
-                + ثبت صحنه جرم
-              </button>
+              {(isCitizen || user?.is_superuser) && (
+                <button 
+                  onClick={() => navigate('/cases/create-complaint')}
+                  className="btn-gold-solid"
+                >
+                  + ثبت شکایت جدید
+                </button>
+              )}
+              {(isPolice || user?.is_superuser) && (
+                <button 
+                  onClick={() => navigate('/cases/create-scene')}
+                  className="btn-gold-outline"
+                >
+                  + ثبت صحنه جرم
+                </button>
+              )}
             </div>
           </div>
 

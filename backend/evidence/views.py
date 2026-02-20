@@ -11,7 +11,7 @@ from .serializers import (
     VehicleEvidenceSerializer, IdentificationDocumentSerializer, OtherEvidenceSerializer,
     EvidenceImageSerializer
 )
-from cases.permissions import IsOfficerOrHigher, IsForensicDoctor
+from cases.permissions import IsOfficerOrHigher, IsForensicDoctor, IsInvestigator
 
 class EvidenceViewSet(viewsets.ModelViewSet):
     queryset = Evidence.objects.all()
@@ -32,7 +32,7 @@ class EvidenceViewSet(viewsets.ModelViewSet):
         return Response({'is_on_board': evidence.is_on_board})
 
 class EvidenceBaseViewSet(viewsets.ModelViewSet):
-    permission_classes = [permissions.IsAuthenticated, IsOfficerOrHigher]
+    permission_classes = [permissions.IsAuthenticated, IsInvestigator]
 
     def perform_create(self, serializer):
         serializer.save(recorder=self.request.user)
@@ -71,6 +71,33 @@ class WitnessTestimonyViewSet(EvidenceBaseViewSet):
 class BiologicalEvidenceViewSet(EvidenceBaseViewSet):
     queryset = BiologicalEvidence.objects.all()
     serializer_class = BiologicalEvidenceSerializer
+
+    def perform_update(self, serializer):
+        # Prevent non-forensic doctors from changing verification fields
+        instance = self.get_object()
+        is_verified = self.request.data.get('is_verified', instance.is_verified)
+        medical_follow_up = self.request.data.get('medical_follow_up', instance.medical_follow_up)
+        database_follow_up = self.request.data.get('database_follow_up', instance.database_follow_up)
+        
+        fields_changed = (
+            is_verified != instance.is_verified or
+            medical_follow_up != instance.medical_follow_up or
+            database_follow_up != instance.database_follow_up
+        )
+
+        if fields_changed:
+            from cases.permissions import IsForensicDoctor
+            perm = IsForensicDoctor()
+            if not perm.has_permission(self.request, self):
+                # Force the old values back
+                serializer.save(
+                    is_verified=instance.is_verified,
+                    medical_follow_up=instance.medical_follow_up,
+                    database_follow_up=instance.database_follow_up
+                )
+                return
+
+        serializer.save()
 
     def get_permissions(self):
         if self.action == 'verify':

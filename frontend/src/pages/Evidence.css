@@ -137,6 +137,46 @@
   transform: scale(1.1);
 }
 
+/* Selected Files Preview in Forms */
+.selected-files-preview {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  border: 1px dashed rgba(212, 175, 55, 0.3);
+}
+
+.file-preview-card {
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.file-preview-card img, 
+.file-preview-card .file-placeholder {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--primary);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+.file-preview-card span {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
 .btn-toggle {
   width: 100%;
   background: transparent;
@@ -163,6 +203,48 @@
 
 .no-data p {
   margin: 20px 0;
+}
+
+/* Image Preview Modal */
+.image-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  cursor: zoom-out;
+}
+
+.image-preview-container {
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+  cursor: default;
+}
+
+.image-preview-container img {
+  max-width: 100%;
+  max-height: 90vh;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.close-preview {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 3rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-preview:hover {
+  color: var(--primary);
 }
 
 @media (max-width: 768px) {

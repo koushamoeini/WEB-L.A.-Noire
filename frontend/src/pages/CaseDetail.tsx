@@ -47,19 +47,26 @@ export default function CaseDetail() {
   const fetchCase = async () => {
     try {
       setLoading(true);
-      const [caseResult, evidenceResult, suspectResult, verdictResult] = await Promise.all([
-        caseAPI.getCase(Number(id)),
-        evidenceAPI.listAllEvidence(Number(id)),
-        investigationAPI.listSuspects(Number(id)),
-        investigationAPI.listVerdicts(Number(id)),
-      ]);
+      setError('');
+      
+      // 1. Fetch the main case data first. This MUST succeed.
+      const caseResult = await caseAPI.getCase(Number(id));
       setCaseData(caseResult);
+      setResubmitData({ title: caseResult.title, description: caseResult.description });
+      setSelectedComplainants(caseResult.complainants);
+
+      // 2. Fetch supplementary data. These might fail based on permissions (e.g. for Trainees).
+      const [evidenceResult, suspectResult, verdictResult] = await Promise.all([
+        evidenceAPI.listAllEvidence(Number(id)).catch(() => []),
+        investigationAPI.listSuspects(Number(id)).catch(() => []),
+        investigationAPI.listVerdicts(Number(id)).catch(() => []),
+      ]);
+
       setEvidences(evidenceResult);
       setSuspects(suspectResult);
       setVerdicts(verdictResult);
-      setResubmitData({ title: caseResult.title, description: caseResult.description });
-      setSelectedComplainants(caseResult.complainants);
     } catch (err: any) {
+      console.error('Error fetching case detail:', err);
       setError(err.response?.data?.detail || 'خطا در بارگذاری پرونده');
     } finally {
       setLoading(false);
@@ -77,7 +84,7 @@ export default function CaseDetail() {
         confirmed_complainants: selectedComplainants,
       });
       alert(approved ? 'پرونده تایید و به افسر ارسال شد' : 'پرونده رد شد');
-      fetchCase();
+      navigate('/cases');
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -95,7 +102,7 @@ export default function CaseDetail() {
         notes: reviewNotes,
       });
       alert(approved ? 'پرونده فعال شد' : 'پرونده به کارآموز بازگردانده شد');
-      fetchCase();
+      navigate('/cases');
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -128,7 +135,7 @@ export default function CaseDetail() {
         notes: reviewNotes,
       });
       alert(approved ? 'پرونده تایید شد' : 'پرونده به کارآگاه بازگردانده شد');
-      fetchCase();
+      navigate('/cases');
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -146,7 +153,7 @@ export default function CaseDetail() {
         notes: reviewNotes,
       });
       alert(approved ? 'پرونده مختومه شد' : 'پرونده به کارآگاه بازگردانده شد');
-      fetchCase();
+      navigate('/cases');
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -209,7 +216,7 @@ export default function CaseDetail() {
     setAddingComplainant(true);
     setError('');
     try {
-      await caseAPI.addComplainant(caseData.id, Number(newComplainantId));
+      await caseAPI.addComplainant(caseData.id, newComplainantId);
       alert('شاکی با موفقیت اضافه شد');
       setNewComplainantId('');
       fetchCase();
@@ -246,11 +253,15 @@ export default function CaseDetail() {
     );
   }
 
+  const isOfficerOrHigher = userRoles.some(r => ['police_officer', 'sergeant', 'detective', 'captain', 'police_chief'].includes(r));
+  const isSergeantOrHigher = userRoles.some(r => ['sergeant', 'captain', 'police_chief'].includes(r));
+  const isChief = userRoles.includes('police_chief');
+
   const canTraineeReview = userRoles.includes('trainee') && caseData.status === 'PT';
-  const canOfficerReview = userRoles.includes('police_officer') && caseData.status === 'PO';
+  const canOfficerReview = isOfficerOrHigher && caseData.status === 'PO';
   const canDetectiveSubmit = userRoles.includes('detective') && caseData.status === 'AC';
-  const canSergeantReview = userRoles.includes('sergeant') && caseData.status === 'PS';
-  const canChiefReview = userRoles.includes('police_chief') && caseData.status === 'PC';
+  const canSergeantReview = isSergeantOrHigher && caseData.status === 'PS';
+  const canChiefReview = isChief && caseData.status === 'PC';
 
   const canJudgeVerdict = (userRoles.includes('judge') || userRoles.includes('qazi')) && caseData.status === 'SO';
   const canResubmit = caseData.creator === user?.id && caseData.status === 'RE';
@@ -340,15 +351,17 @@ export default function CaseDetail() {
 
             {canTraineeReview && (
               <div className="info-section">
-                <h3>شاکیان</h3>
-                {caseData.complainants.map((userId) => (
-                  <label key={userId} className="complainant-checkbox">
+                <h3>تایید شاکیان</h3>
+                {caseData.complainant_details?.map((detail) => (
+                  <label key={detail.user} className="complainant-checkbox">
                     <input
                       type="checkbox"
-                      checked={selectedComplainants.includes(userId)}
-                      onChange={() => toggleComplainant(userId)}
+                      checked={selectedComplainants.includes(detail.user)}
+                      onChange={() => toggleComplainant(detail.user)}
                     />
-                    کاربر {userId}
+                    {detail.first_name || detail.last_name 
+                      ? `${detail.first_name} ${detail.last_name} (${detail.username})` 
+                      : detail.username}
                   </label>
                 ))}
               </div>
@@ -363,7 +376,13 @@ export default function CaseDetail() {
               </div>
               <div className="mini-list">
                 {evidences.length > 0 ? evidences.map(e => (
-                  <div key={e.id} className="mini-list-item">
+                  <div 
+                    key={e.id} 
+                    className="mini-list-item" 
+                    onClick={() => navigate(`/evidence?case=${caseData.id}`)}
+                    style={{ cursor: 'pointer' }}
+                    title="برای مشاهده جزئیات کلیک کنید"
+                  >
                     <span>🔍 {e.title}</span>
                     <small>{e.type_display}</small>
                   </div>
@@ -379,7 +398,7 @@ export default function CaseDetail() {
               <div className="mini-list">
                 {suspects.length > 0 ? suspects.map(s => (
                   <div key={s.id} className="mini-list-item">
-                    <span>👤 {s.name}</span>
+                    <span>👤 {s.first_name} {s.last_name}</span>
                     <small>{s.is_main_suspect ? 'متهم اصلی' : 'مظنون'}</small>
                   </div>
                 )) : <p className="no-data">مظنونی ثبت نشده است.</p>}
@@ -393,12 +412,14 @@ export default function CaseDetail() {
             <div className="info-section">
               <h3>مدیریت شاکیان</h3>
               <p className="section-description">
-                شاکیان فعلی: {caseData.complainants.length > 0 ? caseData.complainants.join(', ') : 'بدون شاکی'}
+                شاکیان فعلی: {caseData.complainant_details && caseData.complainant_details.length > 0 
+                  ? caseData.complainant_details.map(d => d.first_name || d.last_name ? `${d.first_name} ${d.last_name}` : d.username).join('، ') 
+                  : 'بدون شاکی'}
               </p>
               <div className="add-complainant-form">
                 <input
-                  type="number"
-                  placeholder="شناسه کاربری شاکی"
+                  type="text"
+                  placeholder="نام کاربری یا کد ملی شاکی"
                   value={newComplainantId}
                   onChange={(e) => setNewComplainantId(e.target.value)}
                   className="complainant-input"
@@ -546,7 +567,7 @@ export default function CaseDetail() {
                       {suspects
                         .filter(s => !verdicts.some(v => v.suspect === s.id))
                         .map(s => (
-                          <option key={s.id} value={s.id}>{s.name} {s.is_main_suspect ? '(متهم اصلی)' : ''}</option>
+                          <option key={s.id} value={s.id}>{s.first_name} {s.last_name} {s.is_main_suspect ? '(متهم اصلی)' : ''}</option>
                         ))
                       }
                     </select>

@@ -1,13 +1,39 @@
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { evidenceAPI } from '../services/evidenceApi';
+import type { BiologicalEvidence } from '../types/evidence';
 import Sidebar from '../components/Sidebar';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [pendingBiological, setPendingBiological] = useState<BiologicalEvidence[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(false);
 
   const userRoles = user?.roles?.map(r => r.code) || [];
+  const isForensicDoctor = userRoles.includes('forensic_doctor');
+
+  useEffect(() => {
+    if (isForensicDoctor) {
+      fetchForensicTasks();
+    }
+  }, [isForensicDoctor]);
+
+  const fetchForensicTasks = async () => {
+    try {
+      setLoadingTasks(true);
+      const allBio = await evidenceAPI.listBiologicalEvidence();
+      // Filter only unverified ones
+      const unverified = allBio.filter(e => !e.is_verified);
+      setPendingBiological(unverified);
+    } catch (err) {
+      console.error('Failed to fetch forensic tasks:', err);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
 
   const modules = [
     {
@@ -92,6 +118,59 @@ const Dashboard = () => {
               </div>
             ))}
           </div>
+
+          {isForensicDoctor && (
+            <div className="info-card forensic-tasks" style={{ marginTop: '24px', border: '1px solid rgba(255,200,120,0.3)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 className="gold-text" style={{ margin: 0 }}>🔬 وظایف پزشکی قانونی (شواهد در انتظار تایید)</h3>
+                <span className="badge" style={{ background: '#d4af37', color: '#000', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
+                  {pendingBiological.length} مورد
+                </span>
+              </div>
+              
+              {loadingTasks ? (
+                <p style={{ color: '#ccc' }}>در حال بارگذاری وظایف...</p>
+              ) : pendingBiological.length === 0 ? (
+                <p style={{ color: '#888' }}>در حال حاضر هیچ مدرک زیستی جدیدی برای بررسی وجود ندارد.</p>
+              ) : (
+                <div className="tasks-list" style={{ display: 'grid', gap: '12px' }}>
+                  {pendingBiological.slice(0, 5).map(task => (
+                    <div 
+                      key={task.id} 
+                      className="task-item" 
+                      style={{ 
+                        background: 'rgba(255,255,255,0.05)', 
+                        padding: '12px 16px', 
+                        borderRadius: '8px', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s'
+                      }}
+                      onClick={() => navigate(`/evidence/edit/biological/${task.id}?case=${task.case}`)}
+                    >
+                      <div>
+                        <div style={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}>{task.title}</div>
+                        <div style={{ color: '#aaa', fontSize: '12px' }}>پرونده شماره: {task.case} • ثبت شده توسط: {task.recorder_name}</div>
+                      </div>
+                      <button className="btn-gold-outline" style={{ padding: '4px 12px', fontSize: '12px' }}>
+                        بررسی و تایید
+                      </button>
+                    </div>
+                  ))}
+                  {pendingBiological.length > 5 && (
+                    <p 
+                      style={{ textAlign: 'center', color: '#d4af37', cursor: 'pointer', fontSize: '14px', marginTop: '8px' }}
+                      onClick={() => navigate('/evidence')}
+                    >
+                      مشاهده همه موارد...
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="info-card">
             <h3>درباره سیستم</h3>

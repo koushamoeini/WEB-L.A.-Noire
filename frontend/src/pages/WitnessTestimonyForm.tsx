@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useParams } from 'react-router-dom';
 import { evidenceAPI } from '../services/evidenceApi';
 import { caseAPI } from '../services/caseApi';
 import type { Case } from '../types/case';
@@ -8,6 +8,7 @@ import './CreateEvidence.css';
 
 export default function WitnessTestimonyForm() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const urlCaseId = searchParams.get('case');
 
@@ -19,12 +20,16 @@ export default function WitnessTestimonyForm() {
     transcript: '',
   });
   const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [images, setImages] = useState<File[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchCases();
-  }, []);
+    if (id) {
+      fetchEvidence();
+    }
+  }, [id]);
 
   const fetchCases = async () => {
     try {
@@ -35,19 +40,51 @@ export default function WitnessTestimonyForm() {
     }
   };
 
+  const fetchEvidence = async () => {
+    try {
+      setLoading(true);
+      const data = await evidenceAPI.getWitnessTestimony(parseInt(id!));
+      setFormData({
+        case: data.case.toString(),
+        title: data.title,
+        description: data.description,
+        transcript: data.transcript,
+      });
+    } catch (err) {
+      console.error('Failed to fetch evidence details:', err);
+      setError('خطا در دریافت اطلاعات مدرک');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      await evidenceAPI.createWitnessTestimony({
-        case: parseInt(formData.case),
-        title: formData.title,
-        description: formData.description,
-        transcript: formData.transcript,
-        media: mediaFile || undefined,
-      });
+      let result;
+      if (id) {
+        result = await evidenceAPI.updateWitnessTestimony(parseInt(id), {
+          title: formData.title,
+          description: formData.description,
+          transcript: formData.transcript,
+          media: mediaFile || undefined,
+        });
+      } else {
+        result = await evidenceAPI.createWitnessTestimony({
+          case: parseInt(formData.case),
+          title: formData.title,
+          description: formData.description,
+          transcript: formData.transcript,
+          media: mediaFile || undefined,
+        });
+      }
+
+      if (images.length > 0) {
+        await evidenceAPI.uploadImages('witness', result.id, images);
+      }
 
       navigate(`/evidence${formData.case ? `?case=${formData.case}` : ''}`);
     } catch (err: any) {
@@ -63,7 +100,7 @@ export default function WitnessTestimonyForm() {
       <div className="main-content">
         <div className="evidence-form-container">
       <form className="evidence-form" onSubmit={handleSubmit}>
-        <h2>استشهاد شاهد</h2>
+        <h2>{id ? 'ویرایش استشهاد شاهد' : 'استشهاد شاهد'}</h2>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -121,17 +158,41 @@ export default function WitnessTestimonyForm() {
         </div>
 
         <div className="form-group">
-          <label>فایل مرتبط (اختیاری)</label>
+          <label>فایل‌های مرتبط (تصاویر، صوت یا ویدیو)</label>
           <input
             type="file"
-            onChange={(e) => setMediaFile(e.target.files?.[0] || null)}
-            accept="audio/*,video/*"
+            multiple
+            onChange={(e) => {
+              if (e.target.files) {
+                const files = Array.from(e.target.files);
+                setImages(files);
+                const firstMedia = files.find(f => !f.type.startsWith('image/')) || files[0];
+                setMediaFile(firstMedia || null);
+              }
+            }}
+            accept="image/*,audio/*,video/*"
           />
+          <small className="form-text text-muted">می‌توانید چندین فایل را انتخاب کنید.</small>
         </div>
+
+        {images.length > 0 && (
+          <div className="selected-files-preview">
+            {images.map((file, idx) => (
+              <div key={idx} className="file-preview-card">
+                {file.type.startsWith('image/') ? (
+                  <img src={URL.createObjectURL(file)} alt="preview" />
+                ) : (
+                  <div className="file-placeholder" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>📄</div>
+                )}
+                <span>{file.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="form-actions">
           <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? 'در حال ثبت...' : 'ثبت شواهد'}
+            {loading ? 'در حال آپلود...' : 'ثبت مدرک و آپلود فایل‌ها'}
           </button>
           <button
             type="button"

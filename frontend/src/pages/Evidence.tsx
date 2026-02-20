@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Evidence() {
   const { user } = useAuth();
   const isForensicDoctor = user?.roles?.some((r) => r.code === 'forensic_doctor') || false;
+  const BACKEND_URL = 'http://localhost:8000';
 
   const [searchParams] = useSearchParams();
   const caseId = searchParams.get('case');
@@ -25,6 +26,7 @@ export default function Evidence() {
   const [medicalFollowUp, setMedicalFollowUp] = useState('');
   const [databaseFollowUp, setDatabaseFollowUp] = useState('');
   const [verifyLoading, setVerifyLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvidences();
@@ -90,6 +92,17 @@ export default function Evidence() {
     }
   };
 
+  const handleDelete = async (type: string, id: number) => {
+    if (!window.confirm('آیا از حذف این مدرک اطمینان دارید؟ این عمل غیرقابل بازگشت است.')) return;
+    try {
+      await evidenceAPI.deleteEvidence(type, id);
+      await fetchEvidences();
+    } catch (err) {
+      console.error('Failed to delete evidence:', err);
+      setError('خطا در حذف مدرک');
+    }
+  };
+
   if (loading) {
     return <div className="loading">در حال بارگذاری...</div>;
   }
@@ -101,7 +114,7 @@ export default function Evidence() {
         <div className="evidence-container">
           <header className="evidence-header page-header-lux">
             <div>
-              <h1 className="gold-text">ثبت و بررسی مدارک (۵.۸){caseId ? ` — پرونده ${caseId}` : ''}</h1>
+              <h1 className="gold-text">ثبت و بررسی مدارک {caseId ? ` — پرونده ${caseId}` : ''}</h1>
               <p className="subtitle-lux">مشاهده، مدیریت و ارجاع شواهد پرونده</p>
             </div>
             <div className="evidence-actions">
@@ -240,30 +253,93 @@ export default function Evidence() {
 
                     {evidence.images && evidence.images.length > 0 && (
                       <div className="evidence-images">
-                        {evidence.images.map((img) => (
-                          <img key={img.id} src={img.image} alt="Evidence" />
-                        ))}
+                        {evidence.images.map((img) => {
+                          // Handle multiple types of potential paths from Django
+                          let imgPath = img.image;
+                          if (!imgPath) return null;
+                          
+                          // If it's a relative path like /evidence/images/..., prepend backend URL
+                          // and optionally handle the /media/ prefix if it's missing but expected
+                          let fullUrl = imgPath.startsWith('http') ? imgPath : `${BACKEND_URL}${imgPath}`;
+                          
+                          // Special check: if we updated MEDIA_ROOT to BASE_DIR, paths might look like /evidence/images/...
+                          // but Django static serves them at /media/evidence/images/...
+                          if (!fullUrl.includes('/media/') && !imgPath.startsWith('http')) {
+                            fullUrl = `${BACKEND_URL}/media${imgPath.startsWith('/') ? '' : '/'}${imgPath}`;
+                          }
+
+                          return (
+                            <img 
+                              key={img.id} 
+                              src={fullUrl} 
+                              alt="Evidence" 
+                              onClick={() => setSelectedImage(fullUrl)}
+                              title="برای بزرگ‌نمایی کلیک کنید"
+                            />
+                          );
+                        })}
                       </div>
                     )}
 
-                    <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
+                    {/* Witness Media handling */}
+                    {(evidence as any).media && (
+                      <div className="evidence-media-item" style={{ marginTop: 10 }}>
+                        <a 
+                          href={(evidence as any).media.startsWith('http') ? (evidence as any).media : `${BACKEND_URL}${((evidence as any).media.includes('/media/') || (evidence as any).media.startsWith('http')) ? '' : '/media'}${(evidence as any).media.startsWith('/') ? '' : '/'}${(evidence as any).media}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="btn-gold-outline"
+                          style={{ display: 'block', textAlign: 'center', padding: '8px' }}
+                        >
+                          📎 دانلود فایل ضمیمه (صوت/ویدیو)
+                        </a>
+                      </div>
+                    )}
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
                       <button
                         className="btn-gold-outline"
                         style={{ width: '100%' }}
                         onClick={() => navigate(`/investigation?case=${evidence.case}`)}
                       >
-                        مشاهده در تخته کارآگاه
+                        مشاهده در تخته
+                      </button>
+
+                      <button
+                        className="btn-gold-outline"
+                        style={{ width: '100%' }}
+                        onClick={() => {
+                          const type = evidence.type;
+                          let path = '';
+                          if (type === 'biological') path = `/evidence/edit/biological/${evidence.id}`;
+                          else if (type === 'witness') path = `/evidence/edit/witness/${evidence.id}`;
+                          else if (type === 'vehicle') path = `/evidence/edit/vehicle/${evidence.id}`;
+                          else if (type === 'identification') path = `/evidence/edit/id-document/${evidence.id}`;
+                          else if (type === 'other') path = `/evidence/edit/other/${evidence.id}`;
+                          
+                          if (path) navigate(`${path}?case=${evidence.case}`);
+                        }}
+                      >
+                        ویرایش مدرک
                       </button>
 
                       {isForensicDoctor && isBio && bio && !bio.is_verified && (
                         <button
                           className="btn-gold-solid"
-                          style={{ width: '100%' }}
+                          style={{ width: '100%', gridColumn: 'span 2' }}
                           onClick={() => openVerify(bio)}
                         >
                           تایید پزشکی این مدرک
                         </button>
                       )}
+
+                      <button
+                        className="btn-gold-outline"
+                        style={{ width: '100%', gridColumn: 'span 2', borderColor: 'rgba(255, 90, 90, 0.5)', color: '#ffbaba' }}
+                        onClick={() => handleDelete(evidence.type, evidence.id)}
+                      >
+                        حذف مدرک
+                      </button>
                     </div>
                   </div>
                 );
@@ -339,6 +415,19 @@ export default function Evidence() {
                   {verifyLoading ? 'در حال ارسال...' : 'ثبت تایید'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Image Preview Modal */}
+        {selectedImage && (
+          <div 
+            className="image-preview-overlay"
+            onClick={() => setSelectedImage(null)}
+          >
+            <div className="image-preview-container" onClick={e => e.stopPropagation()}>
+              <img src={selectedImage} alt="Large Preview" />
+              <button className="close-preview" onClick={() => setSelectedImage(null)}>×</button>
             </div>
           </div>
         )}

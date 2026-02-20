@@ -33,6 +33,25 @@ export const evidenceAPI = {
     return response.data;
   },
 
+  getWitnessTestimony: async (id: number): Promise<WitnessTestimony> => {
+    const response = await api.get(`/evidence/witness/${id}/`);
+    return response.data;
+  },
+
+  updateWitnessTestimony: async (id: number, data: Partial<CreateWitnessTestimonyRequest>): Promise<WitnessTestimony> => {
+    const formData = new FormData();
+    if (data.case) formData.append('case', data.case.toString());
+    if (data.title) formData.append('title', data.title);
+    if (data.description) formData.append('description', data.description);
+    if (data.transcript) formData.append('transcript', data.transcript);
+    if (data.media) formData.append('media', data.media);
+
+    const response = await api.patch(`/evidence/witness/${id}/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
   createWitnessTestimony: async (data: CreateWitnessTestimonyRequest): Promise<WitnessTestimony> => {
     const formData = new FormData();
     formData.append('case', data.case.toString());
@@ -63,12 +82,17 @@ export const evidenceAPI = {
     return response.data;
   },
 
+  getBiologicalEvidence: async (id: number): Promise<BiologicalEvidence> => {
+    const response = await api.get(`/evidence/biological/${id}/`);
+    return response.data;
+  },
+
   updateBiologicalEvidence: async (id: number, data: Partial<BiologicalEvidence>): Promise<BiologicalEvidence> => {
     const response = await api.patch(`/evidence/biological/${id}/`, data);
     return response.data;
   },
 
-  // Forensic doctor verification (section 5.8)
+  // Forensic doctor verification
   verifyBiologicalEvidence: async (
     id: number,
     data: VerifyBiologicalEvidenceRequest
@@ -89,6 +113,16 @@ export const evidenceAPI = {
     return response.data;
   },
 
+  getVehicleEvidence: async (id: number): Promise<VehicleEvidence> => {
+    const response = await api.get(`/evidence/vehicle/${id}/`);
+    return response.data;
+  },
+
+  updateVehicleEvidence: async (id: number, data: Partial<VehicleEvidence>): Promise<VehicleEvidence> => {
+    const response = await api.patch(`/evidence/vehicle/${id}/`, data);
+    return response.data;
+  },
+
   // Identification Documents
   listIdentificationDocuments: async (caseId?: number): Promise<IdentificationDocument[]> => {
     const url = caseId ? `/evidence/id-document/?case=${caseId}` : '/evidence/id-document/';
@@ -101,6 +135,16 @@ export const evidenceAPI = {
     return response.data;
   },
 
+  getIdentificationDocument: async (id: number): Promise<IdentificationDocument> => {
+    const response = await api.get(`/evidence/id-document/${id}/`);
+    return response.data;
+  },
+
+  updateIdentificationDocument: async (id: number, data: Partial<IdentificationDocument>): Promise<IdentificationDocument> => {
+    const response = await api.patch(`/evidence/id-document/${id}/`, data);
+    return response.data;
+  },
+
   // Other Evidence
   listOtherEvidence: async (caseId?: number): Promise<OtherEvidence[]> => {
     const url = caseId ? `/evidence/other/?case=${caseId}` : '/evidence/other/';
@@ -110,6 +154,16 @@ export const evidenceAPI = {
 
   createOtherEvidence: async (data: CreateOtherEvidenceRequest): Promise<OtherEvidence> => {
     const response = await api.post('/evidence/other/', data);
+    return response.data;
+  },
+
+  getOtherEvidence: async (id: number): Promise<OtherEvidence> => {
+    const response = await api.get(`/evidence/other/${id}/`);
+    return response.data;
+  },
+
+  updateOtherEvidence: async (id: number, data: Partial<OtherEvidence>): Promise<OtherEvidence> => {
+    const response = await api.patch(`/evidence/other/${id}/`, data);
     return response.data;
   },
 
@@ -131,5 +185,15 @@ export const evidenceAPI = {
         'Content-Type': 'multipart/form-data',
       },
     });
+  },
+
+  // Delete evidence
+  deleteEvidence: async (type: string, id: number): Promise<void> => {
+    // Correct type mapping since andpoints are /witness/, /biological/, etc.
+    // The 'type' passed from front might be 'witness', 'biological', 'vehicle', 'identification', 'other'
+    let endpoint = type;
+    if (type === 'identification') endpoint = 'id-document';
+    
+    await api.delete(`/evidence/${endpoint}/${id}/`);
   },
 };
