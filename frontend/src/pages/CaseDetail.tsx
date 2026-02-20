@@ -352,7 +352,12 @@ export default function CaseDetail() {
 
             {caseData.review_notes && (
               <div className="info-section">
-                <h3>یادداشت داور</h3>
+                <h3>
+                  {userRoles.includes('trainee') && caseData.status === 'PT' ? 'دلیل برگشت توسط افسر' :
+                   caseData.status === 'RE' ? 'دلیل برگشت توسط کارآموز' :
+                   isOfficerOrHigher && caseData.status === 'PO' ? 'توضیحات کارآموز' :
+                   'یادداشت داور'}
+                </h3>
                 <p className="review-notes">{caseData.review_notes}</p>
               </div>
             )}
