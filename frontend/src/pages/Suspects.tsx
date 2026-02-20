@@ -25,6 +25,7 @@ export default function Suspects() {
     national_code: '',
     details: '',
     is_main_suspect: false,
+    is_arrested: false,
     image: null as File | null,
   });
 
@@ -58,6 +59,7 @@ export default function Suspects() {
       formDataToSend.append('national_code', formData.national_code);
       formDataToSend.append('details', formData.details);
       formDataToSend.append('is_main_suspect', String(formData.is_main_suspect));
+      formDataToSend.append('is_arrested', String(formData.is_arrested));
       if (formData.image) {
         formDataToSend.append('image', formData.image);
       }
@@ -86,6 +88,7 @@ export default function Suspects() {
       national_code: suspect.national_code || '',
       details: suspect.details,
       is_main_suspect: suspect.is_main_suspect,
+      is_arrested: suspect.is_arrested || false,
       image: null,
     });
     setShowForm(true);
@@ -208,6 +211,19 @@ export default function Suspects() {
                   <label htmlFor="is_main_suspect" style={{ marginBottom: 0 }}>مظنون اصلی پرونده</label>
                 </div>
 
+                <div className="form-group checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
+                  <input
+                    type="checkbox"
+                    id="is_arrested"
+                    checked={formData.is_arrested}
+                    onChange={(e) =>
+                      setFormData({ ...formData, is_arrested: e.target.checked })
+                    }
+                    style={{ width: '20px', height: '20px' }}
+                  />
+                  <label htmlFor="is_arrested" style={{ marginBottom: 0 }}>مظنون دستگیر شده است</label>
+                </div>
+
                 <div className="form-actions" style={{ marginTop: '30px' }}>
                   <button type="submit" className="btn-gold">
                     {editingId ? 'بروزرسانی اطلاعات' : 'تایید و ثبت'}
@@ -244,7 +260,10 @@ export default function Suspects() {
                   )}
                   <div className="suspect-header">
                     <h3>{suspect.first_name} {suspect.last_name}</h3>
-                    {suspect.is_main_suspect && <span className="badge-main">عنصر کلیدی</span>}
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      {suspect.is_main_suspect && <span className="badge-main">عنصر کلیدی</span>}
+                      {suspect.is_arrested && <span className="badge-arrested" style={{ background: '#d1fae5', color: '#065f46', fontSize: '0.65rem' }}>دستگیر شده</span>}
+                    </div>
                   </div>
                   <div className="suspect-body">
                     {suspect.national_code && <p className="national-code">کد ملی: {suspect.national_code}</p>}

@@ -4,7 +4,9 @@ import { investigationAPI } from '../services/investigationApi';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
+import { evidenceAPI } from '../services/evidenceApi';
 import type { Interrogation, Suspect } from '../types/investigation';
+import type { Evidence } from '../types/evidence';
 import './Evidence.css'; // Reusing luxury evidence styles
 
 export default function Interrogations() {
@@ -15,6 +17,7 @@ export default function Interrogations() {
 
   const [interrogations, setInterrogations] = useState<Interrogation[]>([]);
   const [suspect, setSuspect] = useState<Suspect | null>(null);
+  const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -64,6 +67,8 @@ export default function Interrogations() {
       if (caseId) {
         const cases = await api.get(`/cases/${caseId}/`);
         setCaseObj(cases.data);
+        const evidenceData = await evidenceAPI.listEvidence(parseInt(caseId));
+        setEvidences(evidenceData);
       }
     } catch (error) {
       console.error('Failed to fetch interrogations:', error);
@@ -371,6 +376,16 @@ export default function Interrogations() {
                         </div>
                       ) : isCaptain ? (
                         <div className="feedback-form" style={{ display: 'grid', gap: '10px' }}>
+                          <div className="evidence-summary" style={{ background: 'rgba(0,0,0,0.3)', padding: '10px', borderRadius: '5px', marginBottom: '10px' }}>
+                            <p style={{ color: '#d4af37', fontSize: '0.8rem', marginBottom: '5px' }}>📦 مدارک ثبت شده در پرونده:</p>
+                            {evidences.length > 0 ? (
+                              <ul style={{ paddingRight: '20px', fontSize: '0.75rem', color: '#ccc' }}>
+                                {evidences.map(e => <li key={e.id}>{e.title} ({e.type_display})</li>)}
+                              </ul>
+                            ) : (
+                              <p style={{ fontSize: '0.75rem', color: '#555' }}>مدرکی یافت نشد.</p>
+                            )}
+                          </div>
                           <textarea 
                             placeholder="جمع‌بندی نهایی خود را بر اساس مدارک و بازجویی‌ها بنویسید..."
                             value={feedbackFormData[inter.id]?.notes || ''}

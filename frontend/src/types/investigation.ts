@@ -9,6 +9,7 @@ export interface Suspect {
   details: string;
   is_main_suspect: boolean;
   is_on_board: boolean;
+  is_arrested?: boolean;
 }
 
 export interface Interrogation {
