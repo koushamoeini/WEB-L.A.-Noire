@@ -132,6 +132,9 @@ const Cases = () => {
                       <span className={`crime-level-badge level-${caseItem.crime_level}`}>
                         {caseItem.level_label}
                       </span>
+                      <span className="creator-badge" style={{ fontSize: '0.75rem', opacity: 0.7 }}>
+                        👤 {caseItem.creator_name || caseItem.creator_username || 'سیستم'}
+                      </span>
                       <span className="date-text">
                         {new Date(caseItem.created_at).toLocaleDateString('fa-IR')}
                       </span>

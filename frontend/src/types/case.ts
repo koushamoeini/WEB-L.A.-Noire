@@ -15,6 +15,8 @@ export interface Case {
   status_label: string;
   level_label: string;
   creator: number;
+  creator_username?: string;
+  creator_name?: string;
   complainants: number[];
   complainant_details?: CaseComplainant[];
   created_at: string;

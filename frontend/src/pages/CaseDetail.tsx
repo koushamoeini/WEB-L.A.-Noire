@@ -88,7 +88,7 @@ export default function CaseDetail() {
         notes: reviewNotes,
         confirmed_complainants: selectedComplainants,
       });
-      navigate('/cases', { state: { message: approved ? 'پرونده با موفقیت تایید و به افسر ارسال شد' : 'پرونده رد شد و برای اصلاح به شاکی بازگشت' } });
+      navigate('/cases', { state: { message: approved ? 'پرونده با موفقیت تایید و به افسر ارسال شد' : 'پرونده رد شد و برای اصلاح به ثبت‌کننده بازگشت' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -105,7 +105,7 @@ export default function CaseDetail() {
         approved,
         notes: reviewNotes,
       });
-      navigate('/cases', { state: { message: approved ? 'پرونده تایید نهایی شد و به جریان افتاد' : 'پرونده برای بررسی مجدد به کارآموز بازگشت' } });
+      navigate('/cases', { state: { message: approved ? 'پرونده تایید نهایی شد و به جریان افتاد' : 'پرونده برای بررسی مجدد به ثبت‌کننده بازگشت' } });
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
     } finally {
@@ -326,6 +326,7 @@ export default function CaseDetail() {
                   <p><strong>سطح جرم:</strong> {caseData.level_label}</p>
                 </>
               )}
+              <p><strong>ثبت‌کننده:</strong> {caseData.creator_name || caseData.creator_username || 'سیستم'}</p>
               <p><strong>تاریخ ثبت:</strong> {new Date(caseData.created_at).toLocaleDateString('fa-IR')}</p>
               {caseData.submission_attempts > 0 && (
                 <p className="warning-text">
@@ -337,6 +338,7 @@ export default function CaseDetail() {
             {caseData.scene_data && (
               <div className="info-section">
                 <h3>اطلاعات صحنه جرم</h3>
+                <p><strong>ثبت‌کننده:</strong> {caseData.creator_name || caseData.creator_username || 'نامعلوم'}</p>
                 <p><strong>محل وقوع:</strong> {caseData.scene_data.location}</p>
                 <p><strong>زمان وقوع:</strong> {new Date(caseData.scene_data.occurrence_time).toLocaleString('fa-IR')}</p>
                 {caseData.scene_data.witnesses.length > 0 && (
@@ -357,10 +359,7 @@ export default function CaseDetail() {
             {caseData.review_notes && (
               <div className="info-section">
                 <h3>
-                  {userRoles.includes('trainee') && caseData.status === 'PT' ? 'دلیل برگشت توسط افسر' :
-                   caseData.status === 'RE' ? 'دلیل برگشت توسط کارآموز' :
-                   isOfficerOrHigher && caseData.status === 'PO' ? 'توضیحات کارآموز' :
-                   'یادداشت داور'}
+                  {caseData.status === 'RE' ? 'دلیل بازگشت جهت اصلاح' : 'یادداشت داور'}
                 </h3>
                 <p className="review-notes">{caseData.review_notes}</p>
               </div>
@@ -484,7 +483,7 @@ export default function CaseDetail() {
                       disabled={processing}
                       style={{ flex: 1, padding: '14px', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
                     >
-                      رد کردن
+                      بازگشت به ثبت‌کننده جهت اصلاح
                     </button>
                   </>
                 )}
@@ -504,7 +503,7 @@ export default function CaseDetail() {
                       disabled={processing}
                       style={{ flex: 1, padding: '14px', borderColor: 'rgba(239, 68, 68, 0.4)', color: '#f87171' }}
                     >
-                      بازگشت به کارآموز
+                      بازگشت به ثبت‌کننده جهت اصلاح
                     </button>
                   </>
                 )}
