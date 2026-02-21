@@ -34,7 +34,7 @@ export default function Interrogations() {
     supervisor_score: '',
   });
 
-  const [feedbackFormData, setFeedbackFormData] = useState<{ [id: number]: { notes: string, score: number } }>({});
+  const [feedbackFormData, setFeedbackFormData] = useState<{ [id: number]: { notes: string, score: number, decision: 'INNOCENT' | 'GUILTY' | '' } }>({});
   const [chiefFormData, setChiefFormData] = useState<{ [id: number]: { notes: string, is_confirmed: boolean } }>({});
   const [caseObj, setCaseObj] = useState<any>(null);
 
@@ -163,10 +163,14 @@ export default function Interrogations() {
 
   const handleFeedbackSubmit = async (interrogationId: number) => {
     const data = feedbackFormData[interrogationId];
-    if (!data) return;
+    if (!data || !data.decision) {
+      alert('لطفا رای نهایی (گناهکار/بی‌گناه) را انتخاب کنید.');
+      return;
+    }
     try {
       await investigationAPI.interrogationFeedback(interrogationId, {
         notes: data.notes,
+        decision: data.decision,
         is_confirmed: true
       });
       fetchData();
@@ -332,6 +336,14 @@ export default function Interrogations() {
                     
                     {interrogations[0].feedback ? (
                       <div className="feedback-content">
+                        {/* Show captain decision badge */}
+                        {interrogations[0].feedback.decision && (
+                          <div style={{ marginBottom: '12px' }}>
+                            <span className={`status-badge ${interrogations[0].feedback.decision === 'INNOCENT' ? 'status-active' : 'status-rejected'}`} style={{ padding: '6px 16px', fontSize: '1rem' }}>
+                              {interrogations[0].feedback.decision === 'INNOCENT' ? '✓ بی‌گناه' : '✗ گناهکار'}
+                            </span>
+                          </div>
+                        )}
                         <p style={{ fontStyle: 'italic', marginBottom: '15px', borderRight: '3px solid #d4af37', paddingRight: '15px', fontSize: '1rem', color: '#eee' }}>
                           "{interrogations[0].feedback.notes || 'بدون توضیح'}"
                         </p>
@@ -342,11 +354,46 @@ export default function Interrogations() {
                     ) : isCaptain ? (
                       interrogations[0].is_interrogator_confirmed && interrogations[0].is_supervisor_confirmed ? (
                         <div className="feedback-form" style={{ display: 'grid', gap: '15px' }}>
+                          {/* Scores Summary */}
+                          <div style={{ display: 'flex', gap: '20px', padding: '12px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+                            <div style={{ textAlign: 'center', flex: 1 }}>
+                              <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '4px' }}>امتیاز کارآگاه</div>
+                              <div style={{ fontSize: '1.4rem', color: '#d4af37' }}>{interrogations[0].interrogator_score ?? '—'}</div>
+                            </div>
+                            <div style={{ textAlign: 'center', flex: 1 }}>
+                              <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '4px' }}>امتیاز گروهبان</div>
+                              <div style={{ fontSize: '1.4rem', color: '#d4af37' }}>{interrogations[0].supervisor_score ?? '—'}</div>
+                            </div>
+                            <div style={{ textAlign: 'center', flex: 1 }}>
+                              <div style={{ fontSize: '0.75rem', color: '#888', marginBottom: '4px' }}>امتیاز نهایی</div>
+                              <div style={{ fontSize: '1.4rem', color: '#d4af37' }}>{interrogations[0].final_score ?? '—'}</div>
+                            </div>
+                          </div>
+                          {/* Evidences */}
+                          {evidences.length > 0 && (
+                            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: '8px' }}>
+                              <p style={{ color: '#d4af37', fontSize: '0.8rem', marginBottom: '5px' }}>📦 مدارک ثبت شده:</p>
+                              <ul style={{ paddingRight: '20px', margin: 0, fontSize: '0.8rem', color: '#ccc' }}>
+                                {evidences.map(e => <li key={e.id}>{e.title} ({e.type_display})</li>)}
+                              </ul>
+                            </div>
+                          )}
+                          {/* Decision radio */}
+                          <div style={{ display: 'flex', gap: '15px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                            <label style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: `2px solid ${feedbackFormData[editingId]?.decision === 'INNOCENT' ? '#10b981' : 'rgba(255,255,255,0.1)'}`, borderRadius: '8px', transition: '0.2s' }}>
+                              <input type="radio" name={`decision-${editingId}`} value="INNOCENT" checked={feedbackFormData[editingId]?.decision === 'INNOCENT'} onChange={() => setFeedbackFormData({ ...feedbackFormData, [editingId]: { ...feedbackFormData[editingId], decision: 'INNOCENT', notes: feedbackFormData[editingId]?.notes || '', score: 0 } })} />
+                              <span style={{ color: '#10b981', fontWeight: 600 }}>بی‌گناه</span>
+                            </label>
+                            <label style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', border: `2px solid ${feedbackFormData[editingId]?.decision === 'GUILTY' ? '#ef4444' : 'rgba(255,255,255,0.1)'}`, borderRadius: '8px', transition: '0.2s' }}>
+                              <input type="radio" name={`decision-${editingId}`} value="GUILTY" checked={feedbackFormData[editingId]?.decision === 'GUILTY'} onChange={() => setFeedbackFormData({ ...feedbackFormData, [editingId]: { ...feedbackFormData[editingId], decision: 'GUILTY', notes: feedbackFormData[editingId]?.notes || '', score: 0 } })} />
+                              <span style={{ color: '#ef4444', fontWeight: 600 }}>گناهکار</span>
+                            </label>
+                          </div>
                           <textarea 
-                            placeholder="جمع‌بندی نهایی خود را بر اساس مدارک و بازجویی‌ها بنویسید..."
+                            placeholder="توضیحات و جمع‌بندی نهایی کاپیتان..."
                             value={feedbackFormData[editingId]?.notes || ''}
-                            onChange={(e) => setFeedbackFormData({ ...feedbackFormData, [editingId]: { ...feedbackFormData[editingId], notes: e.target.value, score: 0 } })}
-                            style={{ background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid #444', padding: '15px', borderRadius: '8px', minHeight: '120px' }}
+                            onChange={(e) => setFeedbackFormData({ ...feedbackFormData, [editingId]: { ...feedbackFormData[editingId], notes: e.target.value, score: 0, decision: feedbackFormData[editingId]?.decision || '' } })}
+                            style={{ background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid #444', padding: '15px', borderRadius: '8px', minHeight: '100px' }}
                           />
                           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                             <button className="btn-gold-solid" style={{ padding: '10px 25px' }} onClick={() => handleFeedbackSubmit(editingId)}>ثبت نظر نهایی کاپیتان</button>
@@ -363,20 +410,34 @@ export default function Interrogations() {
                   {/* Police Chief Confirmation Section (for Critical Crimes) */}
                   {caseObj?.crime_level === 0 && interrogations[0].feedback && (
                     <div className="chief-section module-card-luxury" style={{ marginTop: '25px', padding: '20px', background: 'rgba(255,50,50,0.03)', borderRadius: '12px', border: '1px solid rgba(255,50,50,0.15)' }}>
-                       <h4 style={{ color: '#ff4d4d', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>
-                        <span style={{ fontSize: '1.4rem' }}>🚨</span> تاییدیه رئیس پلیس (جرم بحرانی)
+                      <h4 style={{ color: '#ff4d4d', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>
+                        <span style={{ fontSize: '1.4rem' }}>🚨</span> تاییدیه نهایی رئیس پلیس (جرم بحرانی)
                       </h4>
                       
                       {interrogations[0].feedback.chief ? (
                         <div className="chief-content">
-                           <div className={`status-badge ${interrogations[0].feedback.is_chief_confirmed ? 'status-active' : 'status-rejected'}`} style={{ display: 'inline-block', marginBottom: '15px', padding: '4px 12px' }}>
-                            {interrogations[0].feedback.is_chief_confirmed ? '✓ تایید شده' : '✗ رد شده'}
+                          {/* Show captain decision for reference */}
+                          <div style={{ marginBottom: '12px', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#888' }}>نظر کاپیتان: </span>
+                            <span className={`status-badge ${interrogations[0].feedback.decision === 'INNOCENT' ? 'status-active' : 'status-rejected'}`} style={{ display: 'inline-block', padding: '2px 10px', fontSize: '0.85rem' }}>
+                              {interrogations[0].feedback.decision === 'INNOCENT' ? 'بی‌گناه' : 'گناهکار'}
+                            </span>
+                          </div>
+                          <div className={`status-badge ${interrogations[0].feedback.is_chief_confirmed ? 'status-active' : 'status-rejected'}`} style={{ display: 'inline-block', marginBottom: '15px', padding: '4px 12px' }}>
+                            {interrogations[0].feedback.is_chief_confirmed ? '✓ تایید شده توسط رئیس پلیس' : '✗ رد شده توسط رئیس پلیس'}
                           </div>
                           <p style={{ marginBottom: '15px', color: '#eee' }}>{interrogations[0].feedback.chief_notes}</p>
                           <small style={{ color: '#888' }}>توسط: {interrogations[0].feedback.chief_name}</small>
                         </div>
                       ) : isChief ? (
                         <div className="chief-form" style={{ display: 'grid', gap: '15px' }}>
+                          {/* Show captain decision for reference */}
+                          <div style={{ padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
+                            <span style={{ fontSize: '0.85rem', color: '#888' }}>نظر کاپیتان: </span>
+                            <span className={`status-badge ${interrogations[0].feedback.decision === 'INNOCENT' ? 'status-active' : 'status-rejected'}`} style={{ display: 'inline-block', padding: '2px 10px' }}>
+                              {interrogations[0].feedback.decision === 'INNOCENT' ? 'بی‌گناه' : 'گناهکار'} — {interrogations[0].feedback.notes || 'بدون توضیح'}
+                            </span>
+                          </div>
                           <textarea 
                             placeholder="توضیحات رئیس پلیس..."
                             value={chiefFormData[editingId]?.notes || ''}

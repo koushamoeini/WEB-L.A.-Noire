@@ -36,6 +36,8 @@ export interface InterrogationFeedback {
   captain: number;
   captain_name?: string;
   is_confirmed: boolean;
+  decision?: 'INNOCENT' | 'GUILTY';
+  decision_display?: string;
   notes?: string;
   is_chief_confirmed?: boolean;
   chief_notes?: string;

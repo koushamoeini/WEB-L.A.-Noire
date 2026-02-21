@@ -57,9 +57,14 @@ class Interrogation(models.Model):
         return 0.0
 
 class InterrogationFeedback(models.Model):
+    class Decision(models.TextChoices):
+        INNOCENT = 'INNOCENT', 'بی‌گناه'
+        GUILTY = 'GUILTY', 'گناهکار'
+
     interrogation = models.OneToOneField(Interrogation, on_delete=models.CASCADE, related_name='feedback')
     captain = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='captain_feedbacks')
     is_confirmed = models.BooleanField(default=False, verbose_name="تایید شده توسط کاپیتان")
+    decision = models.CharField(max_length=10, choices=Decision.choices, null=True, blank=True, verbose_name="رای کاپیتان")
     notes = models.TextField(blank=True, null=True, verbose_name="نظر نهایی کاپیتان")
     
     # Adding Police Chief Confirmation for Critical Crimes

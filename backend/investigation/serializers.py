@@ -32,6 +32,7 @@ class BoardSerializer(serializers.ModelSerializer):
 class InterrogationFeedbackSerializer(serializers.ModelSerializer):
     captain_name = serializers.ReadOnlyField(source='captain.username')
     chief_name = serializers.ReadOnlyField(source='chief.username')
+    decision_display = serializers.CharField(source='get_decision_display', read_only=True)
     
     class Meta:
         model = InterrogationFeedback
