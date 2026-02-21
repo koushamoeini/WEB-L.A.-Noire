@@ -287,7 +287,7 @@ export default function CaseDetail() {
   const canOfficerReview = isOfficerOrHigher && caseData.status === 'PO';
   const canDetectiveSubmit = userRoles.includes('detective') && caseData.status === 'AC';
   const canSergeantReview = isSergeantOrHigher && caseData.status === 'PS';
-  const canArrestSuspects = isSergeantOrHigher && caseData.status === 'IP';
+  const canArrestSuspects = (isSergeantOrHigher || userRoles.includes('detective')) && caseData.status === 'IP';
   const canChiefReview = isChief && caseData.status === 'PC';
 
   const canJudgeVerdict = (userRoles.includes('judge') || userRoles.includes('qazi')) && caseData.status === 'SO';
@@ -400,7 +400,9 @@ export default function CaseDetail() {
             <div className="info-section">
               <div className="section-header-row">
                 <h3>لیست شواهد</h3>
-                <button className="btn-gold-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => navigate(`/evidence/create?case=${caseData.id}`)}>ثبت جدید</button>
+                {(userRoles.includes('detective') && caseData.status === 'AC') && (
+                  <button className="btn-gold-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => navigate(`/evidence/create?case=${caseData.id}`)}>ثبت جدید</button>
+                )}
               </div>
               <div className="mini-list">
                 {evidences.length > 0 ? evidences.map(e => (
@@ -421,7 +423,9 @@ export default function CaseDetail() {
             <div className="info-section">
               <div className="section-header-row">
                 <h3>لیست مظنونین</h3>
-                <button className="btn-gold-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => navigate(`/suspects?case=${caseData.id}`)}>مدیریت</button>
+                {(userRoles.includes('detective') && caseData.status === 'AC') && (
+                  <button className="btn-gold-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => navigate(`/suspects?case=${caseData.id}`)}>مدیریت</button>
+                )}
               </div>
               <div className="mini-list">
                 {suspects.length > 0 ? suspects.map(s => (
@@ -496,10 +500,18 @@ export default function CaseDetail() {
                         <button
                           className="btn-gold-solid"
                           onClick={() => handleArrestSuspect(s.id, `${s.first_name} ${s.last_name}`)}
-                          disabled={processing}
-                          style={{ padding: '8px 20px', background: '#059669', color: '#fff', borderColor: '#059669', fontSize: '0.85rem', borderRadius: '8px', cursor: 'pointer' }}
+                          disabled={processing || !isSergeantOrHigher}
+                          style={{ 
+                            padding: '8px 20px', 
+                            background: isSergeantOrHigher ? '#059669' : '#333', 
+                            color: '#fff', 
+                            borderColor: isSergeantOrHigher ? '#059669' : '#444', 
+                            fontSize: '0.85rem', 
+                            borderRadius: '8px', 
+                            cursor: isSergeantOrHigher ? 'pointer' : 'default' 
+                          }}
                         >
-                          ✅ دستگیر شد
+                          {isSergeantOrHigher ? '✅ دستگیر شد' : 'در انتظار دستگیری'}
                         </button>
                       )}
                     </div>
