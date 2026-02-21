@@ -3,7 +3,7 @@ from django.db.models import Count, Q
 import random
 import string
 from collections import defaultdict
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, exceptions
 from django.utils import timezone
 from django.shortcuts import render
 from rest_framework.decorators import action
@@ -342,7 +342,7 @@ class InterrogationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         suspect = serializer.validated_data.get('suspect')
         if suspect and suspect.status != Suspect.Status.ARRESTED:
-             raise permissions.PermissionDenied("You cannot interrogate a suspect until they are officially arrested.")
+             raise exceptions.PermissionDenied("You cannot interrogate a suspect until they are officially arrested.")
         
         user = self.request.user
         roles = [r.code for r in user.roles.all()]

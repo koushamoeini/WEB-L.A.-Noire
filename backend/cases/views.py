@@ -272,7 +272,7 @@ class CaseViewSet(viewsets.ModelViewSet):
         case.save()
         return Response({'status': 'reviewed_by_sergeant', 'new_status': case.status})
 
-    @action(detail=True, methods=['post'], permission_classes=[IsSergeant | IsPoliceChief])
+    @action(detail=True, methods=['post'], permission_classes=[IsSergeant | IsChief])
     def confirm_case_arrest(self, request, pk=None):
         """Action for Sergeant/Chief to officially mark the suspects as arrested in the station"""
         case = self.get_object()
