@@ -17,6 +17,7 @@ export default function CaseDetail() {
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [reviewNotes, setReviewNotes] = useState('');
   const [selectedComplainants, setSelectedComplainants] = useState<number[]>([]);
   const [processing, setProcessing] = useState(false);
@@ -134,10 +135,28 @@ export default function CaseDetail() {
         approved,
         notes: reviewNotes,
       });
-      alert(approved ? 'پرونده تایید شد' : 'پرونده به کارآگاه بازگردانده شد');
-      navigate('/cases');
+      if (approved) {
+        setSuccess('پرونده تایید شد و مظنونین اصلی در وضعیت "تحت تعقیب" قرار گرفتند. پس از دستگیری فیزیکی، تاییدیه دستگیری را صادر کنید.');
+        fetchCase();
+      } else {
+        navigate('/cases', { state: { message: 'پرونده برای اصلاح به کارآگاه بازگشت' } });
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleConfirmArrest = async () => {
+    if (!caseData) return;
+    setProcessing(true);
+    try {
+      await caseAPI.confirmCaseArrest(caseData.id);
+      setSuccess('متهمین با موفقیت دستگیر شدند. بخش بازجویی هم‌اکنون در دسترس است.');
+      fetchCase();
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'خطا در تایید دستگیری');
     } finally {
       setProcessing(false);
     }
@@ -262,6 +281,7 @@ export default function CaseDetail() {
   const canDetectiveSubmit = userRoles.includes('detective') && caseData.status === 'AC';
   const canSergeantReview = isSergeantOrHigher && caseData.status === 'PS';
   const canChiefReview = isChief && caseData.status === 'PC';
+  const canSergeantConfirmArrest = isSergeantOrHigher && caseData.status === 'IP';
 
   const canJudgeVerdict = (userRoles.includes('judge') || userRoles.includes('qazi')) && caseData.status === 'SO';
   const canResubmit = caseData.creator === user?.id && caseData.status === 'RE';
@@ -442,19 +462,36 @@ export default function CaseDetail() {
           )}
 
           {/* Review Actions */}
-          {(canTraineeReview || canOfficerReview || canSergeantReview || canChiefReview) && (
+          {(canTraineeReview || canOfficerReview || canSergeantReview || canChiefReview || canSergeantConfirmArrest) && (
             <div className="review-section">
-              <h3>بررسی پرونده</h3>
-              <div className="form-group">
-                <label>یادداشت</label>
-                <textarea
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  rows={4}
-                  placeholder="یادداشت های خود را وارد کنید..."
-                />
-              </div>
+              <h3 className="gold-text">
+                {canSergeantConfirmArrest ? 'تایید نهایی عملیات دستگیری' : 'بررسی پرونده'}
+              </h3>
+              
+              {!canSergeantConfirmArrest && (
+                <div className="form-group">
+                  <label>یادداشت</label>
+                  <textarea
+                    value={reviewNotes}
+                    onChange={(e) => setReviewNotes(e.target.value)}
+                    rows={4}
+                    placeholder="یادداشت های خود را وارد کنید..."
+                  />
+                </div>
+              )}
+
               <div className="review-actions">
+                {canSergeantConfirmArrest && (
+                  <button
+                    className="btn-gold-solid"
+                    onClick={handleConfirmArrest}
+                    disabled={processing}
+                    style={{ flex: 1, padding: '16px', background: 'linear-gradient(45deg, #059669, #10b981)', fontSize: '1.1rem' }}
+                  >
+                    ✅ مظنونین بازداشت شدند (انتقال به بازجویی)
+                  </button>
+                )}
+                
                 {canTraineeReview && (
                   <>
                     <button

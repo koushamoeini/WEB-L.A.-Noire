@@ -63,6 +63,12 @@ export const caseAPI = {
     return response.data;
   },
 
+  // Sergeant confirm arrest after pursuit (part of the new workflow)
+  confirmCaseArrest: async (id: number): Promise<{ status: string; message: string }> => {
+    const response = await api.post(`/cases/${id}/confirm_case_arrest/`);
+    return response.data;
+  },
+
   // Add complainant to case
   addComplainant: async (id: number, identifier: string | number): Promise<{ status: string }> => {
     const response = await api.post(`/cases/${id}/add_complainant/`, { user_id: identifier });
