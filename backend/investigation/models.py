@@ -5,6 +5,11 @@ from cases.models import Case
 from evidence.models import Evidence
 
 class Suspect(models.Model):
+    class Status(models.TextChoices):
+        IDENTIFIED = 'IDENTIFIED', 'شناسایی شده'
+        UNDER_ARREST = 'UNDER_ARREST', 'در حال دستگیری (تایید شده)'
+        ARRESTED = 'ARRESTED', 'دستگیر شده'
+
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='suspects')
     name = models.CharField(max_length=255, verbose_name="نام متهم", blank=True)
     first_name = models.CharField(max_length=150, blank=True, verbose_name="نام")
@@ -15,7 +20,13 @@ class Suspect(models.Model):
     created_at = models.DateTimeField(default=timezone.now, verbose_name="تاریخ شناسایی")
     is_main_suspect = models.BooleanField(default=False, verbose_name="متهم اصلی")
     is_on_board = models.BooleanField(default=False, verbose_name="روی تخته")
-    is_arrested = models.BooleanField(default=False, verbose_name="دستگیر شده")
+    is_arrested = models.BooleanField(default=False, verbose_name="دستگیر شده") # Keep this for compatibility
+    status = models.CharField(
+        max_length=20, 
+        choices=Status.choices, 
+        default=Status.IDENTIFIED,
+        verbose_name="وضعیت مظنون"
+    )
 
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.case.id})"

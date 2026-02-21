@@ -176,6 +176,13 @@ class WarrantViewSet(viewsets.ModelViewSet):
         warrant.approver = request.user
         warrant.approver_notes = request.data.get('notes', '')
         warrant.save()
+        
+        # When a warrant is approved, the suspect enters the 'UNDER_ARREST' (in pursuit) state
+        if warrant.suspect:
+            warrant.suspect.status = Suspect.Status.UNDER_ARREST
+            warrant.suspect.is_arrested = True # Keep legacy field sync for now
+            warrant.suspect.save()
+            
         return Response({'status': 'approved'})
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsSergeant])
@@ -295,6 +302,21 @@ class SuspectViewSet(viewsets.ModelViewSet):
                 'detail': 'Internal Server Error during suspect creation'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsSergeant | IsPoliceChief])
+    def mark_as_arrested(self, request, pk=None):
+        suspect = self.get_object()
+        # Suspect can only be marked as ARRESTED if they are currently UNDER_ARREST (warrant approved)
+        if suspect.status != Suspect.Status.UNDER_ARREST:
+            return Response(
+                {'error': 'Suspect must be under arrest (warrant approved) before being marked as arrested.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        suspect.status = Suspect.Status.ARRESTED
+        suspect.is_arrested = True
+        suspect.save()
+        return Response({'status': 'arrested', 'message': f'Suspect {suspect.name} marked as officially arrested.'})
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsDetective])
     def toggle_board(self, request, pk=None):
         suspect = self.get_object()
@@ -318,6 +340,11 @@ class InterrogationViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def perform_create(self, serializer):
+        suspect = serializer.validated_data.get('suspect')
+        if suspect and suspect.status != Suspect.Status.ARRESTED:
+             raise permissions.exceptions.PermissionDenied("You cannot interrogate a suspect until they are officially arrested.")
+        
+        serializer.save(interrogator=self.request.user)
         user = self.request.user
         roles = [r.code for r in user.roles.all()]
         
