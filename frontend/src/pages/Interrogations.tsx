@@ -233,8 +233,8 @@ export default function Interrogations() {
                       max="10"
                       value={formData.interrogator_score}
                       onChange={(e) => setFormData({ ...formData, interrogator_score: e.target.value === '' ? '' : parseInt(e.target.value) })}
-                      placeholder="امتیاز توسط کارآگاه..."
-                      disabled={!isDetective && !isSupervisor && !editingId}
+                      placeholder={!isDetective ? "فقط توسط کارآگاه قابل ویرایش است" : "امتیاز توسط کارآگاه..."}
+                      disabled={!isDetective}
                     />
                   </div>
 
@@ -246,8 +246,8 @@ export default function Interrogations() {
                       max="10"
                       value={formData.supervisor_score}
                       onChange={(e) => setFormData({ ...formData, supervisor_score: e.target.value === '' ? '' : parseInt(e.target.value) })}
-                      placeholder="امتیاز توسط گروهبان..."
-                      disabled={!isSergeant && !isCaptain && !isChief && !editingId}
+                      placeholder={!isSergeant ? "فقط توسط گروهبان قابل ویرایش است" : "امتیاز توسط گروهبان..."}
+                      disabled={!isSergeant}
                     />
                   </div>
                 </div>
