@@ -12,6 +12,7 @@ class Case(models.Model):
         PENDING_TRAINEE = 'PT', 'در انتظار بررسی کارآموز'
         PENDING_OFFICER = 'PO', 'در انتظار تایید افسر'
         ACTIVE = 'AC', 'در جریان'
+        IN_PURSUIT = 'IP', 'در حال دستگیری متهم'
         PENDING_SERGEANT = 'PS', 'در انتظار تایید گروهبان (حل پرونده)'
         PENDING_CHIEF = 'PC', 'در انتظار تایید نهایی رئیس پلیس'
         REJECTED = 'RE', 'نیازمند اصلاح توسط شاکی'
