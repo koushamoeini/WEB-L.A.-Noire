@@ -257,11 +257,20 @@ class CaseViewSet(viewsets.ModelViewSet):
         notes = request.data.get('notes', '')
         
         if approved:
-            # If critical, needs Chief's approval
-            if case.crime_level == Case.CrimeLevel.CRITICAL:
-                case.status = Case.Status.PENDING_CHIEF
-            else:
-                case.status = Case.Status.SOLVED
+            # When Sergeant approves the resolution, all main suspects go into pursuit (UNDER_ARREST)
+            # if they weren't already. The case status remains PENDING_SERGEANT or similar
+            # until the actual interrogation/arrest cycle is finished and the Sergeant clicks "Mark as Arrested"
+            # However, to satisfy the user's flow, we will keep the case in ACTIVE or a special status.
+            # Let's say we set it to ACTIVE so it stays in the list of open cases.
+            case.status = Case.Status.ACTIVE 
+            
+            # Change status of all main suspects of this case to UNDER_ARREST
+            from investigation.models import Suspect
+            case.suspects.filter(is_main_suspect=True).update(status=Suspect.Status.UNDER_ARREST)
+            
+            # Logic: If critical, eventually needs Chief's approval, but for now we follow the user's custom flow.
+            # The user wants: Sergeant approves -> suspects become "Under Pursuit" -> Sergeant marks "Arrested" -> Interrogation opens.
+            return Response({'status': 'approved_under_pursuit', 'message': 'پرونده تایید شد و مظنونین اصلی در وضعیت در تعقیب قرار گرفتند. پس از دستگیری فیزیکی، دکمه دستگیر شد را در بخش مظنونین بزنید.'})
         else:
             case.status = Case.Status.ACTIVE # Back to detective
             

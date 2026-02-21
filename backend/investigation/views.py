@@ -342,9 +342,8 @@ class InterrogationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         suspect = serializer.validated_data.get('suspect')
         if suspect and suspect.status != Suspect.Status.ARRESTED:
-             raise permissions.exceptions.PermissionDenied("You cannot interrogate a suspect until they are officially arrested.")
+             raise permissions.PermissionDenied("You cannot interrogate a suspect until they are officially arrested.")
         
-        serializer.save(interrogator=self.request.user)
         user = self.request.user
         roles = [r.code for r in user.roles.all()]
         
