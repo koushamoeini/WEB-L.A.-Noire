@@ -24,6 +24,11 @@ staticfiles/
 media/
 *.log
 
+# Uploaded media files (Django MEDIA_ROOT)
+backend/suspects/
+backend/evidence/images/
+backend/evidence/witness/
+
 # Environment variables
 .env
 .env.local
