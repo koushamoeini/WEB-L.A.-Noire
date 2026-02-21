@@ -209,10 +209,6 @@ export default function Interrogations() {
             </div>
           </div>
           
-          <div className="info-box-lux" style={{ marginBottom: '20px', fontSize: '0.9rem' }}>
-            💡 راهنما: طبق قانون، بازجویی توسط کارآگاه و گروهبان انجام می‌شود. هر یک از این دو نقش می‌توانند جلسه را ثبت کرده و امتیاز مربوط به حوزه خود را وارد کنند. امتیاز نهایی میانگین این دو خواهد بود.
-          </div>
-
           {showForm && (
             <div className="evidence-form-container" style={{ maxWidth: '800px', margin: '0 auto 40px' }}>
               <form className="evidence-form" onSubmit={handleSubmit}>

@@ -472,9 +472,6 @@ export default function CaseDetail() {
           {canArrestSuspects && (
             <div className="review-section">
               <h3 className="gold-text">🕵️‍♂️ در حال دستگیری متهمین</h3>
-              <p style={{ color: 'var(--text-dim)', marginBottom: '16px', fontSize: '0.9rem' }}>
-                مظنونین زیر تحت تعقیب هستند. پس از دستگیری فیزیکی هر متهم، دکمه «دستگیر شد» را بزنید تا بازجویی برای ایشان باز شود.
-              </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {suspects
                   .map(s => (
@@ -813,10 +810,6 @@ export default function CaseDetail() {
                 <h3 className="gold-text" style={{ marginBottom: '15px' }}>تایید دستگیری متهم</h3>
                 <p style={{ color: 'var(--text-light)', lineHeight: '1.6', marginBottom: '25px' }}>
                   آیا از دستگیری <strong style={{ color: 'var(--gold)' }}>«{arrestConfirmTarget.name}»</strong> مطمئن هستید؟
-                  <br />
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>
-                    پس از تایید، بخش بازجویی برای این متهم باز می‌شود و وضعیت او به «دستگیر شده» تغییر می‌کند.
-                  </span>
                 </p>
                 <div style={{ display: 'flex', gap: '15px' }}>
                   <button 
