@@ -19,7 +19,7 @@ export default function Interrogations() {
   const [suspect, setSuspect] = useState<Suspect | null>(null);
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
   const [editingId, setEditingId] = useState<number | null>(null);
   
   const [formData, setFormData] = useState<{
@@ -57,6 +57,18 @@ export default function Interrogations() {
         ? data.filter(i => i.suspect === parseInt(suspectId))
         : data;
       setInterrogations(filtered);
+
+      // Automatically set for editing if an interrogation exists for this suspect
+      if (suspectId && filtered.length > 0) {
+        const inter = filtered[0];
+        setFormData({
+          suspect: inter.suspect.toString(),
+          transcript: inter.transcript,
+          interrogator_score: inter.interrogator_score || '',
+          supervisor_score: inter.supervisor_score || '',
+        });
+        setEditingId(inter.id);
+      }
 
       if (suspectId) {
         const suspects = await investigationAPI.listSuspects(parseInt(caseId!));
@@ -99,13 +111,11 @@ export default function Interrogations() {
       } else {
         await investigationAPI.createInterrogation(payload);
       }
-      setShowForm(false);
-      setEditingId(null);
-      setFormData({ suspect: suspectId || '', transcript: '', interrogator_score: '', supervisor_score: '' });
       fetchData();
+      alert('اطلاعات بازجویی با موفقیت ثبت شد.');
     } catch (error: any) {
       console.error('Interrogation submission error:', error);
-      const detail = error.response?.data?.detail || JSON.stringify(error.response?.data) || 'خطا در ارتباط با سرور';
+      const detail = error.response?.data?.detail || JSON.stringify(error.response?.data) || 'خلاصه خطا: متهم هنوز دستگیر نشده یا دسترسی ندارید';
       alert('خطا در ثبت اطلاعات: ' + detail);
     }
   };
@@ -193,19 +203,8 @@ export default function Interrogations() {
         <div className="evidence-container">
           <div className="evidence-header">
             <div className="header-titles">
-              <h1 className="gold-text">جلسات بازجویی</h1>
+              <h1 className="gold-text">گزارش بازجویی</h1>
               {suspect && <p className="subtitle-lux">متهم: {suspect.first_name} {suspect.last_name}</p>}
-            </div>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn-gold-solid" onClick={() => {
-                if (showForm) {
-                  setEditingId(null);
-                  setFormData({ suspect: suspectId || '', transcript: '', interrogator_score: '', supervisor_score: '' });
-                }
-                setShowForm(!showForm);
-              }}>
-                {showForm ? 'لغو' : 'ثبت جلسه جدید'}
-              </button>
             </div>
           </div>
           
@@ -253,13 +252,85 @@ export default function Interrogations() {
                 </div>
 
                 <div className="form-actions">
-                  <button type="submit" className="btn-gold">{editingId ? 'بروزرسانی گزارش' : 'ثبت گزارش'}</button>
+                  <button type="submit" className="btn-gold">{editingId ? 'بروزرسانی گزارش بازجویی' : 'ثبت گزارش نهایی بازجویی'}</button>
                 </div>
               </form>
+
+              {editingId && interrogations.length > 0 && (
+                <div style={{ marginTop: '40px' }}>
+                  {/* Captain Final Decision Section */}
+                  <div className="feedback-section module-card-luxury" style={{ padding: '20px', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid rgba(212,175,55,0.2)' }}>
+                    <h4 style={{ color: '#d4af37', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>
+                      <span style={{ fontSize: '1.4rem' }}>⚖️</span> نظر نهایی کاپیتان
+                    </h4>
+                    
+                    {interrogations[0].feedback ? (
+                      <div className="feedback-content">
+                        <p style={{ fontStyle: 'italic', marginBottom: '15px', borderRight: '3px solid #d4af37', paddingRight: '15px', fontSize: '1rem', color: '#eee' }}>
+                          "{interrogations[0].feedback.notes || 'بدون توضیح'}"
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ color: '#888', fontSize: '0.9rem' }}>ثبت کننده: {interrogations[0].feedback.captain_name}</span>
+                        </div>
+                      </div>
+                    ) : isCaptain ? (
+                      <div className="feedback-form" style={{ display: 'grid', gap: '15px' }}>
+                        <textarea 
+                          placeholder="جمع‌بندی نهایی خود را بر اساس مدارک و بازجویی‌ها بنویسید..."
+                          value={feedbackFormData[editingId]?.notes || ''}
+                          onChange={(e) => setFeedbackFormData({ ...feedbackFormData, [editingId]: { ...feedbackFormData[editingId], notes: e.target.value, score: 0 } })}
+                          style={{ background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid #444', padding: '15px', borderRadius: '8px', minHeight: '120px' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <button className="btn-gold-solid" style={{ padding: '10px 25px' }} onClick={() => handleFeedbackSubmit(editingId)}>ثبت نظر نهایی کاپیتان</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p style={{ color: '#666', fontStyle: 'italic' }}>در انتظار بررسی و ثبت نظر نهایی توسط کاپیتان...</p>
+                    )}
+                  </div>
+
+                  {/* Police Chief Confirmation Section (for Critical Crimes) */}
+                  {caseObj?.crime_level === 0 && interrogations[0].feedback && (
+                    <div className="chief-section module-card-luxury" style={{ marginTop: '25px', padding: '20px', background: 'rgba(255,50,50,0.03)', borderRadius: '12px', border: '1px solid rgba(255,50,50,0.15)' }}>
+                       <h4 style={{ color: '#ff4d4d', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>
+                        <span style={{ fontSize: '1.4rem' }}>🚨</span> تاییدیه رئیس پلیس (جرم بحرانی)
+                      </h4>
+                      
+                      {interrogations[0].feedback.chief ? (
+                        <div className="chief-content">
+                           <div className={`status-badge ${interrogations[0].feedback.is_chief_confirmed ? 'status-active' : 'status-rejected'}`} style={{ display: 'inline-block', marginBottom: '15px', padding: '4px 12px' }}>
+                            {interrogations[0].feedback.is_chief_confirmed ? '✓ تایید شده' : '✗ رد شده'}
+                          </div>
+                          <p style={{ marginBottom: '15px', color: '#eee' }}>{interrogations[0].feedback.chief_notes}</p>
+                          <small style={{ color: '#888' }}>توسط: {interrogations[0].feedback.chief_name}</small>
+                        </div>
+                      ) : isChief ? (
+                        <div className="chief-form" style={{ display: 'grid', gap: '15px' }}>
+                          <textarea 
+                            placeholder="توضیحات رئیس پلیس..."
+                            value={chiefFormData[editingId]?.notes || ''}
+                            onChange={(e) => setChiefFormData({ ...chiefFormData, [editingId]: { ...chiefFormData[editingId], notes: e.target.value, is_confirmed: chiefFormData[editingId]?.is_confirmed ?? true } })}
+                            style={{ background: 'rgba(0,0,0,0.3)', color: '#fff', border: '1px solid #444', padding: '12px', borderRadius: '8px' }}
+                          />
+                          <div style={{ display: 'flex', gap: '15px' }}>
+                            <button className="btn-gold-solid" style={{ flex: 1, padding: '12px', background: '#059669', borderColor: '#059669' }} onClick={() => handleChiefConfirm(editingId, true)}>تایید نظر کاپیتان</button>
+                            <button className="btn-gold-outline" style={{ flex: 1, padding: '12px', borderColor: '#ff4d4d', color: '#ff4d4d' }} onClick={() => handleChiefConfirm(editingId, false)}>رد نظر کاپیتان</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p style={{ color: '#666', fontStyle: 'italic' }}>در انتظار تایید نهایی رئیس پلیس...</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          <div className="evidence-list">
+          {/* List hidden as we only want one session */}
+          {false && (
+            <div className="evidence-list">
             {loading ? (
               <div className="loading">در حال بارگذاری...</div>
             ) : interrogations.length === 0 ? (
