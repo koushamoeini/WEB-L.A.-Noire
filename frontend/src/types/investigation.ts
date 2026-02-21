@@ -22,7 +22,9 @@ export interface Interrogation {
   supervisor_name?: string;
   transcript: string;
   interrogator_score: number;
+  is_interrogator_confirmed?: boolean;
   supervisor_score?: number;
+  is_supervisor_confirmed?: boolean;
   final_score: number;
   feedback?: InterrogationFeedback;
   created_at: string;

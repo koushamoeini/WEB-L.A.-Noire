@@ -50,6 +50,7 @@ class InterrogationSerializer(serializers.ModelSerializer):
             'id', 'suspect', 'interrogator', 'interrogator_name', 
             'supervisor', 'supervisor_name', 'transcript', 
             'interrogator_score', 'supervisor_score', 'final_score', 
+            'is_interrogator_confirmed', 'is_supervisor_confirmed',
             'feedback', 'created_at'
         ]
         read_only_fields = ['interrogator', 'supervisor']

@@ -38,6 +38,8 @@ class Interrogation(models.Model):
     transcript = models.TextField(verbose_name="متن بازجویی")
     interrogator_score = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="امتیاز کارآگاه (۱-۱۰)")
     supervisor_score = models.PositiveSmallIntegerField(null=True, blank=True, verbose_name="امتیاز گروهبان (۱-۱۰)")
+    is_interrogator_confirmed = models.BooleanField(default=False, verbose_name="تایید نهایی توسط بازجو (کارآگاه)")
+    is_supervisor_confirmed = models.BooleanField(default=False, verbose_name="تایید نهایی توسط ناظر (گروهبان)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     @property
