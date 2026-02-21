@@ -485,16 +485,13 @@ export default function CaseDetail() {
                         {s.is_main_suspect && <span style={{ background: '#92400e', color: '#fde68a', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '3px' }}>متهم اصلی</span>}
                       </div>
                       {s.status === 'ARRESTED' ? (
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <span style={{ background: '#10b981', color: '#fff', fontSize: '0.75rem', padding: '5px 12px', borderRadius: '6px' }}>✓ دستگیر شده</span>
-                          <button
-                            className="btn-gold-sm"
-                            onClick={() => navigate(`/cases/${caseData.id}/interrogations?suspectId=${s.id}`)}
-                            style={{ padding: '6px 14px', fontSize: '0.8rem' }}
-                          >
-                            جلسات بازجویی
-                          </button>
-                        </div>
+                        <button
+                          className="btn-gold-solid"
+                          onClick={() => navigate(`/cases/${caseData?.id}/interrogations?suspectId=${s.id}`)}
+                          style={{ padding: '8px 20px', background: 'var(--gold)', color: '#000', borderColor: 'var(--gold)', fontSize: '0.85rem', borderRadius: '8px' }}
+                        >
+                          📁 جلسات بازجویی
+                        </button>
                       ) : (
                         <button
                           className="btn-gold-solid"
