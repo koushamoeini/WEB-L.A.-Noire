@@ -131,12 +131,9 @@ export default function CaseDetail() {
     setProcessing(true);
     setError('');
     try {
-      await caseAPI.sergeantReview(caseData.id, {
-        approved,
-        notes: reviewNotes,
-      });
+      await caseAPI.sergeantReview(caseData.id, { approved, notes: reviewNotes });
       if (approved) {
-        setSuccess('پرونده تایید شد و مظنونین اصلی در وضعیت "تحت تعقیب" قرار گرفتند. پس از دستگیری فیزیکی، تاییدیه دستگیری را صادر کنید.');
+        setSuccess('پرونده تایید شد. مظنونین اصلی در حالت «در حال دستگیری» قرار گرفتند.');
         fetchCase();
       } else {
         navigate('/cases', { state: { message: 'پرونده برای اصلاح به کارآگاه بازگشت' } });
@@ -148,13 +145,13 @@ export default function CaseDetail() {
     }
   };
 
-  const handleArrestSuspect = async (suspectId: number) => {
+  const handleArrestSuspect = async (suspectId: number, suspectName: string) => {
     if (!caseData) return;
-    if (!window.confirm('آیا از دستگیری این متهم مطمئن هستید؟ پس از تایید، بازجویی برای این متهم باز می‌شود.')) return;
+    if (!window.confirm(`آیا از دستگیری «${suspectName}» مطمئن هستید؟\nپس از تایید، بخش بازجویی برای این متهم باز می‌شود.`)) return;
     setProcessing(true);
     try {
       await caseAPI.arrestSuspect(caseData.id, suspectId);
-      setSuccess('متهم دستگیر شد. اکنون می‌توان بازجویی را آغاز کرد.');
+      setSuccess(`«${suspectName}» دستگیر شد. بازجویی برای این متهم باز است.`);
       fetchCase();
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در ثبت دستگیری');
@@ -281,8 +278,8 @@ export default function CaseDetail() {
   const canOfficerReview = isOfficerOrHigher && caseData.status === 'PO';
   const canDetectiveSubmit = userRoles.includes('detective') && caseData.status === 'AC';
   const canSergeantReview = isSergeantOrHigher && caseData.status === 'PS';
+  const canArrestSuspects = isSergeantOrHigher && caseData.status === 'IP';
   const canChiefReview = isChief && caseData.status === 'PC';
-  const canSergeantConfirmArrest = isSergeantOrHigher && caseData.status === 'IP';
 
   const canJudgeVerdict = (userRoles.includes('judge') || userRoles.includes('qazi')) && caseData.status === 'SO';
   const canResubmit = caseData.creator === user?.id && caseData.status === 'RE';
@@ -462,58 +459,61 @@ export default function CaseDetail() {
             </div>
           )}
 
-          {/* Review Actions */}
-          {(canTraineeReview || canOfficerReview || canSergeantReview || canChiefReview || canSergeantConfirmArrest) && (
+          {/* IN_PURSUIT: Arrest Suspects Section */}
+          {canArrestSuspects && (
             <div className="review-section">
-              <h3 className="gold-text">
-                {canSergeantConfirmArrest ? 'تایید نهایی عملیات دستگیری' : 'بررسی پرونده'}
-              </h3>
-              
-              {!canSergeantConfirmArrest && (
-                <div className="form-group">
-                  <label>یادداشت</label>
-                  <textarea
-                    value={reviewNotes}
-                    onChange={(e) => setReviewNotes(e.target.value)}
-                    rows={4}
-                    placeholder="یادداشت های خود را وارد کنید..."
-                  />
-                </div>
-              )}
-
-              <div className="review-actions">
-                {canSergeantConfirmArrest && (
-                  <div style={{ width: '100%' }}>
-                    <p style={{ color: 'var(--text-dim)', marginBottom: '16px', fontSize: '0.9rem' }}>
-                      مظنونین زیر در لیست تعقیب قرار دارند. پس از دستگیری فیزیکی هر کدام، دکمه دستگیر شد را بزنید تا بازجویی باز شود.
-                    </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {suspects
-                        .filter(s => s.status === 'UNDER_ARREST' || s.status === 'ARRESTED')
-                        .map(s => (
-                          <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '8px' }}>
-                            <div>
-                              <span style={{ fontWeight: 600 }}>👤 {s.first_name} {s.last_name}</span>
-                              {s.is_main_suspect && <span style={{ marginRight: '8px', background: '#92400e', color: '#fde68a', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '3px' }}>متهم اصلی</span>}
-                            </div>
-                            {s.status === 'UNDER_ARREST' ? (
-                              <button
-                                className="btn-gold-solid"
-                                onClick={() => handleArrestSuspect(s.id)}
-                                disabled={processing}
-                                style={{ padding: '8px 18px', background: '#059669', borderColor: '#059669', fontSize: '0.85rem' }}
-                              >
-                                ✅ دستگیر شد
-                              </button>
-                            ) : (
-                              <span style={{ background: '#10b981', color: '#fff', fontSize: '0.75rem', padding: '4px 10px', borderRadius: '6px' }}>دستگیر شده ✓ (بازجویی باز)</span>
-                            )}
-                          </div>
-                        ))}
+              <h3 className="gold-text">🕵️‍♂️ در حال دستگیری متهمین</h3>
+              <p style={{ color: 'var(--text-dim)', marginBottom: '16px', fontSize: '0.9rem' }}>
+                مظنونین زیر تحت تعقیب هستند. پس از دستگیری فیزیکی هر متهم، دکمه «دستگیر شد» را بزنید تا بازجویی برای ایشان باز شود.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {suspects
+                  .filter(s => s.status === 'UNDER_ARREST' || s.status === 'ARRESTED')
+                  .map(s => (
+                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '1.2rem' }}>👤</span>
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{s.first_name} {s.last_name}</div>
+                          {s.national_code && <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>کد ملی: {s.national_code}</div>}
+                        </div>
+                        {s.is_main_suspect && <span style={{ background: '#92400e', color: '#fde68a', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '3px' }}>متهم اصلی</span>}
+                      </div>
+                      {s.status === 'UNDER_ARREST' ? (
+                        <button
+                          className="btn-gold-solid"
+                          onClick={() => handleArrestSuspect(s.id, `${s.first_name} ${s.last_name}`)}
+                          disabled={processing}
+                          style={{ padding: '8px 20px', background: '#059669', borderColor: '#059669', fontSize: '0.85rem', borderRadius: '8px' }}
+                        >
+                          ✅ دستگیر شد
+                        </button>
+                      ) : (
+                        <span style={{ background: '#10b981', color: '#fff', fontSize: '0.75rem', padding: '5px 12px', borderRadius: '6px' }}>✓ دستگیر — بازجویی باز</span>
+                      )}
                     </div>
-                  </div>
+                  ))}
+                {suspects.filter(s => s.status === 'UNDER_ARREST' || s.status === 'ARRESTED').length === 0 && (
+                  <p style={{ color: 'var(--text-dim)' }}>مظنونی در لیست تعقیب یافت نشد.</p>
                 )}
-                
+              </div>
+            </div>
+          )}
+
+          {/* Review Actions */}
+          {(canTraineeReview || canOfficerReview || canSergeantReview || canChiefReview) && (
+            <div className="review-section">
+              <h3>بررسی پرونده</h3>
+              <div className="form-group">
+                <label>یادداشت</label>
+                <textarea
+                  value={reviewNotes}
+                  onChange={(e) => setReviewNotes(e.target.value)}
+                  rows={4}
+                  placeholder="یادداشت های خود را وارد کنید..."
+                />
+              </div>
+              <div className="review-actions">
                 {canTraineeReview && (
                   <>
                     <button

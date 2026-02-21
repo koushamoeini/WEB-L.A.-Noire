@@ -6,8 +6,8 @@ from evidence.models import Evidence
 
 class Suspect(models.Model):
     class Status(models.TextChoices):
-        IDENTIFIED = 'IDENTIFIED', 'شناسایی شده'
-        UNDER_ARREST = 'UNDER_ARREST', 'در حال دستگیری (تایید شده)'
+        IDENTIFIED = 'IDENTIFIED', 'شناسایی‌شده'
+        UNDER_ARREST = 'UNDER_ARREST', 'در حال دستگیری'
         ARRESTED = 'ARRESTED', 'دستگیر شده'
 
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='suspects')
@@ -20,10 +20,10 @@ class Suspect(models.Model):
     created_at = models.DateTimeField(default=timezone.now, verbose_name="تاریخ شناسایی")
     is_main_suspect = models.BooleanField(default=False, verbose_name="متهم اصلی")
     is_on_board = models.BooleanField(default=False, verbose_name="روی تخته")
-    is_arrested = models.BooleanField(default=False, verbose_name="دستگیر شده") # Keep this for compatibility
+    is_arrested = models.BooleanField(default=False, verbose_name="دستگیر شده")
     status = models.CharField(
-        max_length=20, 
-        choices=Status.choices, 
+        max_length=20,
+        choices=Status.choices,
         default=Status.IDENTIFIED,
         verbose_name="وضعیت مظنون"
     )

@@ -31,13 +31,13 @@ class CaseViewSet(viewsets.ModelViewSet):
         if 'police_officer' in roles:
             queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.SOLVED])
 
-        # Sergeants see cases pending resolution review, active cases, and completed/solved cases
+        # Sergeants see cases pending resolution review, active cases, in pursuit, and completed/solved cases
         if 'sergeant' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
+            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
 
-        # Detectives see active cases to investigate and solved cases
+        # Detectives see active cases to investigate, in-pursuit, and solved cases
         if 'detective' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
+            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
 
         # Forensic doctors see active and solved cases to manage evidence
         if 'forensic_doctor' in roles:
@@ -251,20 +251,23 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsSergeant])
     def sergeant_review(self, request, pk=None):
-        """Sergeant reviews the detective's resolution (Section 4.4)"""
+        """Sergeant approves -> case goes IN_PURSUIT, all main suspects become UNDER_ARREST."""
         case = self.get_object()
         approved = request.data.get('approved', False)
         notes = request.data.get('notes', '')
-        
         case.review_notes = notes
+
         if approved:
-            # Transition to 'In Pursuit' phase — suspects individually arrested via separate action
             case.status = Case.Status.IN_PURSUIT
             case.save()
-            # Put all main suspects into UNDER_ARREST (in pursuit) state
+            # Put all main suspects into the pursuit list
             from investigation.models import Suspect
-            case.suspects.filter(is_main_suspect=True).update(status=Suspect.Status.UNDER_ARREST)
-            return Response({'status': 'approved_under_pursuit', 'new_status': case.status})
+            updated = case.suspects.filter(is_main_suspect=True).update(status=Suspect.Status.UNDER_ARREST)
+            return Response({
+                'status': 'in_pursuit',
+                'new_status': case.status,
+                'suspects_updated': updated,
+            })
         else:
             case.status = Case.Status.ACTIVE
             case.save()
@@ -272,31 +275,25 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsSergeant | IsChief])
     def arrest_suspect(self, request, pk=None):
-        """Sergeant/Chief marks a specific suspect as officially arrested, opening interrogation."""
+        """Sergeant/Chief marks a specific suspect as officially arrested -> opens interrogation."""
         from investigation.models import Suspect
         case = self.get_object()
         suspect_id = request.data.get('suspect_id')
         if not suspect_id:
             return Response({'error': 'suspect_id الزامی است.'}, status=400)
-        
         try:
             suspect = case.suspects.get(id=suspect_id)
         except Suspect.DoesNotExist:
             return Response({'error': 'متهم مربوطه در این پرونده یافت نشد.'}, status=404)
-
         if suspect.status != Suspect.Status.UNDER_ARREST:
             return Response({'error': f'وضعیت متهم باید «در تعقیب» باشد. وضعیت فعلی: {suspect.get_status_display()}'}, status=400)
-
         suspect.status = Suspect.Status.ARRESTED
         suspect.is_arrested = True
         suspect.save()
-
-        # If all main suspects are arrested, keep case ACTIVE (already is) — no auto-solve.
         return Response({
             'status': 'arrested',
             'suspect_id': suspect.id,
             'suspect_name': f'{suspect.first_name} {suspect.last_name}',
-            'message': 'متهم دستگیر شد. بازجویی برای این متهم باز است.'
         })
 
     @action(detail=True, methods=['post'], permission_classes=[IsChief])

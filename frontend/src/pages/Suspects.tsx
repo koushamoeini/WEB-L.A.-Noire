@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { investigationAPI } from '../services/investigationApi';
 import { caseAPI } from '../services/caseApi';
 import type { Suspect } from '../types/investigation';
@@ -11,7 +10,6 @@ import './Suspects.css';
 const BACKEND_URL = 'http://localhost:8000';
 
 export default function Suspects() {
-  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const caseId = searchParams.get('case');
   const navigate = useNavigate();
@@ -30,18 +28,6 @@ export default function Suspects() {
     is_arrested: false,
     image: null as File | null,
   });
-
-  const isSergeantOrChief = user?.roles.some(r => r.code === 'sergeant' || r.code === 'police_chief');
-
-  const handleArrest = async (id: number) => {
-    if (!window.confirm('آیا از تغییر وضعیت این متهم به "دستگیر شده" اطمینان دارید؟\nاین اقدام باعث باز شدن مرحله بازجویی خواهد شد.')) return;
-    try {
-      await investigationAPI.markAsArrested(id);
-      fetchData();
-    } catch (error: any) {
-      alert(error.response?.data?.error || 'خطا در عملیات');
-    }
-  };
 
   useEffect(() => {
     fetchData();
@@ -282,11 +268,9 @@ export default function Suspects() {
                   )}
                   <div className="suspect-header">
                     <h3>{suspect.first_name} {suspect.last_name}</h3>
-                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '5px' }}>
                       {suspect.is_main_suspect && <span className="badge-main">عنصر کلیدی</span>}
-                      {suspect.status === 'IDENTIFIED' && <span className="badge-status-identified" style={{ background: '#3b82f6', color: '#fff', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px' }}>شناسایی شده</span>}
-                      {suspect.status === 'UNDER_ARREST' && <span className="badge-status-pursuit" style={{ background: '#f59e0b', color: '#fff', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px' }}>در تعقیب</span>}
-                      {suspect.status === 'ARRESTED' && <span className="badge-status-arrested" style={{ background: '#10b981', color: '#fff', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px' }}>دستگیر شده</span>}
+                      {suspect.is_arrested && <span className="badge-arrested" style={{ background: '#d1fae5', color: '#065f46', fontSize: '0.65rem' }}>دستگیر شده</span>}
                     </div>
                   </div>
                   <div className="suspect-body">
@@ -297,10 +281,8 @@ export default function Suspects() {
                     <button 
                       onClick={() => navigate(`/cases/${suspect.case}/interrogations?suspectId=${suspect.id}`)}
                       className="btn-gold-sm"
-                      disabled={suspect.status !== 'ARRESTED'}
-                      title={suspect.status !== 'ARRESTED' ? "تا زمانی که متهم دستگیر نشود، بازجویی امکان‌پذیر نیست" : ""}
                     >
-                      {suspect.status !== 'ARRESTED' ? 'قفل (بازجویی)' : 'جلسات بازجویی'}
+                      جلسات بازجویی
                     </button>
                     <button 
                       onClick={() => navigate(`/investigation?case=${suspect.case}`)}
@@ -308,17 +290,6 @@ export default function Suspects() {
                     >
                       تخته تحقیقات
                     </button>
-                    
-                    {isSergeantOrChief && suspect.status === 'UNDER_ARREST' && (
-                      <button 
-                        onClick={() => handleArrest(suspect.id)}
-                        className="btn-gold-sm"
-                        style={{ gridColumn: 'span 2', background: '#059669', borderColor: '#059669' }}
-                      >
-                        تایید نهایی: "متهم دستگیر شد"
-                      </button>
-                    )}
-
                     <button 
                       onClick={() => handleEdit(suspect)}
                       className="btn-gold-outline-sm"

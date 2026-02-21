@@ -57,15 +57,15 @@ export const caseAPI = {
     return response.data;
   },
 
-  // Chief review for critical cases (section 5.4)
-  chiefReview: async (id: number, data: ReviewRequest): Promise<{ status: string; new_status: string }> => {
-    const response = await api.post(`/cases/${id}/chief_review/`, data);
+  // Sergeant/Chief mark a specific suspect as arrested (opens interrogation)
+  arrestSuspect: async (caseId: number, suspectId: number): Promise<{ status: string; suspect_id: number }> => {
+    const response = await api.post(`/cases/${caseId}/arrest_suspect/`, { suspect_id: suspectId });
     return response.data;
   },
 
-  // Sergeant marks a specific suspect as arrested (opens interrogation for that suspect)
-  arrestSuspect: async (caseId: number, suspectId: number): Promise<{ status: string; message: string }> => {
-    const response = await api.post(`/cases/${caseId}/arrest_suspect/`, { suspect_id: suspectId });
+  // Chief review for critical cases (section 5.4)
+  chiefReview: async (id: number, data: ReviewRequest): Promise<{ status: string; new_status: string }> => {
+    const response = await api.post(`/cases/${id}/chief_review/`, data);
     return response.data;
   },
 

@@ -3,7 +3,8 @@ from django.db.models import Count, Q
 import random
 import string
 from collections import defaultdict
-from rest_framework import viewsets, permissions, status, exceptions
+from rest_framework import viewsets, permissions, status
+from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
 from django.shortcuts import render
 from rest_framework.decorators import action
@@ -28,6 +29,7 @@ OPEN_CASE_STATUSES = {
     Case.Status.PENDING_TRAINEE,
     Case.Status.PENDING_OFFICER,
     Case.Status.ACTIVE,
+    Case.Status.IN_PURSUIT,
     Case.Status.PENDING_SERGEANT,
     Case.Status.PENDING_CHIEF,
 }
@@ -342,8 +344,8 @@ class InterrogationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         suspect = serializer.validated_data.get('suspect')
         if suspect and suspect.status != Suspect.Status.ARRESTED:
-             raise exceptions.PermissionDenied("You cannot interrogate a suspect until they are officially arrested.")
-        
+            raise PermissionDenied("تا زمانی که متهم رسماً دستگیر نشده است، امکان ثبت بازجویی وجود ندارد.")
+
         user = self.request.user
         roles = [r.code for r in user.roles.all()]
         
