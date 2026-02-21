@@ -279,8 +279,11 @@ export default function Suspects() {
                   </div>
                   <div className="suspect-footer" style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <button 
-                      onClick={() => navigate(`/cases/${suspect.case}/interrogations?suspectId=${suspect.id}`)}
+                      onClick={() => (suspect.status === 'ARRESTED' || suspect.is_arrested) && navigate(`/cases/${suspect.case}/interrogations?suspectId=${suspect.id}`)}
                       className="btn-gold-sm"
+                      disabled={!(suspect.status === 'ARRESTED' || suspect.is_arrested)}
+                      title={!(suspect.status === 'ARRESTED' || suspect.is_arrested) ? 'بازجویی فقط پس از دستگیری فعال می‌شود' : ''}
+                      style={{ opacity: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? 1 : 0.4, cursor: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? 'pointer' : 'not-allowed' }}
                     >
                       جلسات بازجویی
                     </button>
