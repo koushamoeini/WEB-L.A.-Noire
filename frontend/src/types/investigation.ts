@@ -10,6 +10,7 @@ export interface Suspect {
   is_main_suspect: boolean;
   is_on_board: boolean;
   is_arrested?: boolean;
+  status: 'IDENTIFIED' | 'UNDER_ARREST' | 'ARRESTED';
 }
 
 export interface Interrogation {

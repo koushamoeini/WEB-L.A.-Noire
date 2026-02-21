@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { investigationAPI } from '../services/investigationApi';
 import { caseAPI } from '../services/caseApi';
 import type { Suspect } from '../types/investigation';
@@ -10,6 +11,7 @@ import './Suspects.css';
 const BACKEND_URL = 'http://localhost:8000';
 
 export default function Suspects() {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const caseId = searchParams.get('case');
   const navigate = useNavigate();
@@ -28,6 +30,18 @@ export default function Suspects() {
     is_arrested: false,
     image: null as File | null,
   });
+
+  const isSergeantOrChief = user?.roles.some(r => r.code === 'sergeant' || r.code === 'police_chief');
+
+  const handleArrest = async (id: number) => {
+    if (!window.confirm('آیا از تغییر وضعیت این متهم به "دستگیر شده" اطمینان دارید؟\nاین اقدام باعث باز شدن مرحله بازجویی خواهد شد.')) return;
+    try {
+      await investigationAPI.markAsArrested(id);
+      fetchData();
+    } catch (error: any) {
+      alert(error.response?.data?.error || 'خطا در عملیات');
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -56,6 +70,8 @@ export default function Suspects() {
       formDataToSend.append('case', formData.case);
       formDataToSend.append('first_name', formData.first_name);
       formDataToSend.append('last_name', formData.last_name);
+      // Auto-generate name field from first/last for backend
+      formDataToSend.append('name', `${formData.first_name} ${formData.last_name}`);
       formDataToSend.append('national_code', formData.national_code);
       formDataToSend.append('details', formData.details);
       formDataToSend.append('is_main_suspect', String(formData.is_main_suspect));
@@ -72,10 +88,15 @@ export default function Suspects() {
       
       setShowForm(false);
       setEditingId(null);
-      setFormData({ case: caseId || '', first_name: '', last_name: '', national_code: '', details: '', is_main_suspect: false, image: null });
+      setFormData({ case: caseId || '', first_name: '', last_name: '', national_code: '', details: '', is_main_suspect: false, is_arrested: false, image: null });
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save suspect:', error);
+      const detail = error.response?.data?.error || 
+                     error.response?.data?.detail || 
+                     (error.response?.data && typeof error.response?.data === 'object' ? JSON.stringify(error.response?.data) : null) ||
+                     'خطا در ارتباط با سرور';
+      alert('خطا در ثبت اطلاعات: ' + detail);
     }
   };
 
@@ -115,7 +136,7 @@ export default function Suspects() {
             <button className="btn-gold-outline" onClick={() => {
               if (showForm) {
                 setEditingId(null);
-                setFormData({ case: caseId || '', first_name: '', last_name: '', national_code: '', details: '', is_main_suspect: false, image: null });
+                setFormData({ case: caseId || '', first_name: '', last_name: '', national_code: '', details: '', is_main_suspect: false, is_arrested: false, image: null });
               }
               setShowForm(!showForm);
             }}>
@@ -160,22 +181,23 @@ export default function Suspects() {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label>پرونده *</label>
-                  <select
-                    value={formData.case}
-                    onChange={(e) => setFormData({ ...formData, case: e.target.value })}
-                    required
-                    disabled={!!caseId}
-                  >
-                    <option value="">انتخاب پرونده</option>
-                    {cases.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.title} - #{c.id}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {!caseId && (
+                  <div className="form-group">
+                    <label>پرونده *</label>
+                    <select
+                      value={formData.case}
+                      onChange={(e) => setFormData({ ...formData, case: e.target.value })}
+                      required
+                    >
+                      <option value="">انتخاب پرونده</option>
+                      {cases.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.title} - #{c.id}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label>جزئیات و توضیحات *</label>
@@ -231,7 +253,7 @@ export default function Suspects() {
                   <button type="button" className="btn-gold-outline" onClick={() => {
                     setShowForm(false);
                     setEditingId(null);
-                    setFormData({ case: caseId || '', first_name: '', last_name: '', national_code: '', details: '', is_main_suspect: false, image: null });
+                    setFormData({ case: caseId || '', first_name: '', last_name: '', national_code: '', details: '', is_main_suspect: false, is_arrested: false, image: null });
                   }}>
                     انصراف
                   </button>
@@ -260,9 +282,11 @@ export default function Suspects() {
                   )}
                   <div className="suspect-header">
                     <h3>{suspect.first_name} {suspect.last_name}</h3>
-                    <div style={{ display: 'flex', gap: '5px' }}>
+                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                       {suspect.is_main_suspect && <span className="badge-main">عنصر کلیدی</span>}
-                      {suspect.is_arrested && <span className="badge-arrested" style={{ background: '#d1fae5', color: '#065f46', fontSize: '0.65rem' }}>دستگیر شده</span>}
+                      {suspect.status === 'IDENTIFIED' && <span className="badge-status-identified" style={{ background: '#3b82f6', color: '#fff', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px' }}>شناسایی شده</span>}
+                      {suspect.status === 'UNDER_ARREST' && <span className="badge-status-pursuit" style={{ background: '#f59e0b', color: '#fff', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px' }}>در تعقیب</span>}
+                      {suspect.status === 'ARRESTED' && <span className="badge-status-arrested" style={{ background: '#10b981', color: '#fff', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '4px' }}>دستگیر شده</span>}
                     </div>
                   </div>
                   <div className="suspect-body">
@@ -273,8 +297,10 @@ export default function Suspects() {
                     <button 
                       onClick={() => navigate(`/cases/${suspect.case}/interrogations?suspectId=${suspect.id}`)}
                       className="btn-gold-sm"
+                      disabled={suspect.status !== 'ARRESTED'}
+                      title={suspect.status !== 'ARRESTED' ? "تا زمانی که متهم دستگیر نشود، بازجویی امکان‌پذیر نیست" : ""}
                     >
-                      جلسات بازجویی
+                      {suspect.status !== 'ARRESTED' ? 'قفل (بازجویی)' : 'جلسات بازجویی'}
                     </button>
                     <button 
                       onClick={() => navigate(`/investigation?case=${suspect.case}`)}
@@ -282,6 +308,17 @@ export default function Suspects() {
                     >
                       تخته تحقیقات
                     </button>
+                    
+                    {isSergeantOrChief && suspect.status === 'UNDER_ARREST' && (
+                      <button 
+                        onClick={() => handleArrest(suspect.id)}
+                        className="btn-gold-sm"
+                        style={{ gridColumn: 'span 2', background: '#059669', borderColor: '#059669' }}
+                      >
+                        تایید نهایی: "متهم دستگیر شد"
+                      </button>
+                    )}
+
                     <button 
                       onClick={() => handleEdit(suspect)}
                       className="btn-gold-outline-sm"

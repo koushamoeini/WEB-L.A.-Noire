@@ -37,6 +37,11 @@ export const investigationAPI = {
     return response.data;
   },
 
+  markAsArrested: async (id: number): Promise<any> => {
+    const response = await api.post(`/investigation/suspects/${id}/mark_as_arrested/`);
+    return response.data;
+  },
+
   listMostWanted: async (): Promise<any[]> => {
     const response = await api.get('/investigation/suspects/most_wanted/');
     return response.data;

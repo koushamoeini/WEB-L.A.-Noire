@@ -197,14 +197,19 @@ export default function Interrogations() {
               {suspect && <p className="subtitle-lux">متهم: {suspect.first_name} {suspect.last_name}</p>}
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <button className="btn-gold-solid" onClick={() => {
-                if (showForm) {
-                  setEditingId(null);
-                  setFormData({ suspect: suspectId || '', transcript: '', interrogator_score: '', supervisor_score: '' });
-                }
-                setShowForm(!showForm);
-              }}>
-                {showForm ? 'لغو' : 'ثبت جلسه جدید'}
+              <button 
+                className="btn-gold-solid" 
+                onClick={() => {
+                  if (showForm) {
+                    setEditingId(null);
+                    setFormData({ suspect: suspectId || '', transcript: '', interrogator_score: '', supervisor_score: '' });
+                  }
+                  setShowForm(!showForm);
+                }}
+                disabled={suspect?.status !== 'ARRESTED' && !editingId}
+                title={suspect?.status !== 'ARRESTED' ? "تا زمانی که متهم دستگیر نشود، امکان ثبت بازجویی جدید وجود ندارد" : ""}
+              >
+                {showForm ? 'لغو' : (suspect?.status !== 'ARRESTED' ? 'قفل (عدم بازداشت)' : 'ثبت جلسه جدید')}
               </button>
             </div>
           </div>

@@ -314,6 +314,7 @@ export default function CaseDetail() {
                 </>
               )}
               <p><strong>سطح جرم:</strong> {caseData.level_label}</p>
+              <p><strong>ثبت‌کننده و گزارش‌دهنده صحنه جرم:</strong> {caseData.creator_name || caseData.creator_username || 'سیستم'}</p>
               <p><strong>تاریخ ثبت:</strong> {new Date(caseData.created_at).toLocaleDateString('fa-IR')}</p>
               {caseData.submission_attempts > 0 && (
                 <p className="warning-text">
@@ -397,8 +398,12 @@ export default function CaseDetail() {
               </div>
               <div className="mini-list">
                 {suspects.length > 0 ? suspects.map(s => (
-                  <div key={s.id} className="mini-list-item">
-                    <span>👤 {s.first_name} {s.last_name}</span>
+                  <div key={s.id} className="mini-list-item" style={{ justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>👤 {s.first_name} {s.last_name}</span>
+                      {s.status === 'UNDER_ARREST' && <span style={{ background: '#f59e0b', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>در تعقیب</span>}
+                      {s.status === 'ARRESTED' && <span style={{ background: '#10b981', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>دستگیر شده</span>}
+                    </div>
                     <small>{s.is_main_suspect ? 'متهم اصلی' : 'مظنون'}</small>
                   </div>
                 )) : <p className="no-data">مظنونی ثبت نشده است.</p>}
