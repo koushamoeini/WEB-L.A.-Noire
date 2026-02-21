@@ -29,6 +29,7 @@ export default function CaseDetail() {
   const [evidences, setEvidences] = useState<Evidence[]>([]);
   const [suspects, setSuspects] = useState<Suspect[]>([]);
   const [verdicts, setVerdicts] = useState<Verdict[]>([]);
+  const [arrestConfirmTarget, setArrestConfirmTarget] = useState<{ id: number; name: string } | null>(null);
 
   // Verdict Form State
   const [verdictForm, setVerdictForm] = useState({
@@ -145,9 +146,14 @@ export default function CaseDetail() {
     }
   };
 
-  const handleArrestSuspect = async (suspectId: number, suspectName: string) => {
-    if (!caseData) return;
-    if (!window.confirm(`آیا از دستگیری «${suspectName}» مطمئن هستید؟\nپس از تایید، بخش بازجویی برای این متهم باز می‌شود.`)) return;
+  const handleArrestSuspect = (suspectId: number, suspectName: string) => {
+    setArrestConfirmTarget({ id: suspectId, name: suspectName });
+  };
+
+  const proceedArrest = async () => {
+    if (!caseData || !arrestConfirmTarget) return;
+    const { id: suspectId, name: suspectName } = arrestConfirmTarget;
+    setArrestConfirmTarget(null);
     setProcessing(true);
     try {
       await caseAPI.arrestSuspect(caseData.id, suspectId);
@@ -468,7 +474,6 @@ export default function CaseDetail() {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {suspects
-                  .filter(s => s.status === 'UNDER_ARREST' || s.status === 'ARRESTED')
                   .map(s => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: '10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -479,7 +484,9 @@ export default function CaseDetail() {
                         </div>
                         {s.is_main_suspect && <span style={{ background: '#92400e', color: '#fde68a', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '3px' }}>متهم اصلی</span>}
                       </div>
-                      {s.status === 'UNDER_ARREST' ? (
+                      {s.status === 'ARRESTED' ? (
+                        <span style={{ background: '#10b981', color: '#fff', fontSize: '0.75rem', padding: '5px 12px', borderRadius: '6px' }}>✓ دستگیر — بازجویی باز</span>
+                      ) : (
                         <button
                           className="btn-gold-solid"
                           onClick={() => handleArrestSuspect(s.id, `${s.first_name} ${s.last_name}`)}
@@ -488,12 +495,10 @@ export default function CaseDetail() {
                         >
                           ✅ دستگیر شد
                         </button>
-                      ) : (
-                        <span style={{ background: '#10b981', color: '#fff', fontSize: '0.75rem', padding: '5px 12px', borderRadius: '6px' }}>✓ دستگیر — بازجویی باز</span>
                       )}
                     </div>
                   ))}
-                {suspects.filter(s => s.status === 'UNDER_ARREST' || s.status === 'ARRESTED').length === 0 && (
+                {suspects.length === 0 && (
                   <p style={{ color: 'var(--text-dim)' }}>مظنونی در لیست تعقیب یافت نشد.</p>
                 )}
               </div>
@@ -765,6 +770,64 @@ export default function CaseDetail() {
               مشاهده تخته تحقیقات
             </button>
           </div>
+
+          {/* Custom Arrest Confirmation Modal */}
+          {arrestConfirmTarget && (
+            <div 
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: 'rgba(0,0,0,0.85)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 9999,
+                backdropFilter: 'blur(5px)'
+              }}
+            >
+              <div 
+                style={{
+                  background: 'var(--bg-dark)',
+                  padding: '30px',
+                  borderRadius: '15px',
+                  border: '1px solid var(--gold-border)',
+                  maxWidth: '450px',
+                  width: '90%',
+                  textAlign: 'center',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+                }}
+              >
+                <div style={{ fontSize: '3rem', marginBottom: '20px' }}>🚔</div>
+                <h3 className="gold-text" style={{ marginBottom: '15px' }}>تایید دستگیری متهم</h3>
+                <p style={{ color: 'var(--text-light)', lineHeight: '1.6', marginBottom: '25px' }}>
+                  آیا از دستگیری <strong style={{ color: 'var(--gold)' }}>«{arrestConfirmTarget.name}»</strong> مطمئن هستید؟
+                  <br />
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)' }}>
+                    پس از تایید، بخش بازجویی برای این متهم باز می‌شود و وضعیت او به «دستگیر شده» تغییر می‌کند.
+                  </span>
+                </p>
+                <div style={{ display: 'flex', gap: '15px' }}>
+                  <button 
+                    className="btn-gold-solid" 
+                    onClick={proceedArrest}
+                    style={{ flex: 1, padding: '12px', background: '#059669', borderColor: '#059669' }}
+                  >
+                    تایید و ثبت دستگیری
+                  </button>
+                  <button 
+                    className="btn-gold-outline" 
+                    onClick={() => setArrestConfirmTarget(null)}
+                    style={{ flex: 1, padding: '12px' }}
+                  >
+                    انصراف
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
