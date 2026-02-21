@@ -27,15 +27,11 @@ export default function Interrogations() {
     transcript: string;
     interrogator_score: number | '';
     supervisor_score: number | '';
-    is_interrogator_confirmed: boolean;
-    is_supervisor_confirmed: boolean;
   }>({
     suspect: suspectId || '',
     transcript: '',
     interrogator_score: '',
     supervisor_score: '',
-    is_interrogator_confirmed: false,
-    is_supervisor_confirmed: false,
   });
 
   const [feedbackFormData, setFeedbackFormData] = useState<{ [id: number]: { notes: string, score: number } }>({});
@@ -70,8 +66,6 @@ export default function Interrogations() {
           transcript: inter.transcript,
           interrogator_score: inter.interrogator_score || '',
           supervisor_score: inter.supervisor_score || '',
-          is_interrogator_confirmed: inter.is_interrogator_confirmed || false,
-          is_supervisor_confirmed: inter.is_supervisor_confirmed || false,
         });
         setEditingId(inter.id);
       }
@@ -95,7 +89,7 @@ export default function Interrogations() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent, confirmingType?: 'detective' | 'sergeant') => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       if (!formData.suspect || formData.suspect === '') {
@@ -112,14 +106,6 @@ export default function Interrogations() {
       if (formData.interrogator_score !== '') payload.interrogator_score = formData.interrogator_score;
       if (formData.supervisor_score !== '') payload.supervisor_score = formData.supervisor_score;
 
-      // Only allow confirming if score is present
-      if (confirmingType === 'detective' && formData.interrogator_score !== '') {
-        payload.is_interrogator_confirmed = true;
-      }
-      if (confirmingType === 'sergeant' && formData.supervisor_score !== '') {
-        payload.is_supervisor_confirmed = true;
-      }
-
       if (editingId) {
         await investigationAPI.updateInterrogation(editingId, payload);
       } else {
@@ -134,9 +120,32 @@ export default function Interrogations() {
     }
   };
 
-  const handleConfirmScore = (type: 'detective' | 'sergeant') => {
-    const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-    handleSubmit(fakeEvent, type);
+  const handleConfirmScore = async (role: 'interrogator' | 'supervisor') => {
+    if (!editingId) return;
+    try {
+      const payload: any = {};
+      if (role === 'interrogator') {
+        if (formData.interrogator_score === '') {
+          alert('لطفا ابتدا نمره را وارد کنید.');
+          return;
+        }
+        payload.interrogator_score = formData.interrogator_score;
+        payload.is_interrogator_confirmed = true;
+      } else if (role === 'supervisor') {
+        if (formData.supervisor_score === '') {
+          alert('لطفا ابتدا نمره را وارد کنید.');
+          return;
+        }
+        payload.supervisor_score = formData.supervisor_score;
+        payload.is_supervisor_confirmed = true;
+      }
+
+      await investigationAPI.updateInterrogation(editingId, payload);
+      fetchData();
+    } catch (error) {
+      console.error('Failed to confirm score:', error);
+      alert('خطا در تایید نمره.');
+    }
   };
 
   const handleUpdateScore = async (id: number, score: number) => {
@@ -245,58 +254,60 @@ export default function Interrogations() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div className="form-group">
                     <label>امتیاز کارآگاه (۱-۱۰)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={formData.interrogator_score}
-                      onChange={(e) => setFormData({ ...formData, interrogator_score: e.target.value === '' ? '' : parseInt(e.target.value) })}
-                      placeholder={!isDetective ? "فقط توسط کارآگاه قابل ویرایش است" : "امتیاز توسط کارآگاه..."}
-                      disabled={!isDetective || formData.is_interrogator_confirmed}
-                    />
-                    {isDetective && !formData.is_interrogator_confirmed && formData.interrogator_score !== '' && (
-                      <button 
-                        type="button" 
-                        className="btn-gold-sm" 
-                        style={{ marginTop: '10px', width: '100%', background: '#059669', borderColor: '#059669' }}
-                        onClick={() => handleConfirmScore('detective')}
-                      >
-                        🔒 تایید نهایی امتیاز کارآگاه
-                      </button>
-                    )}
-                    {formData.is_interrogator_confirmed && (
-                      <div style={{ marginTop: '10px', color: '#10b981', fontSize: '0.9rem', textAlign: 'center' }}>
-                        ✅ امتیاز کارآگاه تایید و قفل شد
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={formData.interrogator_score}
+                        onChange={(e) => setFormData({ ...formData, interrogator_score: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                        placeholder={!isDetective ? "فقط توسط کارآگاه قابل ویرایش است" : "امتیاز توسط کارآگاه..."}
+                        disabled={!isDetective || (editingId && interrogations[0]?.is_interrogator_confirmed)}
+                        style={{ flex: 1 }}
+                      />
+                      {isDetective && editingId && !interrogations[0]?.is_interrogator_confirmed && (
+                        <button 
+                          type="button" 
+                          className="btn-gold-solid" 
+                          onClick={() => handleConfirmScore('interrogator')}
+                          style={{ padding: '0 15px', background: '#059669', borderColor: '#059669' }}
+                        >
+                          تایید نهایی
+                        </button>
+                      )}
+                      {interrogations[0]?.is_interrogator_confirmed && (
+                        <span style={{ display: 'flex', alignItems: 'center', color: '#059669', padding: '0 10px' }}>✓ تایید شده</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="form-group">
                     <label>امتیاز گروهبان (۱-۱۰)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={formData.supervisor_score}
-                      onChange={(e) => setFormData({ ...formData, supervisor_score: e.target.value === '' ? '' : parseInt(e.target.value) })}
-                      placeholder={!isSergeant ? "فقط توسط گروهبان قابل ویرایش است" : "امتیاز توسط گروهبان..."}
-                      disabled={!isSergeant || formData.is_supervisor_confirmed}
-                    />
-                    {isSergeant && !formData.is_supervisor_confirmed && formData.supervisor_score !== '' && (
-                      <button 
-                        type="button" 
-                        className="btn-gold-sm" 
-                        style={{ marginTop: '10px', width: '100%', background: '#059669', borderColor: '#059669' }}
-                        onClick={() => handleConfirmScore('sergeant')}
-                      >
-                        🔒 تایید نهایی امتیاز گروهبان
-                      </button>
-                    )}
-                    {formData.is_supervisor_confirmed && (
-                      <div style={{ marginTop: '10px', color: '#10b981', fontSize: '0.9rem', textAlign: 'center' }}>
-                        ✅ امتیاز گروهبان تایید و قفل شد
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={formData.supervisor_score}
+                        onChange={(e) => setFormData({ ...formData, supervisor_score: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                        placeholder={!isSergeant ? "فقط توسط گروهبان قابل ویرایش است" : "امتیاز توسط گروهبان..."}
+                        disabled={!isSergeant || (editingId && interrogations[0]?.is_supervisor_confirmed)}
+                        style={{ flex: 1 }}
+                      />
+                      {isSergeant && editingId && !interrogations[0]?.is_supervisor_confirmed && (
+                        <button 
+                          type="button" 
+                          className="btn-gold-solid" 
+                          onClick={() => handleConfirmScore('supervisor')}
+                          style={{ padding: '0 15px', background: '#059669', borderColor: '#059669' }}
+                        >
+                          تایید نهایی
+                        </button>
+                      )}
+                      {interrogations[0]?.is_supervisor_confirmed && (
+                        <span style={{ display: 'flex', alignItems: 'center', color: '#059669', padding: '0 10px' }}>✓ تایید شده</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -304,7 +315,7 @@ export default function Interrogations() {
                   <button 
                     type="submit" 
                     className="btn-gold"
-                    disabled={(isDetective && formData.is_interrogator_confirmed) || (isSergeant && formData.is_supervisor_confirmed)}
+                    disabled={editingId && interrogations[0]?.is_interrogator_confirmed && interrogations[0]?.is_supervisor_confirmed}
                   >
                     {editingId ? 'بروزرسانی گزارش بازجویی' : 'ثبت گزارش نهایی بازجویی'}
                   </button>
@@ -314,22 +325,22 @@ export default function Interrogations() {
               {editingId && interrogations.length > 0 && (
                 <div style={{ marginTop: '40px' }}>
                   {/* Captain Final Decision Section */}
-                  {(formData.is_interrogator_confirmed && formData.is_supervisor_confirmed) ? (
-                    <div className="feedback-section module-card-luxury" style={{ padding: '20px', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid rgba(212,175,55,0.2)' }}>
-                      <h4 style={{ color: '#d4af37', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>
-                        <span style={{ fontSize: '1.4rem' }}>⚖️</span> نظر نهایی کاپیتان
-                      </h4>
-                      
-                      {interrogations[0].feedback ? (
-                        <div className="feedback-content">
-                          <p style={{ fontStyle: 'italic', marginBottom: '15px', borderRight: '3px solid #d4af37', paddingRight: '15px', fontSize: '1rem', color: '#eee' }}>
-                            "{interrogations[0].feedback.notes || 'بدون توضیح'}"
-                          </p>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ color: '#888', fontSize: '0.9rem' }}>ثبت کننده: {interrogations[0].feedback.captain_name}</span>
-                          </div>
+                  <div className="feedback-section module-card-luxury" style={{ padding: '20px', background: 'rgba(212,175,55,0.05)', borderRadius: '12px', border: '1px solid rgba(212,175,55,0.2)' }}>
+                    <h4 style={{ color: '#d4af37', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>
+                      <span style={{ fontSize: '1.4rem' }}>⚖️</span> نظر نهایی کاپیتان
+                    </h4>
+                    
+                    {interrogations[0].feedback ? (
+                      <div className="feedback-content">
+                        <p style={{ fontStyle: 'italic', marginBottom: '15px', borderRight: '3px solid #d4af37', paddingRight: '15px', fontSize: '1rem', color: '#eee' }}>
+                          "{interrogations[0].feedback.notes || 'بدون توضیح'}"
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ color: '#888', fontSize: '0.9rem' }}>ثبت کننده: {interrogations[0].feedback.captain_name}</span>
                         </div>
-                      ) : isCaptain ? (
+                      </div>
+                    ) : isCaptain ? (
+                      interrogations[0].is_interrogator_confirmed && interrogations[0].is_supervisor_confirmed ? (
                         <div className="feedback-form" style={{ display: 'grid', gap: '15px' }}>
                           <textarea 
                             placeholder="جمع‌بندی نهایی خود را بر اساس مدارک و بازجویی‌ها بنویسید..."
@@ -342,14 +353,12 @@ export default function Interrogations() {
                           </div>
                         </div>
                       ) : (
-                        <p style={{ color: '#666', fontStyle: 'italic' }}>در انتظار بررسی و ثبت نظر نهایی توسط کاپیتان...</p>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="feedback-section module-card-luxury" style={{ padding: '20px', background: 'rgba(212,175,55,0.02)', borderRadius: '12px', border: '1px solid rgba(212,175,55,0.1)', textAlign: 'center' }}>
-                      <p style={{ color: '#888', margin: 0 }}>⚠️ بخش نظر نهایی کاپیتان پس از تایید نهایی امتیازات توسط کارآگاه و گروهبان فعال خواهد شد.</p>
-                    </div>
-                  )}
+                        <p style={{ color: '#666', fontStyle: 'italic' }}>در انتظار تایید نهایی نمرات توسط کارآگاه و گروهبان...</p>
+                      )
+                    ) : (
+                      <p style={{ color: '#666', fontStyle: 'italic' }}>در انتظار بررسی و ثبت نظر نهایی توسط کاپیتان...</p>
+                    )}
+                  </div>
 
                   {/* Police Chief Confirmation Section (for Critical Crimes) */}
                   {caseObj?.crime_level === 0 && interrogations[0].feedback && (
