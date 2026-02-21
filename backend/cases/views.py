@@ -256,41 +256,48 @@ class CaseViewSet(viewsets.ModelViewSet):
         approved = request.data.get('approved', False)
         notes = request.data.get('notes', '')
         
+        case.review_notes = notes
         if approved:
-            # Transition to 'In Pursuit' phase instead of 'Solved'
+            # Transition to 'In Pursuit' phase — suspects individually arrested via separate action
             case.status = Case.Status.IN_PURSUIT
-            # Automatically put main suspects into pursuit state
+            case.save()
+            # Put all main suspects into UNDER_ARREST (in pursuit) state
             from investigation.models import Suspect
             case.suspects.filter(is_main_suspect=True).update(status=Suspect.Status.UNDER_ARREST)
-            
-            message = 'پرونده تایید شد و مظنونین اصلی در لیست تحت تعقیب قرار گرفتند. پس از دستگیری فیزیکی، تایید دستگیری را در همین صفحه بزنید.'
-            return Response({'status': 'approved_under_pursuit', 'new_status': case.status, 'message': message})
+            return Response({'status': 'approved_under_pursuit', 'new_status': case.status})
         else:
-            case.status = Case.Status.ACTIVE # Back to detective
-            
-        case.review_notes = notes
-        case.save()
-        return Response({'status': 'reviewed_by_sergeant', 'new_status': case.status})
+            case.status = Case.Status.ACTIVE
+            case.save()
+            return Response({'status': 'returned_to_detective', 'new_status': case.status})
 
     @action(detail=True, methods=['post'], permission_classes=[IsSergeant | IsChief])
-    def confirm_case_arrest(self, request, pk=None):
-        """Action for Sergeant/Chief to officially mark the suspects as arrested in the station"""
-        case = self.get_object()
-        if case.status != Case.Status.IN_PURSUIT:
-             return Response({'error': 'متهمین این پرونده در لیست تحت تعقیب نیستند.'}, status=400)
-        
-        # Mark case as ACTIVE again (or special Interrogation status)
-        case.status = Case.Status.ACTIVE 
-        case.save()
-        
-        # Mark all UNDER_ARREST suspects as ARRESTED
+    def arrest_suspect(self, request, pk=None):
+        """Sergeant/Chief marks a specific suspect as officially arrested, opening interrogation."""
         from investigation.models import Suspect
-        case.suspects.filter(status=Suspect.Status.UNDER_ARREST).update(
-            status=Suspect.Status.ARRESTED, 
-            is_arrested=True
-        )
+        case = self.get_object()
+        suspect_id = request.data.get('suspect_id')
+        if not suspect_id:
+            return Response({'error': 'suspect_id الزامی است.'}, status=400)
         
-        return Response({'status': 'arrested', 'message': 'متهمین دستگیر شدند. بخش بازجویی در دسترس است.'})
+        try:
+            suspect = case.suspects.get(id=suspect_id)
+        except Suspect.DoesNotExist:
+            return Response({'error': 'متهم مربوطه در این پرونده یافت نشد.'}, status=404)
+
+        if suspect.status != Suspect.Status.UNDER_ARREST:
+            return Response({'error': f'وضعیت متهم باید «در تعقیب» باشد. وضعیت فعلی: {suspect.get_status_display()}'}, status=400)
+
+        suspect.status = Suspect.Status.ARRESTED
+        suspect.is_arrested = True
+        suspect.save()
+
+        # If all main suspects are arrested, keep case ACTIVE (already is) — no auto-solve.
+        return Response({
+            'status': 'arrested',
+            'suspect_id': suspect.id,
+            'suspect_name': f'{suspect.first_name} {suspect.last_name}',
+            'message': 'متهم دستگیر شد. بازجویی برای این متهم باز است.'
+        })
 
     @action(detail=True, methods=['post'], permission_classes=[IsChief])
     def chief_review(self, request, pk=None):

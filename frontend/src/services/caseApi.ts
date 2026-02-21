@@ -63,9 +63,9 @@ export const caseAPI = {
     return response.data;
   },
 
-  // Sergeant confirm arrest after pursuit (part of the new workflow)
-  confirmCaseArrest: async (id: number): Promise<{ status: string; message: string }> => {
-    const response = await api.post(`/cases/${id}/confirm_case_arrest/`);
+  // Sergeant marks a specific suspect as arrested (opens interrogation for that suspect)
+  arrestSuspect: async (caseId: number, suspectId: number): Promise<{ status: string; message: string }> => {
+    const response = await api.post(`/cases/${caseId}/arrest_suspect/`, { suspect_id: suspectId });
     return response.data;
   },
 
