@@ -364,16 +364,12 @@ class InterrogationViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
 
         if 'detective' in roles:
-            if instance.is_interrogator_confirmed:
-                raise PermissionDenied("بازجویی توسط کارآگاه تایید شده و دیگر قابل ویرایش نیست.")
             # Detectives update their own score and potentially empty interrogator field
             save_kwargs = {}
             if not instance.interrogator:
                 save_kwargs['interrogator'] = user
             serializer.save(**save_kwargs)
         elif 'sergeant' in roles or 'captain' in roles or 'police_chief' in roles:
-            if instance.is_supervisor_confirmed:
-                raise PermissionDenied("بازجویی توسط گروهبان تایید شده و دیگر قابل ویرایش نیست.")
             # Supervisors update their score and supervisor field
             save_kwargs = {}
             if not instance.supervisor:
