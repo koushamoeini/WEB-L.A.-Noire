@@ -285,8 +285,8 @@ class CaseViewSet(viewsets.ModelViewSet):
             suspect = case.suspects.get(id=suspect_id)
         except Suspect.DoesNotExist:
             return Response({'error': 'متهم مربوطه در این پرونده یافت نشد.'}, status=404)
-        if suspect.status != Suspect.Status.UNDER_ARREST:
-            return Response({'error': f'وضعیت متهم باید «در تعقیب» باشد. وضعیت فعلی: {suspect.get_status_display()}'}, status=400)
+        if suspect.status == Suspect.Status.ARRESTED:
+            return Response({'error': 'این متهم قبلاً دستگیر شده است.'}, status=400)
         suspect.status = Suspect.Status.ARRESTED
         suspect.is_arrested = True
         suspect.save()

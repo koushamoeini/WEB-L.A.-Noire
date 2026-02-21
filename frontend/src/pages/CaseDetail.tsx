@@ -31,6 +31,9 @@ export default function CaseDetail() {
   const [verdicts, setVerdicts] = useState<Verdict[]>([]);
   const [arrestConfirmTarget, setArrestConfirmTarget] = useState<{ id: number; name: string } | null>(null);
 
+  // Helper to check if a suspect is arrested
+  const isArrested = (s: Suspect) => s.status === 'ARRESTED' || s.is_arrested === true;
+
   // Verdict Form State
   const [verdictForm, setVerdictForm] = useState({
     suspect: '',
@@ -426,7 +429,7 @@ export default function CaseDetail() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span>👤 {s.first_name} {s.last_name}</span>
                       {s.status === 'UNDER_ARREST' && <span style={{ background: '#f59e0b', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>در تعقیب</span>}
-                      {s.status === 'ARRESTED' && <span style={{ background: '#10b981', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>دستگیر شده</span>}
+                      {isArrested(s) && <span style={{ background: '#10b981', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>دستگیر شده</span>}
                     </div>
                     <small>{s.is_main_suspect ? 'متهم اصلی' : 'مظنون'}</small>
                   </div>
@@ -484,20 +487,20 @@ export default function CaseDetail() {
                         </div>
                         {s.is_main_suspect && <span style={{ background: '#92400e', color: '#fde68a', fontSize: '0.6rem', padding: '2px 6px', borderRadius: '3px' }}>متهم اصلی</span>}
                       </div>
-                      {s.status === 'ARRESTED' ? (
+                      {isArrested(s) ? (
                         <button
                           className="btn-gold-solid"
                           onClick={() => navigate(`/cases/${caseData?.id}/interrogations?suspectId=${s.id}`)}
-                          style={{ padding: '8px 20px', background: 'var(--gold)', color: '#000', borderColor: 'var(--gold)', fontSize: '0.85rem', borderRadius: '8px' }}
+                          style={{ padding: '8px 20px', background: '#D4AF37', color: '#000', fontWeight: 'bold', borderColor: '#D4AF37', fontSize: '0.85rem', borderRadius: '8px', cursor: 'pointer' }}
                         >
-                          📁 جلسات بازجویی
+                          ⚖️ جلسات بازجویی
                         </button>
                       ) : (
                         <button
                           className="btn-gold-solid"
                           onClick={() => handleArrestSuspect(s.id, `${s.first_name} ${s.last_name}`)}
                           disabled={processing}
-                          style={{ padding: '8px 20px', background: '#059669', borderColor: '#059669', fontSize: '0.85rem', borderRadius: '8px' }}
+                          style={{ padding: '8px 20px', background: '#059669', color: '#fff', borderColor: '#059669', fontSize: '0.85rem', borderRadius: '8px', cursor: 'pointer' }}
                         >
                           ✅ دستگیر شد
                         </button>

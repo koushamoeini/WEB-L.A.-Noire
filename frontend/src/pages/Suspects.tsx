@@ -280,12 +280,20 @@ export default function Suspects() {
                   <div className="suspect-footer" style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <button 
                       onClick={() => (suspect.status === 'ARRESTED' || suspect.is_arrested) && navigate(`/cases/${suspect.case}/interrogations?suspectId=${suspect.id}`)}
-                      className="btn-gold-sm"
+                      className="btn-gold-solid"
                       disabled={!(suspect.status === 'ARRESTED' || suspect.is_arrested)}
-                      title={!(suspect.status === 'ARRESTED' || suspect.is_arrested) ? 'بازجویی فقط پس از دستگیری فعال می‌شود' : ''}
-                      style={{ opacity: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? 1 : 0.4, cursor: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? 'pointer' : 'not-allowed' }}
+                      style={{ 
+                        opacity: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? 1 : 0.4, 
+                        cursor: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? 'pointer' : 'not-allowed',
+                        padding: '10px',
+                        background: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? '#D4AF37' : '#555',
+                        color: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? '#000' : '#fff',
+                        fontWeight: 'bold',
+                        border: 'none',
+                        borderRadius: '6px'
+                      }}
                     >
-                      جلسات بازجویی
+                      ⚖️ جلسات بازجویی
                     </button>
                     <button 
                       onClick={() => navigate(`/investigation?case=${suspect.case}`)}

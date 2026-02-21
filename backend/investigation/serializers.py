@@ -61,7 +61,7 @@ class SuspectSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'case', 'name', 'first_name', 'last_name', 
             'national_code', 'image', 'details', 'created_at', 
-            'is_main_suspect', 'is_on_board', 'is_arrested', 'interrogations'
+            'is_main_suspect', 'is_on_board', 'is_arrested', 'status', 'interrogations'
         ]
 
 class BoardConnectionSerializer(serializers.ModelSerializer):
@@ -95,7 +95,7 @@ class SuspectStatusSerializer(serializers.ModelSerializer):
             'case', 'case_title', 'case_status', 'case_status_label',
             'crime_level', 'crime_level_label',
             'pursuit_days', 'is_under_pursuit', 'is_severe_pursuit',
-            'pursuit_score', 'reward_amount',
+            'pursuit_score', 'reward_amount', 'status',
         ]
 
     def _is_case_open(self, obj):
