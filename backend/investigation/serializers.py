@@ -163,7 +163,7 @@ class RewardReportSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = [
             'reporter', 'officer', 'detective',
-            'reward_amount', 'tracking_code',
+            'reward_amount', 'tracking_code', 'reward_code',
             'is_paid', 'paid_at', 'paid_by',
             'created_at', 'updated_at',
         ]

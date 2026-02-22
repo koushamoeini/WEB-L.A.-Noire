@@ -167,6 +167,7 @@ class RewardReport(models.Model):
 
     reward_amount = models.BigIntegerField(null=True, blank=True, verbose_name='مبلغ پاداش')
     tracking_code = models.CharField(max_length=20, unique=True, null=True, blank=True, verbose_name='کد پیگیری')
+    reward_code = models.CharField(max_length=6, unique=True, null=True, blank=True, verbose_name='کد پاداش ۶ رقمی')
     is_paid = models.BooleanField(default=False, verbose_name='پرداخت شده')
     paid_at = models.DateTimeField(null=True, blank=True, verbose_name='تاریخ پرداخت')
     paid_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='reward_payments')
