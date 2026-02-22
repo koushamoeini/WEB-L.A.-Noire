@@ -1,0 +1,115 @@
+.dashboard-content {
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-welcome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 50px;
+  color: #fff;
+  border-bottom: 1px solid var(--border-dim);
+  padding-bottom: 20px;
+}
+
+.dashboard-welcome h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 2.6rem;
+  margin-bottom: 10px;
+  color: var(--primary);
+  letter-spacing: 1px;
+}
+
+.dashboard-welcome p {
+  color: var(--text-dim);
+  font-size: 1rem;
+}
+
+.modular-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 30px;
+  margin-bottom: 50px;
+}
+
+.module-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: 20px;
+  padding: 35px;
+  cursor: pointer;
+  transition: all 0.45s cubic-bezier(0.19, 1, 0.22, 1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-soft);
+}
+
+.module-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--primary);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5), 0 0 16px rgba(212, 175, 55, 0.08);
+}
+
+.module-icon {
+  font-size: 3.1rem;
+  margin-bottom: 22px;
+}
+
+.module-info h3 {
+  font-family: 'Cinzel', serif;
+  color: var(--primary);
+  font-size: 1.35rem;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.module-info p {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 22px;
+}
+
+.module-footer {
+  margin-top: auto;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.info-card {
+  background: rgba(18, 18, 24, 0.85);
+  border: 1px solid var(--border-gold);
+  border-radius: 20px;
+  padding: 30px;
+  color: var(--text-main);
+}
+
+.info-card h3 {
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.info-card p {
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  line-height: 1.7;
+}
+
+.info-card .note {
+  margin-top: 12px;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .dashboard-content {
+    padding: 20px;
+  }
+
+  .modular-grid {
+    grid-template-columns: 1fr;
+  }
+}

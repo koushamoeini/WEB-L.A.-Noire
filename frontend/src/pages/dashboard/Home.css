@@ -1,0 +1,191 @@
+.home-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #050505;
+  background-image:
+    radial-gradient(circle at center, rgba(44, 26, 18, 0.2) 0%, rgba(5, 5, 5, 1) 100%),
+    url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+  padding: 40px;
+  direction: rtl;
+}
+
+.home-content {
+  text-align: center;
+  width: min(1120px, 100%);
+}
+
+.home-hero {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.05) 0%, rgba(20, 20, 20, 0.7) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.16);
+  border-radius: 24px;
+  padding: 42px 36px;
+  margin-bottom: 28px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+}
+
+.home-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  color: var(--primary);
+  letter-spacing: 0;
+}
+
+.home-subtitle {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 28px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.home-description {
+  font-size: 1.2rem;
+  margin-bottom: 0;
+  color: var(--text-dim);
+  line-height: 1.8;
+}
+
+.intro-section {
+  background: var(--bg-card);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 40px;
+  text-align: right;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.intro-section h3 {
+  color: var(--primary);
+  margin-bottom: 20px;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.intro-section p {
+  color: var(--text-main);
+  line-height: 1.9;
+  font-size: 1rem;
+}
+
+.home-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.home-actions a {
+  min-width: 210px;
+  min-height: 56px;
+  border-radius: 16px !important;
+  padding: 0 26px !important;
+  font-size: 1.08rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #000 !important;
+}
+
+.home-actions a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.45);
+  color: #000 !important;
+}
+
+.stats-section {
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+.stats-title {
+  color: var(--primary);
+  text-align: center;
+  font-size: 1.7rem;
+  margin-bottom: 20px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.stat-item {
+  background: rgba(18, 18, 22, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 16px;
+  padding: 24px 16px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+.stat-value {
+  color: var(--primary);
+  font-size: 3.2rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  color: var(--text-dim);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 900px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-container {
+    padding: 18px;
+  }
+
+  .home-hero {
+    padding: 26px 18px;
+    border-radius: 16px;
+  }
+
+  .intro-section {
+    padding: 20px;
+  }
+
+  .home-title {
+    font-size: 2.25rem;
+  }
+
+  .home-subtitle {
+    font-size: 1.5rem;
+  }
+
+  .home-description {
+    font-size: 1rem;
+  }
+
+  .stats-title {
+    font-size: 1.35rem;
+  }
+
+  .stat-value {
+    font-size: 2.6rem;
+  }
+
+  .home-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .home-actions a {
+    width: 100%;
+    min-height: 52px;
+  }
+}
