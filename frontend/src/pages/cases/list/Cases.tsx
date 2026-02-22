@@ -32,8 +32,9 @@ const Cases = () => {
       try {
         console.log('📋 Fetching cases...');
         const data = await caseAPI.listCases();
-        console.log('📋 Cases fetched successfully:', data.length, 'cases');
-        setCases(data);
+        console.log('📋 Cases fetched successfully:', data?.length || 0, 'cases');
+        // Ensure data is always an array
+        setCases(Array.isArray(data) ? data : []);
         setError('');
       } catch (err: any) {
         console.error('📋 Error fetching cases:', err);

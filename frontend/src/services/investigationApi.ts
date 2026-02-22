@@ -44,13 +44,15 @@ export const investigationAPI = {
 
   listMostWanted: async (): Promise<any[]> => {
     const response = await api.get('/investigation/suspects/most_wanted/');
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   // Interrogations
   listInterrogations: async (): Promise<Interrogation[]> => {
     const response = await api.get('/investigation/interrogations/');
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createInterrogation: async (data: CreateInterrogationRequest): Promise<Interrogation> => {

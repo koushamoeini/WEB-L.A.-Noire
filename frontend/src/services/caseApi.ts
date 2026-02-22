@@ -5,8 +5,12 @@ import type { TrialHistoryReport } from '../types/report';
 export const caseAPI = {
   // List all cases
   listCases: async (): Promise<Case[]> => {
-    const response = await api.get<Case[]>('/cases/');
-    return response.data;
+    const response = await api.get<Case[] | { results: Case[]; count: number }>('/cases/');
+    // Handle both paginated and non-paginated responses
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    return response.data?.results || [];
   },
 
   // Get single case
