@@ -83,6 +83,16 @@ export interface Verdict {
   punishment?: string;
   description: string;
   created_at: string;
+  bail_amount?: number;
+  fine_amount?: number;
+  bail_paid?: boolean;
+  fine_paid?: boolean;
+  bail_paid_at?: string;
+  fine_paid_at?: string;
+  bail_tracking_code?: string;
+  fine_tracking_code?: string;
+  is_eligible_for_bail?: boolean;
+  case_crime_level?: number;
 }
 
 // Request types

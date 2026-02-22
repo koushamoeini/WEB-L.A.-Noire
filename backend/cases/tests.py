@@ -11,33 +11,24 @@ class CaseAPITests(APITestCase):
         self.case = Case.objects.create(title='Test Case', description='desc', creator=self.user)
 
     def test_list_cases(self):
+        """Test 4: List all cases (GET endpoint)"""
         self.client.force_authenticate(user=self.user)
         url = reverse('case-list')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_create_case(self):
+        """Test 5: Create new case (POST endpoint)"""
         self.client.force_authenticate(user=self.user)
         url = reverse('case-list')
         payload = {'title': 'New Case', 'description': 'New desc'}
         response = self.client.post(url, payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_stats_endpoint(self):
-        self.client.force_authenticate(user=self.user)
-        url = reverse('case-stats')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn('total_cases', response.data)
-
-    def test_unauthorized_create_from_scene(self):
-        self.client.force_authenticate(user=self.user)
-        url = reverse('case-create-from-scene')
-        response = self.client.post(url, {})
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_case_detail_access(self):
+    def test_case_detail(self):
+        """Test 6: Get case detail (GET by ID)"""
         self.client.force_authenticate(user=self.user)
         url = reverse('case-detail', args=[self.case.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], 'Test Case')

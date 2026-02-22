@@ -7,6 +7,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.exceptions import PermissionDenied
 from django.utils import timezone
 from django.shortcuts import render
+from django.urls import reverse
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -102,6 +103,24 @@ def _generate_tracking_code():
     while True:
         code = ''.join(random.choices(string.digits, k=10))
         if not RewardReport.objects.filter(tracking_code=code).exists():
+            return code
+
+
+def _generate_bail_tracking_code():
+    """کد پیگیری وثیقه"""
+    from investigation.models import Verdict
+    while True:
+        code = 'B' + ''.join(random.choices(string.digits, k=9))
+        if not Verdict.objects.filter(bail_tracking_code=code).exists():
+            return code
+
+
+def _generate_fine_tracking_code():
+    """کد پیگیری جریمه"""
+    from investigation.models import Verdict
+    while True:
+        code = 'F' + ''.join(random.choices(string.digits, k=9))
+        if not Verdict.objects.filter(fine_tracking_code=code).exists():
             return code
 
 
@@ -321,6 +340,40 @@ class SuspectViewSet(viewsets.ModelViewSet):
                 'detail': 'Internal Server Error during suspect creation'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def perform_create(self, serializer):
+        data = serializer.validated_data
+
+        roles = set(self.request.user.roles.values_list('code', flat=True)) if self.request.user.is_authenticated else set()
+        is_sergeant_or_higher = bool({'sergeant', 'captain', 'police_chief'} & roles) or self.request.user.is_superuser
+
+        requested_arrest = data.get('is_arrested') is True or data.get('status') == Suspect.Status.ARRESTED
+        if requested_arrest and not is_sergeant_or_higher:
+            raise PermissionDenied("ثبت وضعیت «دستگیر شده» فقط توسط گروهبان/کاپیتان/رئیس پلیس مجاز است.")
+
+        if requested_arrest:
+            data['is_arrested'] = True
+            data['status'] = Suspect.Status.ARRESTED
+        elif data.get('status') in [Suspect.Status.IDENTIFIED, Suspect.Status.UNDER_ARREST]:
+            data['is_arrested'] = False
+        serializer.save()
+
+    def perform_update(self, serializer):
+        data = serializer.validated_data
+
+        roles = set(self.request.user.roles.values_list('code', flat=True)) if self.request.user.is_authenticated else set()
+        is_sergeant_or_higher = bool({'sergeant', 'captain', 'police_chief'} & roles) or self.request.user.is_superuser
+
+        requested_arrest = data.get('is_arrested') is True or data.get('status') == Suspect.Status.ARRESTED
+        if requested_arrest and not is_sergeant_or_higher:
+            raise PermissionDenied("تغییر وضعیت به «دستگیر شده» فقط توسط گروهبان/کاپیتان/رئیس پلیس مجاز است.")
+
+        if requested_arrest:
+            data['is_arrested'] = True
+            data['status'] = Suspect.Status.ARRESTED
+        elif data.get('status') in [Suspect.Status.IDENTIFIED, Suspect.Status.UNDER_ARREST]:
+            data['is_arrested'] = False
+        serializer.save()
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsSergeant | IsPoliceChief])
     def mark_as_arrested(self, request, pk=None):
         suspect = self.get_object()
@@ -360,7 +413,7 @@ class InterrogationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         suspect = serializer.validated_data.get('suspect')
-        if suspect and suspect.status != Suspect.Status.ARRESTED:
+        if suspect and not (suspect.status == Suspect.Status.ARRESTED or suspect.is_arrested):
             raise PermissionDenied("تا زمانی که متهم رسماً دستگیر نشده است، امکان ثبت بازجویی وجود ندارد.")
 
         user = self.request.user
@@ -407,7 +460,18 @@ class InterrogationViewSet(viewsets.ModelViewSet):
             serializer = InterrogationFeedbackSerializer(data=request.data)
             
         serializer.is_valid(raise_exception=True)
-        serializer.save(interrogation=interrogation, captain=request.user)
+        feedback_obj = serializer.save(interrogation=interrogation, captain=request.user)
+
+        case = interrogation.suspect.case
+        if feedback_obj.is_confirmed and feedback_obj.decision == InterrogationFeedback.Decision.GUILTY:
+            # Captain confirms guilt -> send case to chief final review.
+            case.status = Case.Status.PENDING_CHIEF
+            case.save(update_fields=['status'])
+        elif feedback_obj.is_confirmed and feedback_obj.decision == InterrogationFeedback.Decision.INNOCENT:
+            # Captain marks innocent -> return to active investigation.
+            case.status = Case.Status.ACTIVE
+            case.save(update_fields=['status'])
+
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsPoliceChief])
@@ -421,6 +485,14 @@ class InterrogationViewSet(viewsets.ModelViewSet):
         feedback.chief_notes = request.data.get('notes', '')
         feedback.chief = request.user
         feedback.save()
+
+        case = interrogation.suspect.case
+        if feedback.is_chief_confirmed:
+            case.status = Case.Status.PENDING_CHIEF
+        else:
+            case.status = Case.Status.ACTIVE
+        case.save(update_fields=['status'])
+
         return Response({'status': 'confirmed by chief'})
 
 class BoardConnectionViewSet(viewsets.ModelViewSet):
@@ -459,13 +531,234 @@ class VerdictViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(judge=self.request.user)
+        verdict = serializer.save(judge=self.request.user)
+        case = verdict.case
+        if case and case.status != Case.Status.SOLVED:
+            case.status = Case.Status.SOLVED
+            case.save(update_fields=['status'])
 
     def get_queryset(self):
         case_id = self.request.query_params.get('case')
         if case_id:
             return self.queryset.filter(case_id=case_id)
         return self.queryset
+
+    @extend_schema(summary="تعیین مبلغ وثیقه و جریمه (قاضی/گروهبان)")
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsJudge | IsSergeant])
+    def set_bail_fine(self, request, pk=None):
+        """Judge or Sergeant sets bail and fine amounts for eligible verdicts (Level 2 & 3 crimes)"""
+        verdict = self.get_object()
+        
+        if not verdict.is_eligible_for_bail():
+            return Response({
+                'error': 'فقط متهمان جرائم سطح ۲ و ۳ می‌توانند وثیقه پرداخت کنند'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        bail = request.data.get('bail_amount')
+        fine = request.data.get('fine_amount')
+
+        if bail is not None and verdict.bail_paid:
+            return Response({
+                'error': 'وثیقه قبلاً پرداخت شده و مبلغ آن قابل تغییر نیست.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if fine is not None and verdict.fine_paid:
+            return Response({
+                'error': 'جریمه قبلاً پرداخت شده و مبلغ آن قابل تغییر نیست.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if bail is not None:
+            verdict.bail_amount = int(bail)
+            if not verdict.bail_tracking_code:
+                verdict.bail_tracking_code = _generate_bail_tracking_code()
+        
+        if fine is not None:
+            verdict.fine_amount = int(fine)
+            if not verdict.fine_tracking_code:
+                verdict.fine_tracking_code = _generate_fine_tracking_code()
+        
+        verdict.save()
+        return Response({
+            'bail_amount': verdict.bail_amount,
+            'fine_amount': verdict.fine_amount,
+            'bail_tracking_code': verdict.bail_tracking_code,
+            'fine_tracking_code': verdict.fine_tracking_code
+        })
+
+    @extend_schema(summary="درخواست پرداخت وثیقه")
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def request_bail_payment(self, request, pk=None):
+        """Request bail payment - redirect to payment gateway simulator"""
+        verdict = self.get_object()
+        
+        if not verdict.bail_amount or verdict.bail_amount <= 0:
+            return Response({'error': 'مبلغ وثیقه تعیین نشده است'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if verdict.bail_paid:
+            return Response({'error': 'وثیقه قبلاً پرداخت شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Build callback URL
+        callback_url = reverse('verdict-bail-payment-callback', kwargs={'pk': verdict.id})
+        
+        context = {
+            'verdict_id': verdict.id,
+            'amount': verdict.bail_amount,
+            'tracking_code': verdict.bail_tracking_code,
+            'payment_type': 'bail',
+            'payment_type_display': 'پرداخت وثیقه',
+            'suspect_name': f"{verdict.suspect.first_name} {verdict.suspect.last_name}",
+            'callback_url': callback_url,
+        }
+        return render(request, 'landing/payment_gateway.html', context)
+
+    @extend_schema(summary="درخواست پرداخت جریمه")
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def request_fine_payment(self, request, pk=None):
+        """Request fine payment - redirect to payment gateway simulator"""
+        verdict = self.get_object()
+        
+        if not verdict.fine_amount or verdict.fine_amount <= 0:
+            return Response({'error': 'مبلغ جریمه تعیین نشده است'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if verdict.fine_paid:
+            return Response({'error': 'جریمه قبلاً پرداخت شده است'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Build callback URL
+        callback_url = reverse('verdict-fine-payment-callback', kwargs={'pk': verdict.id})
+        
+        context = {
+            'verdict_id': verdict.id,
+            'amount': verdict.fine_amount,
+            'tracking_code': verdict.fine_tracking_code,
+            'payment_type': 'fine',
+            'payment_type_display': 'پرداخت جریمه',
+            'suspect_name': f"{verdict.suspect.first_name} {verdict.suspect.last_name}",
+            'callback_url': callback_url,
+        }
+        return render(request, 'landing/payment_gateway.html', context)
+
+    @extend_schema(summary="بازگشت از درگاه پرداخت وثیقه")
+    @action(detail=True, methods=['post'], permission_classes=[permissions.AllowAny])
+    def bail_payment_callback(self, request, pk=None):
+        """Callback from payment gateway for bail payment"""
+        verdict = self.get_object()
+        
+        # Handle both form data and JSON data
+        status = request.POST.get('status') or request.data.get('status')
+        gateway = request.POST.get('gateway') or request.data.get('gateway', 'unknown')
+        
+        if status == 'success':
+            verdict.bail_paid = True
+            verdict.bail_paid_at = timezone.now()
+            verdict.save()
+            
+            # Update suspect status - release from custody
+            if verdict.suspect:
+                from investigation.models import Suspect
+                verdict.suspect.is_arrested = False
+                verdict.suspect.status = Suspect.Status.FREE
+                verdict.suspect.save()
+            
+            msg = f"وثیقه با موفقیت از طریق {gateway} پرداخت شد. متهم آزاد گردید."
+            success = True
+        else:
+            msg = "پرداخت وثیقه با خطا مواجه شد یا توسط کاربر لغو گردید."
+            success = False
+
+        # Return HTML response for browser
+        if request.content_type == 'application/x-www-form-urlencoded' or 'text/html' in request.META.get('HTTP_ACCEPT', ''):
+            from django.shortcuts import render
+            return render(request, 'landing/payment_result.html', {
+                'success': success,
+                'message': msg,
+                'tracking_code': verdict.bail_tracking_code,
+                'amount': verdict.bail_amount,
+                'payment_type': 'وثیقه',
+                'gateway': gateway
+            })
+        
+        # Return JSON for API calls
+        return Response({
+            "success": success,
+            "message": msg,
+            "tracking_code": verdict.bail_tracking_code,
+            "amount": verdict.bail_amount,
+            "gateway": gateway
+        })
+
+    @extend_schema(summary="بازگشت از درگاه پرداخت جریمه")
+    @action(detail=True, methods=['post'], permission_classes=[permissions.AllowAny])
+    def fine_payment_callback(self, request, pk=None):
+        """Callback from payment gateway for fine payment"""
+        verdict = self.get_object()
+        
+        # Handle both form data and JSON data
+        status = request.POST.get('status') or request.data.get('status')
+        gateway = request.POST.get('gateway') or request.data.get('gateway', 'unknown')
+
+        if status == 'success':
+            verdict.fine_paid = True
+            verdict.fine_paid_at = timezone.now()
+            verdict.save()
+            
+            msg = f"جریمه با موفقیت از طریق {gateway} پرداخت شد."
+            success = True
+        else:
+            msg = "پرداخت جریمه با خطا مواجه شد یا توسط کاربر لغو گردید."
+            success = False
+
+        # Return HTML response for browser
+        if request.content_type == 'application/x-www-form-urlencoded' or 'text/html' in request.META.get('HTTP_ACCEPT', ''):
+            from django.shortcuts import render
+            return render(request, 'landing/payment_result.html', {
+                'success': success,
+                'message': msg,
+                'tracking_code': verdict.fine_tracking_code,
+                'amount': verdict.fine_amount,
+                'payment_type': 'جریمه',
+                'gateway': gateway
+            })
+        
+        # Return JSON for API calls
+        return Response({
+            "success": success,
+            "message": msg,
+            "tracking_code": verdict.fine_tracking_code,
+            "amount": verdict.fine_amount,
+            "gateway": gateway
+        })
+
+    @extend_schema(summary="لیست احکام قابل پرداخت وثیقه/جریمه")
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def pending_payments(self, request):
+        """List verdicts with unpaid bail or fine for current user"""
+        user = request.user
+        
+        # Get verdicts where user is the suspect or related to the case
+        verdicts = Verdict.objects.filter(
+            suspect__case__complainants=user
+        ) | Verdict.objects.filter(
+            case__creator=user
+        )
+        
+        # Filter for eligible and unpaid
+        eligible = []
+        for v in verdicts.distinct():
+            if v.is_eligible_for_bail():
+                data = {
+                    'id': v.id,
+                    'case_title': v.case.title,
+                    'suspect_name': f"{v.suspect.first_name} {v.suspect.last_name}",
+                    'bail_amount': v.bail_amount,
+                    'fine_amount': v.fine_amount,
+                    'bail_paid': v.bail_paid,
+                    'fine_paid': v.fine_paid,
+                    'bail_tracking_code': v.bail_tracking_code,
+                    'fine_tracking_code': v.fine_tracking_code,
+                }
+                eligible.append(data)
+        
+        return Response(eligible)
 
 
 class GlobalStatsView(APIView):

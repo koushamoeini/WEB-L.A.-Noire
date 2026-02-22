@@ -9,6 +9,7 @@ class Suspect(models.Model):
         IDENTIFIED = 'IDENTIFIED', 'شناسایی‌شده'
         UNDER_ARREST = 'UNDER_ARREST', 'در حال دستگیری'
         ARRESTED = 'ARRESTED', 'دستگیر شده'
+        FREE = 'FREE', 'آزاد شده (با قرار وثیقه)'
 
     case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='suspects')
     name = models.CharField(max_length=255, verbose_name="نام متهم", blank=True)
@@ -107,6 +108,16 @@ class Verdict(models.Model):
     punishment = models.TextField(blank=True, null=True, verbose_name="مجازات")
     description = models.TextField(verbose_name="توضیحات قاضی")
     
+    # Bail and Fine Payment (Part 9 - Optional)
+    bail_amount = models.BigIntegerField(null=True, blank=True, verbose_name="مبلغ وثیقه (ریال)")
+    fine_amount = models.BigIntegerField(null=True, blank=True, verbose_name="مبلغ جریمه (ریال)")
+    bail_paid = models.BooleanField(default=False, verbose_name="وثیقه پرداخت شده")
+    fine_paid = models.BooleanField(default=False, verbose_name="جریمه پرداخت شده")
+    bail_paid_at = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ پرداخت وثیقه")
+    fine_paid_at = models.DateTimeField(null=True, blank=True, verbose_name="تاریخ پرداخت جریمه")
+    bail_tracking_code = models.CharField(max_length=20, unique=True, null=True, blank=True, verbose_name="کد پیگیری وثیقه")
+    fine_tracking_code = models.CharField(max_length=20, unique=True, null=True, blank=True, verbose_name="کد پیگیری جریمه")
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -116,6 +127,13 @@ class Verdict(models.Model):
 
     def __str__(self):
         return f"Verdict for {self.suspect.name}: {self.result}"
+    
+    def is_eligible_for_bail(self):
+        """Check if suspect can pay bail (crime level 2 or 3 only)"""
+        if not self.case:
+            return False
+        from cases.models import Case
+        return self.case.crime_level in [Case.CrimeLevel.LEVEL_2, Case.CrimeLevel.LEVEL_3]
 
 class Warrant(models.Model):
     class WarrantType(models.TextChoices):

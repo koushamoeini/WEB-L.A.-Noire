@@ -15,7 +15,9 @@ export const investigationAPI = {
   listSuspects: async (caseId?: number): Promise<Suspect[]> => {
     const url = caseId ? `/investigation/suspects/?case=${caseId}` : '/investigation/suspects/';
     const response = await api.get(url);
-    return response.data;
+    // Handle both paginated and non-paginated responses
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createSuspect: async (data: CreateSuspectRequest): Promise<Suspect> => {
@@ -44,13 +46,15 @@ export const investigationAPI = {
 
   listMostWanted: async (): Promise<any[]> => {
     const response = await api.get('/investigation/suspects/most_wanted/');
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   // Interrogations
   listInterrogations: async (): Promise<Interrogation[]> => {
     const response = await api.get('/investigation/interrogations/');
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createInterrogation: async (data: CreateInterrogationRequest): Promise<Interrogation> => {
@@ -81,7 +85,8 @@ export const investigationAPI = {
   listBoards: async (caseId?: number): Promise<Board[]> => {
     const url = caseId ? `/investigation/boards/?case=${caseId}` : '/investigation/boards/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createBoard: async (caseId: number): Promise<Board> => {
@@ -93,7 +98,8 @@ export const investigationAPI = {
   listConnections: async (caseId?: number): Promise<BoardConnection[]> => {
     const url = caseId ? `/investigation/board-connections/?case=${caseId}` : '/investigation/board-connections/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createConnection: async (data: CreateBoardConnectionRequest): Promise<BoardConnection> => {
@@ -113,7 +119,8 @@ export const investigationAPI = {
 
   listVerdicts: async (caseId: number): Promise<Verdict[]> => {
     const response = await api.get(`/investigation/verdicts/?case=${caseId}`);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   // Reward Reports
@@ -127,7 +134,8 @@ export const investigationAPI = {
       ? `/investigation/reward-reports/?suspect_national_code=${suspectNationalCode}` 
       : '/investigation/reward-reports/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   reviewRewardReportOfficer: async (id: number, approved: boolean, notes: string): Promise<any> => {
@@ -145,6 +153,30 @@ export const investigationAPI = {
       national_code: nationalCode, 
       reward_code: rewardCode 
     });
+    return response.data;
+  },
+
+  // Bail and Fine Payments
+  getVerdict: async (id: number): Promise<Verdict> => {
+    const response = await api.get(`/investigation/verdicts/${id}/`);
+    return response.data;
+  },
+
+  setBailFine: async (verdictId: number, payload: { bail_amount?: number; fine_amount?: number }): Promise<any> => {
+    const response = await api.post(`/investigation/verdicts/${verdictId}/set_bail_fine/`, payload);
+    return response.data;
+  },
+
+  requestBailPayment: (verdictId: number): string => {
+    return `${api.defaults.baseURL}/investigation/verdicts/${verdictId}/request_bail_payment/`;
+  },
+
+  requestFinePayment: (verdictId: number): string => {
+    return `${api.defaults.baseURL}/investigation/verdicts/${verdictId}/request_fine_payment/`;
+  },
+
+  getPendingPayments: async (): Promise<Verdict[]> => {
+    const response = await api.get('/investigation/verdicts/pending_payments/');
     return response.data;
   },
 };

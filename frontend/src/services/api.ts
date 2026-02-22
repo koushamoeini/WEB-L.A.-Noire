@@ -16,6 +16,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle 401 errors by clearing tokens
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid - clear storage
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      // Let ProtectedRoute handle the redirect naturally
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
     const response = await api.post<RegisterResponse>('/auth/register/', data);
@@ -34,17 +48,19 @@ export const authAPI = {
 
   listUsers: async (): Promise<User[]> => {
     const response = await api.get<User[]>('/users/');
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
-  getUserStats: async (): Promise<{ total_users: number }> => {
-    const response = await api.get<{ total_users: number }>('/users/stats/');
+  getSystemStats: async (): Promise<{ total_cases: number; solved_cases: number; active_cases: number; total_users: number }> => {
+    const response = await api.get('/system-stats/');
     return response.data;
   },
 
   getNotifications: async (): Promise<any[]> => {
     const response = await api.get('/notifications/');
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   markNotificationRead: async (id: number): Promise<void> => {

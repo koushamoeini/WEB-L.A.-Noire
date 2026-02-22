@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, status, viewsets, filters
 from rest_framework.decorators import action
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.generics import CreateAPIView
@@ -11,7 +11,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Role, Notification
-from .serializers import RegistrationSerializer, RoleSerializer, UserRoleSerializer, NotificationSerializer
+from .serializers import (
+    RegistrationSerializer, RoleSerializer, UserRoleSerializer, 
+    NotificationSerializer, AdminUserSerializer
+)
 from .serializers_user_read import UserReadSerializer
 from rest_framework.generics import ListAPIView
 
@@ -19,6 +22,16 @@ from rest_framework.generics import ListAPIView
 class IsSuperUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and request.user.is_superuser)
+
+
+class IsAdminUser(permissions.BasePermission):
+    """Admin users: superuser or police_chief"""
+    def has_permission(self, request, view):
+        if not (request.user and request.user.is_authenticated):
+            return False
+        if request.user.is_superuser:
+            return True
+        return request.user.roles.filter(code__in=['police_chief']).exists()
 
 
 class RoleViewSet(viewsets.ModelViewSet):
@@ -63,6 +76,29 @@ class UserStatsView(APIView):
         user_model = get_user_model()
         total_users = user_model.objects.count()
         return Response({'total_users': total_users})
+
+
+class SystemStatsView(APIView):
+    """Provides public statistics for the system home page."""
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+
+    def get(self, request, *args, **kwargs):
+        from django.contrib.auth import get_user_model
+        from cases.models import Case
+        user_model = get_user_model()
+        
+        total_cases = Case.objects.count()
+        solved_cases = Case.objects.filter(status=Case.Status.SOLVED).count()
+        active_cases = Case.objects.filter(status=Case.Status.ACTIVE).count()
+        total_users = user_model.objects.count()
+        
+        return Response({
+            'total_cases': total_cases,
+            'solved_cases': solved_cases,
+            'active_cases': active_cases,
+            'total_users': total_users,
+        })
 
 
 class MeView(APIView):
@@ -170,3 +206,162 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def clear_all(self, request):
         Notification.objects.filter(user=self.request.user).delete()
         return Response({'status': 'all notifications cleared'}, status=status.HTTP_204_NO_CONTENT)
+
+
+class AdminUserViewSet(viewsets.ModelViewSet):
+    """Admin panel user management - full CRUD operations."""
+    serializer_class = AdminUserSerializer
+    permission_classes = [IsAdminUser]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['username', 'email', 'first_name', 'last_name', 'profile__phone', 'profile__national_code']
+    ordering_fields = ['id', 'username', 'email', 'date_joined', 'last_login', 'is_active']
+    ordering = ['-id']
+
+    def get_queryset(self):
+        queryset = get_user_model().objects.select_related('profile').prefetch_related('roles').all()
+        
+        # Filter by role
+        role_code = self.request.query_params.get('role')
+        if role_code:
+            queryset = queryset.filter(roles__code=role_code)
+        
+        # Filter by active status
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active.lower() == 'true')
+        
+        # Filter by superuser status
+        is_superuser = self.request.query_params.get('is_superuser')
+        if is_superuser is not None:
+            queryset = queryset.filter(is_superuser=is_superuser.lower() == 'true')
+        
+        return queryset.distinct()
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        data = serializer.data
+        
+        # Add profile info
+        try:
+            profile = instance.profile
+            data['phone'] = profile.phone
+            data['national_code'] = profile.national_code
+        except:
+            data['phone'] = ''
+            data['national_code'] = ''
+        
+        return Response(data)
+
+    @action(detail=True, methods=['post'])
+    def toggle_active(self, request, pk=None):
+        """Toggle user active status."""
+        user = self.get_object()
+        user.is_active = not user.is_active
+        user.save()
+        return Response({
+            'id': user.id,
+            'is_active': user.is_active,
+            'message': f'کاربر {"فعال" if user.is_active else "غیرفعال"} شد.'
+        })
+
+    @action(detail=True, methods=['post'])
+    def reset_password(self, request, pk=None):
+        """Reset user password to a default."""
+        user = self.get_object()
+        new_password = request.data.get('password', 'newpassword123')
+        user.set_password(new_password)
+        user.save()
+        return Response({'message': 'رمز عبور با موفقیت تغییر کرد.'})
+
+
+class AdminStatsView(APIView):
+    """Comprehensive admin statistics."""
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        from cases.models import Case
+        from evidence.models import Evidence
+        from investigation.models import Suspect, Verdict
+        
+        User = get_user_model()
+        
+        # User statistics
+        total_users = User.objects.count()
+        active_users = User.objects.filter(is_active=True).count()
+        inactive_users = total_users - active_users
+        superusers = User.objects.filter(is_superuser=True).count()
+        
+        # Users by role
+        users_by_role = list(
+            Role.objects.annotate(user_count=Count('users')).values('code', 'name', 'user_count')
+        )
+        
+        # Case statistics
+        from evidence.models import BiologicalEvidence
+        
+        total_cases = Case.objects.count()
+        pending_cases = Case.objects.filter(
+            status__in=[Case.Status.PENDING_TRAINEE, Case.Status.PENDING_OFFICER, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF]
+        ).count()
+        active_cases = Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.IN_PURSUIT]).count()
+        solved_cases = Case.objects.filter(status=Case.Status.SOLVED).count()
+        rejected_cases = Case.objects.filter(status__in=[Case.Status.REJECTED, Case.Status.CANCELLED]).count()
+        
+        # Evidence statistics (only BiologicalEvidence has is_verified field)
+        total_evidence = Evidence.objects.count()
+        verified_evidence = BiologicalEvidence.objects.filter(is_verified=True).count()
+        pending_evidence = BiologicalEvidence.objects.filter(is_verified=False).count()
+        
+        # Investigation statistics
+        total_suspects = Suspect.objects.count()
+        arrested_suspects = Suspect.objects.filter(status=Suspect.Status.ARRESTED).count()
+        free_suspects = Suspect.objects.filter(status=Suspect.Status.FREE).count()
+        total_verdicts = Verdict.objects.count()
+        guilty_verdicts = Verdict.objects.filter(result=Verdict.Result.GUILTY).count()
+        innocent_verdicts = Verdict.objects.filter(result=Verdict.Result.INNOCENT).count()
+        
+        # Recent activity (last 5 items)
+        recent_users = list(
+            User.objects.order_by('-date_joined')[:5].values('id', 'username', 'email', 'date_joined')
+        )
+        recent_cases = list(
+            Case.objects.order_by('-created_at')[:5].values('id', 'title', 'created_at', 'status')
+        )
+        recent_evidence = list(
+            Evidence.objects.order_by('-recorded_at')[:5].values('id', 'title', 'recorded_at')
+        )
+        
+        return Response({
+            'users': {
+                'total': total_users,
+                'active': active_users,
+                'inactive': inactive_users,
+                'superusers': superusers,
+                'by_role': users_by_role,
+                'recent': recent_users,
+            },
+            'cases': {
+                'total': total_cases,
+                'pending': pending_cases,
+                'active': active_cases,
+                'solved': solved_cases,
+                'rejected': rejected_cases,
+                'recent': recent_cases,
+            },
+            'evidence': {
+                'total': total_evidence,
+                'verified': verified_evidence,
+                'pending': pending_evidence,
+                'recent': recent_evidence,
+            },
+            'investigation': {
+                'suspects': total_suspects,
+                'arrests': arrested_suspects,
+                'verdicts': {
+                    'total': total_verdicts,
+                    'guilty': guilty_verdicts,
+                    'innocent': innocent_verdicts,
+                },
+            }
+        })

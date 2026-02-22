@@ -23,14 +23,17 @@ export const evidenceAPI = {
   listAllEvidence: async (caseId?: number): Promise<Evidence[]> => {
     const url = caseId ? `/evidence/all/?case=${caseId}` : '/evidence/all/';
     const response = await api.get(url);
-    return response.data;
+    // Handle both paginated and non-paginated responses
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   // Witness Testimony
   listWitnessTestimonies: async (caseId?: number): Promise<WitnessTestimony[]> => {
     const url = caseId ? `/evidence/witness/?case=${caseId}` : '/evidence/witness/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   getWitnessTestimony: async (id: number): Promise<WitnessTestimony> => {
@@ -74,7 +77,8 @@ export const evidenceAPI = {
   listBiologicalEvidence: async (caseId?: number): Promise<BiologicalEvidence[]> => {
     const url = caseId ? `/evidence/biological/?case=${caseId}` : '/evidence/biological/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createBiologicalEvidence: async (data: CreateBiologicalEvidenceRequest): Promise<BiologicalEvidence> => {
@@ -105,7 +109,8 @@ export const evidenceAPI = {
   listVehicleEvidence: async (caseId?: number): Promise<VehicleEvidence[]> => {
     const url = caseId ? `/evidence/vehicle/?case=${caseId}` : '/evidence/vehicle/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createVehicleEvidence: async (data: CreateVehicleEvidenceRequest): Promise<VehicleEvidence> => {
@@ -127,7 +132,8 @@ export const evidenceAPI = {
   listIdentificationDocuments: async (caseId?: number): Promise<IdentificationDocument[]> => {
     const url = caseId ? `/evidence/id-document/?case=${caseId}` : '/evidence/id-document/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createIdentificationDocument: async (data: CreateIdentificationDocumentRequest): Promise<IdentificationDocument> => {
@@ -149,7 +155,8 @@ export const evidenceAPI = {
   listOtherEvidence: async (caseId?: number): Promise<OtherEvidence[]> => {
     const url = caseId ? `/evidence/other/?case=${caseId}` : '/evidence/other/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createOtherEvidence: async (data: CreateOtherEvidenceRequest): Promise<OtherEvidence> => {
