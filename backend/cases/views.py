@@ -14,47 +14,53 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        roles = user.roles.values_list('code', flat=True)
+        roles = list(user.roles.values_list('code', flat=True))
         
         # Chiefs and Captains see everything
         if user.is_superuser or 'police_chief' in roles or 'captain' in roles:
             return Case.objects.all()
         
-        # Combine filters based on roles
-        queryset = Case.objects.none()
+        # Start with a filter that returns nothing
+        conditions = Q(pk__in=[])
         
-        # Trainees see cases pending their review
+        # Build conditions based on roles
         if 'trainee' in roles:
-            queryset |= Case.objects.filter(status=Case.Status.PENDING_TRAINEE)
+            conditions |= Q(status=Case.Status.PENDING_TRAINEE)
             
-        # Officers see cases pending their review, active cases, and solved cases
         if 'police_officer' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.SOLVED])
+            conditions |= Q(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.SOLVED])
 
-        # Sergeants see cases pending resolution review, active cases, in pursuit, and completed/solved cases
         if 'sergeant' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
+            conditions |= Q(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
 
-        # Detectives see active cases to investigate, in-pursuit, and solved cases
         if 'detective' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
+            conditions |= Q(status__in=[Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
 
-        # Forensic doctors see active and solved cases to manage evidence
         if 'forensic_doctor' in roles:
-            queryset |= Case.objects.filter(status__in=[Case.Status.ACTIVE, Case.Status.SOLVED])
+            conditions |= Q(status__in=[Case.Status.ACTIVE, Case.Status.SOLVED])
 
-        # Judges see all active cases
         if 'judge' in roles or 'qazi' in roles:
-            queryset |= Case.objects.all()
+            # Match guilty suspects' cases
+            # We use distinct() on the final query because of these joins
+            conditions |= Q(
+                crime_level=0, 
+                suspects__interrogations__feedback__is_chief_confirmed=True, 
+                suspects__interrogations__feedback__decision='GUILTY'
+            )
+            conditions |= Q(
+                crime_level__gt=0, 
+                suspects__interrogations__feedback__is_confirmed=True, 
+                suspects__interrogations__feedback__decision='GUILTY'
+            )
 
-        # Everyone sees cases they created or are involved in (Plaintiffs)
-        queryset |= Case.objects.filter(Q(complainants=user) | Q(creator=user))
+        # Everyone sees cases they created or are involved in
+        conditions |= Q(complainants=user) | Q(creator=user)
 
-        return queryset.distinct()
+        return Case.objects.filter(conditions).distinct()
 
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def trial_history(self, request, pk=None):
-        """Aggregate all case data for the Judge's review (Section 6.4)"""
+        """Aggregate all case data for the Judge's/Chief's review (Section 6.4 + Report)"""
         case = self.get_object()
         
         # 1. Base case info
@@ -62,7 +68,10 @@ class CaseViewSet(viewsets.ModelViewSet):
             'case': CaseSerializer(case).data,
             'evidence': [],
             'suspects': [],
-            'officers_involved': []
+            'verdicts': [],
+            'officers_involved': [],
+            'complainants': [],
+            'witnesses': []
         }
 
         # 2. Get All Evidence
@@ -83,22 +92,41 @@ class CaseViewSet(viewsets.ModelViewSet):
         verdicts = Verdict.objects.filter(case=case)
         data['verdicts'] = VerdictSerializer(verdicts, many=True).data
 
-        # Collector for officers
-        officers = set()
+        # 5. Complainants
+        from .serializers import CaseComplainantSerializer
+        data['complainants'] = CaseComplainantSerializer(case.complainant_details.all(), many=True).data
+
+        # 6. Witnesses
+        if hasattr(case, 'scene_data'):
+            from .serializers import WitnessSerializer
+            data['witnesses'] = WitnessSerializer(case.scene_data.witnesses.all(), many=True).data
+
+        # 7. Involved People (with detail)
+        involved_users = set()
         if case.creator:
-            officers.add(f"{case.creator.get_full_name()} ({case.creator.username})")
+            involved_users.add(case.creator)
         
         for ev in evidence_objs:
             if ev.recorder:
-                officers.add(f"{ev.recorder.get_full_name()} ({ev.recorder.username})")
+                involved_users.add(ev.recorder)
         
         for s in suspects_objs:
             interrogations = Interrogation.objects.filter(suspect=s)
             for i in interrogations:
                 if i.interrogator:
-                    officers.add(f"{i.interrogator.get_full_name()} ({i.interrogator.username})")
+                    involved_users.add(i.interrogator)
+                if i.supervisor:
+                    involved_users.add(i.supervisor)
         
-        data['officers_involved'] = list(officers)
+        detail_involved = []
+        for u in involved_users:
+            detail_involved.append({
+                'username': u.username,
+                'full_name': u.get_full_name(),
+                'roles': [r.name for r in u.roles.all()],
+                'is_staff': u.is_staff
+            })
+        data['officers_involved'] = detail_involved
 
         return Response(data)
 
