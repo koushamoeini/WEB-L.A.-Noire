@@ -304,14 +304,14 @@ export default function CaseDetail() {
   const canInvestigate = isOfficerOrHigher && ['AC', 'IP', 'PS'].includes(caseData.status);
   const canTraineeReview = userRoles.includes('trainee') && caseData.status === 'PT';
   const canOfficerReview = isOfficerOrHigher && caseData.status === 'PO';
-  const canDetectiveSubmit = (userRoles.includes('detective') || userRoles.includes('captain') || userRoles.includes('police_chief')) && caseData.status === 'AC';
+  const canDetectiveSubmit = userRoles.includes('detective') && caseData.status === 'AC';
   const canSergeantReview = isSergeantOrHigher && caseData.status === 'PS';
-  const canArrestSuspects = (isSergeantOrHigher || userRoles.includes('detective')) && caseData.status === 'IP';
+  const canArrestSuspects = isSergeantOrHigher && caseData.status === 'IP';
   const canChiefReview = isChief && caseData.status === 'PC';
   const firstArrestedSuspect = suspects.find(s => isArrested(s));
 
   const isJudge = userRoles.includes('judge') || userRoles.includes('qazi');
-  const canJudgeVerdict = isJudge && (caseData.status === 'SO' || caseData.status === 'IP' || caseData.status === 'PC');
+  const canJudgeVerdict = isJudge && (caseData.status === 'SO' || caseData.status === 'PC');
   const canResubmit = caseData.creator === user?.id && caseData.status === 'RE';
 
   return (

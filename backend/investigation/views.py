@@ -342,16 +342,36 @@ class SuspectViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         data = serializer.validated_data
-        if data.get('is_arrested') is True or data.get('status') == Suspect.Status.ARRESTED:
+
+        roles = set(self.request.user.roles.values_list('code', flat=True)) if self.request.user.is_authenticated else set()
+        is_sergeant_or_higher = bool({'sergeant', 'captain', 'police_chief'} & roles) or self.request.user.is_superuser
+
+        requested_arrest = data.get('is_arrested') is True or data.get('status') == Suspect.Status.ARRESTED
+        if requested_arrest and not is_sergeant_or_higher:
+            raise PermissionDenied("ثبت وضعیت «دستگیر شده» فقط توسط گروهبان/کاپیتان/رئیس پلیس مجاز است.")
+
+        if requested_arrest:
             data['is_arrested'] = True
             data['status'] = Suspect.Status.ARRESTED
+        elif data.get('status') in [Suspect.Status.IDENTIFIED, Suspect.Status.UNDER_ARREST]:
+            data['is_arrested'] = False
         serializer.save()
 
     def perform_update(self, serializer):
         data = serializer.validated_data
-        if data.get('is_arrested') is True or data.get('status') == Suspect.Status.ARRESTED:
+
+        roles = set(self.request.user.roles.values_list('code', flat=True)) if self.request.user.is_authenticated else set()
+        is_sergeant_or_higher = bool({'sergeant', 'captain', 'police_chief'} & roles) or self.request.user.is_superuser
+
+        requested_arrest = data.get('is_arrested') is True or data.get('status') == Suspect.Status.ARRESTED
+        if requested_arrest and not is_sergeant_or_higher:
+            raise PermissionDenied("تغییر وضعیت به «دستگیر شده» فقط توسط گروهبان/کاپیتان/رئیس پلیس مجاز است.")
+
+        if requested_arrest:
             data['is_arrested'] = True
             data['status'] = Suspect.Status.ARRESTED
+        elif data.get('status') in [Suspect.Status.IDENTIFIED, Suspect.Status.UNDER_ARREST]:
+            data['is_arrested'] = False
         serializer.save()
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsSergeant | IsPoliceChief])

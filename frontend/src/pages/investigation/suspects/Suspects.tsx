@@ -71,7 +71,6 @@ export default function Suspects() {
       formDataToSend.append('national_code', formData.national_code);
       formDataToSend.append('details', formData.details);
       formDataToSend.append('is_main_suspect', String(formData.is_main_suspect));
-      formDataToSend.append('is_arrested', String(formData.is_arrested));
       if (formData.image) {
         formDataToSend.append('image', formData.image);
       }
@@ -241,19 +240,6 @@ export default function Suspects() {
                     style={{ width: '20px', height: '20px' }}
                   />
                   <label htmlFor="is_main_suspect" style={{ marginBottom: 0 }}>مظنون اصلی پرونده</label>
-                </div>
-
-                <div className="form-group checkbox-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px' }}>
-                  <input
-                    type="checkbox"
-                    id="is_arrested"
-                    checked={formData.is_arrested}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_arrested: e.target.checked })
-                    }
-                    style={{ width: '20px', height: '20px' }}
-                  />
-                  <label htmlFor="is_arrested" style={{ marginBottom: 0 }}>مظنون دستگیر شده است</label>
                 </div>
 
                 <div className="form-actions" style={{ marginTop: '30px' }}>
