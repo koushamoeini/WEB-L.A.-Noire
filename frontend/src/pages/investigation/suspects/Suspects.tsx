@@ -280,15 +280,7 @@ export default function Suspects() {
             </div>
           ) : (
             <div className="suspects-grid">
-              {suspects.map((suspect) => {
-                const canInterrogate = suspect.status === 'ARRESTED' || suspect.is_arrested === true;
-                console.log(`🔍 Suspect ${suspect.id} (${suspect.first_name} ${suspect.last_name}):`, {
-                  status: suspect.status,
-                  is_arrested: suspect.is_arrested,
-                  canInterrogate
-                });
-                
-                return (
+              {suspects.map((suspect) => (
                 <div key={suspect.id} className={`suspect-card module-card-luxury ${suspect.is_main_suspect ? 'main-suspect' : ''}`}>
                    {suspect.image && (
                     <div className="suspect-image-container">
@@ -303,9 +295,6 @@ export default function Suspects() {
                     <div style={{ display: 'flex', gap: '5px' }}>
                       {suspect.is_main_suspect && <span className="badge-main">عنصر کلیدی</span>}
                       {suspect.is_arrested && <span className="badge-arrested" style={{ background: '#d1fae5', color: '#065f46', fontSize: '0.65rem' }}>دستگیر شده</span>}
-                      <span style={{ fontSize: '0.65rem', background: '#374151', color: '#9ca3af', padding: '2px 6px', borderRadius: '3px' }}>
-                        {suspect.status || 'UNKNOWN'}
-                      </span>
                     </div>
                   </div>
                   <div className="suspect-body">
@@ -314,16 +303,15 @@ export default function Suspects() {
                   </div>
                   <div className="suspect-footer" style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <button 
-                      onClick={() => canInterrogate && navigate(`/cases/${suspect.case}/interrogations?suspectId=${suspect.id}`)}
+                      onClick={() => (suspect.status === 'ARRESTED' || suspect.is_arrested) && navigate(`/cases/${suspect.case}/interrogations?suspectId=${suspect.id}`)}
                       className="btn-gold-solid"
-                      disabled={!canInterrogate}
-                      title={canInterrogate ? 'رفتن به صفحه بازجویی' : `وضعیت: ${suspect.status} - متهم باید ابتدا دستگیر شود`}
+                      disabled={!(suspect.status === 'ARRESTED' || suspect.is_arrested)}
                       style={{ 
-                        opacity: canInterrogate ? 1 : 0.4, 
-                        cursor: canInterrogate ? 'pointer' : 'not-allowed',
+                        opacity: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? 1 : 0.4, 
+                        cursor: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? 'pointer' : 'not-allowed',
                         padding: '10px',
-                        background: canInterrogate ? '#D4AF37' : '#555',
-                        color: canInterrogate ? '#000' : '#fff',
+                        background: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? '#D4AF37' : '#555',
+                        color: (suspect.status === 'ARRESTED' || suspect.is_arrested) ? '#000' : '#fff',
                         fontWeight: 'bold',
                         border: 'none',
                         borderRadius: '6px'
@@ -353,8 +341,7 @@ export default function Suspects() {
                     </button>
                   </div>
                 </div>
-                );
-              })}
+              ))}
             </div>
           )}
         </div>
