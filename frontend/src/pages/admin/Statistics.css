@@ -1,0 +1,377 @@
+.statistics-container {
+  padding: 2rem;
+}
+
+.stats-header {
+  margin-bottom: 2.5rem;
+}
+
+.stats-header h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.stats-section {
+  background: rgba(20, 20, 20, 0.6);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #d4af37;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+}
+
+.section-title .icon {
+  font-size: 1.75rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.secondary-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 0;
+}
+
+.stat-card {
+  background: rgba(20, 20, 20, 0.8);
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border-color: #d4af37;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #b4a684;
+}
+
+/* Color variants for stat cards */
+.stat-card.primary {
+  border-color: rgba(212, 175, 55, 0.6);
+}
+
+.stat-card.primary .stat-value {
+  color: #d4af37;
+}
+
+.stat-card.success {
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.stat-card.success .stat-value {
+  color: #22c55e;
+}
+
+.stat-card.warning {
+  border-color: rgba(251, 146, 60, 0.6);
+}
+
+.stat-card.warning .stat-value {
+  color: #fb923c;
+}
+
+.stat-card.info {
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+.stat-card.info .stat-value {
+  color: #3b82f6;
+}
+
+.stat-card.pending {
+  border-color: rgba(234, 179, 8, 0.6);
+}
+
+.stat-card.pending .stat-value {
+  color: #eab308;
+}
+
+.stat-card.closed {
+  border-color: rgba(148, 163, 184, 0.6);
+}
+
+.stat-card.closed .stat-value {
+  color: #94a3b8;
+}
+
+.stat-card.solved {
+  border-color: rgba(16, 185, 129, 0.6);
+}
+
+.stat-card.solved .stat-value {
+  color: #10b981;
+}
+
+.stat-card.rejected {
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+.stat-card.rejected .stat-value {
+  color: #ef4444;
+}
+
+.detailed-section {
+  margin-top: 2rem;
+}
+
+.subsection-title {
+  color: #d4af37;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.role-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.role-stat-item {
+  background: rgba(20, 20, 20, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.role-stat-item:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: #d4af37;
+}
+
+.role-name {
+  color: #e0d5b7;
+  font-size: 0.9rem;
+}
+
+.role-count {
+  color: #d4af37;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.recent-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto auto;
+  gap: 1rem;
+  align-items: center;
+  background: rgba(20, 20, 20, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 6px;
+  padding: 1rem;
+  transition: all 0.2s;
+}
+
+.recent-item:hover {
+  background: rgba(212, 175, 55, 0.05);
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+.item-id {
+  color: #888;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.item-name {
+  color: #e0d5b7;
+  font-weight: 500;
+}
+
+.item-email {
+  color: #b4a684;
+  font-size: 0.85rem;
+}
+
+.item-status {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.pending {
+  background: rgba(234, 179, 8, 0.2);
+  color: #eab308;
+  border: 1px solid #eab308;
+}
+
+.status-badge.verified {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  border: 1px solid #22c55e;
+}
+
+.item-date {
+  color: #888;
+  font-size: 0.85rem;
+  direction: ltr;
+  text-align: left;
+  min-width: 90px;
+}
+
+.verdict-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.verdict-item {
+  background: rgba(20, 20, 20, 0.5);
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  transition: all 0.3s;
+}
+
+.verdict-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.verdict-item.guilty {
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+.verdict-item.guilty:hover {
+  border-color: #ef4444;
+}
+
+.verdict-item.not-guilty {
+  border-color: rgba(34, 197, 94, 0.6);
+}
+
+.verdict-item.not-guilty:hover {
+  border-color: #22c55e;
+}
+
+.verdict-icon {
+  font-size: 2.5rem;
+}
+
+.verdict-info {
+  flex: 1;
+}
+
+.verdict-value {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.verdict-item.guilty .verdict-value {
+  color: #ef4444;
+}
+
+.verdict-item.not-guilty .verdict-value {
+  color: #22c55e;
+}
+
+.verdict-label {
+  color: #b4a684;
+  font-size: 0.9rem;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+
+  .recent-item {
+    grid-template-columns: 50px 1fr auto;
+    gap: 0.75rem;
+  }
+
+  .item-email {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .statistics-container {
+    padding: 1rem;
+  }
+
+  .stats-section {
+    padding: 1.5rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+  }
+
+  .role-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-item {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .item-date {
+    text-align: right;
+  }
+
+  .verdict-details {
+    grid-template-columns: 1fr;
+  }
+}
