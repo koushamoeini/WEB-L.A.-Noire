@@ -32,6 +32,11 @@ export const investigationAPI = {
     await api.delete(`/investigation/suspects/${id}/`);
   },
 
+  getSuspect: async (id: number): Promise<Suspect> => {
+    const response = await api.get(`/investigation/suspects/${id}/`);
+    return response.data;
+  },
+
   toggleSuspectBoard: async (id: number): Promise<{ is_on_board: boolean }> => {
     const response = await api.post(`/investigation/suspects/${id}/toggle_board/`);
     return response.data;
@@ -108,6 +113,38 @@ export const investigationAPI = {
 
   listVerdicts: async (caseId: number): Promise<Verdict[]> => {
     const response = await api.get(`/investigation/verdicts/?case=${caseId}`);
+    return response.data;
+  },
+
+  // Reward Reports
+  createRewardReport: async (data: any): Promise<any> => {
+    const response = await api.post('/investigation/reward-reports/', data);
+    return response.data;
+  },
+
+  listRewardReports: async (suspectNationalCode?: string): Promise<any[]> => {
+    const url = suspectNationalCode 
+      ? `/investigation/reward-reports/?suspect_national_code=${suspectNationalCode}` 
+      : '/investigation/reward-reports/';
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  reviewRewardReportOfficer: async (id: number, approved: boolean, notes: string): Promise<any> => {
+    const response = await api.post(`/investigation/reward-reports/${id}/officer_review/`, { approved, notes });
+    return response.data;
+  },
+
+  reviewRewardReportDetective: async (id: number, approved: boolean, notes: string): Promise<any> => {
+    const response = await api.post(`/investigation/reward-reports/${id}/detective_review/`, { approved, notes });
+    return response.data;
+  },
+
+  verifyRewardPayout: async (nationalCode: string, rewardCode: string): Promise<any> => {
+    const response = await api.post('/investigation/reward-reports/verify_payout/', { 
+      national_code: nationalCode, 
+      reward_code: rewardCode 
+    });
     return response.data;
   },
 };
