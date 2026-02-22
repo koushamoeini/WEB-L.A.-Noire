@@ -162,11 +162,8 @@ export const investigationAPI = {
     return response.data;
   },
 
-  setBailFine: async (verdictId: number, bailAmount: number, fineAmount: number): Promise<any> => {
-    const response = await api.post(`/investigation/verdicts/${verdictId}/set_bail_fine/`, {
-      bail_amount: bailAmount,
-      fine_amount: fineAmount
-    });
+  setBailFine: async (verdictId: number, payload: { bail_amount?: number; fine_amount?: number }): Promise<any> => {
+    const response = await api.post(`/investigation/verdicts/${verdictId}/set_bail_fine/`, payload);
     return response.data;
   },
 

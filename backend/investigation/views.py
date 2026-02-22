@@ -556,6 +556,16 @@ class VerdictViewSet(viewsets.ModelViewSet):
         
         bail = request.data.get('bail_amount')
         fine = request.data.get('fine_amount')
+
+        if bail is not None and verdict.bail_paid:
+            return Response({
+                'error': 'وثیقه قبلاً پرداخت شده و مبلغ آن قابل تغییر نیست.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        if fine is not None and verdict.fine_paid:
+            return Response({
+                'error': 'جریمه قبلاً پرداخت شده و مبلغ آن قابل تغییر نیست.'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         if bail is not None:
             verdict.bail_amount = int(bail)

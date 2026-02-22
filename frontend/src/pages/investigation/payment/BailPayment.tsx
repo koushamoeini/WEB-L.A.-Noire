@@ -66,11 +66,22 @@ export default function BailPayment() {
     setSuccess('');
 
     try {
-      await investigationAPI.setBailFine(
-        Number(verdictId),
-        Number(bailAmount) || 0,
-        Number(fineAmount) || 0
-      );
+      if (!verdict) return;
+
+      const payload: { bail_amount?: number; fine_amount?: number } = {};
+      if (verdict.is_eligible_for_bail && !verdict.bail_paid) {
+        payload.bail_amount = Number(bailAmount) || 0;
+      }
+      if (!verdict.fine_paid) {
+        payload.fine_amount = Number(fineAmount) || 0;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        setError('پس از پرداخت، مبلغ قابل ویرایش نیست.');
+        return;
+      }
+
+      await investigationAPI.setBailFine(Number(verdictId), payload);
       setSuccess('مبالغ وثیقه و جریمه با موفقیت تنظیم شد');
       setShowSetAmountForm(false);
       await fetchData(); // Refresh data
@@ -119,6 +130,9 @@ export default function BailPayment() {
 
   const canPayBail = verdict.bail_amount && !verdict.bail_paid && verdict.is_eligible_for_bail;
   const canPayFine = verdict.fine_amount && !verdict.fine_paid;
+  const canEditBailAmount = verdict.is_eligible_for_bail && !verdict.bail_paid;
+  const canEditFineAmount = !verdict.fine_paid;
+  const canEditAnyAmount = canEditBailAmount || canEditFineAmount;
 
   return (
     <div className="layout-with-sidebar">
@@ -258,10 +272,17 @@ export default function BailPayment() {
                   className="btn-gold-outline"
                   onClick={() => setShowSetAmountForm(!showSetAmountForm)}
                   style={{ padding: '8px 16px', fontSize: '0.9rem' }}
+                  disabled={!canEditAnyAmount}
                 >
-                  {showSetAmountForm ? 'بستن' : 'ویرایش مبالغ'}
+                  {!canEditAnyAmount ? 'قفل شده' : showSetAmountForm ? 'بستن' : 'ویرایش مبالغ'}
                 </button>
               </div>
+
+              {!canEditAnyAmount && (
+                <p style={{ color: '#f59e0b', fontSize: '0.9rem' }}>
+                  پس از پرداخت، مبلغ وثیقه/جریمه قابل تغییر نیست.
+                </p>
+              )}
 
               {showSetAmountForm && (
                 <form onSubmit={handleSetBailFine} style={{ marginTop: '15px' }}>
@@ -275,9 +296,10 @@ export default function BailPayment() {
                         placeholder="مثلاً: 50000000"
                         min="0"
                         className="lux-input"
+                        disabled={!canEditBailAmount}
                       />
                       <small style={{ color: 'var(--text-dim)', fontSize: '0.8rem' }}>
-                        فقط برای جرائم سطح 2 و 3
+                        فقط برای جرائم سطح 2 و 3 {verdict.bail_paid ? '(پرداخت شده و قفل است)' : ''}
                       </small>
                     </div>
                   )}
@@ -291,6 +313,7 @@ export default function BailPayment() {
                       placeholder="مثلاً: 10000000"
                       min="0"
                       className="lux-input"
+                      disabled={!canEditFineAmount}
                     />
                   </div>
 
@@ -298,7 +321,7 @@ export default function BailPayment() {
                     type="submit" 
                     className="btn-gold-solid" 
                     style={{ width: '100%', padding: '12px' }}
-                    disabled={processing}
+                    disabled={processing || !canEditAnyAmount}
                   >
                     {processing ? 'در حال ثبت...' : 'ثبت مبالغ'}
                   </button>
