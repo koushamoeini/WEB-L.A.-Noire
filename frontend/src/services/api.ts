@@ -48,7 +48,8 @@ export const authAPI = {
 
   listUsers: async (): Promise<User[]> => {
     const response = await api.get<User[]>('/users/');
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   getSystemStats: async (): Promise<{ total_cases: number; solved_cases: number; active_cases: number; total_users: number }> => {
@@ -58,7 +59,8 @@ export const authAPI = {
 
   getNotifications: async (): Promise<any[]> => {
     const response = await api.get('/notifications/');
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   markNotificationRead: async (id: number): Promise<void> => {

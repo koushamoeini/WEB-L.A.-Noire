@@ -85,7 +85,8 @@ export const investigationAPI = {
   listBoards: async (caseId?: number): Promise<Board[]> => {
     const url = caseId ? `/investigation/boards/?case=${caseId}` : '/investigation/boards/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createBoard: async (caseId: number): Promise<Board> => {
@@ -97,7 +98,8 @@ export const investigationAPI = {
   listConnections: async (caseId?: number): Promise<BoardConnection[]> => {
     const url = caseId ? `/investigation/board-connections/?case=${caseId}` : '/investigation/board-connections/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createConnection: async (data: CreateBoardConnectionRequest): Promise<BoardConnection> => {
@@ -117,7 +119,8 @@ export const investigationAPI = {
 
   listVerdicts: async (caseId: number): Promise<Verdict[]> => {
     const response = await api.get(`/investigation/verdicts/?case=${caseId}`);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   // Reward Reports
@@ -131,7 +134,8 @@ export const investigationAPI = {
       ? `/investigation/reward-reports/?suspect_national_code=${suspectNationalCode}` 
       : '/investigation/reward-reports/';
     const response = await api.get(url);
-    return response.data;
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   reviewRewardReportOfficer: async (id: number, approved: boolean, notes: string): Promise<any> => {
