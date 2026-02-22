@@ -198,32 +198,46 @@ class CaseViewSet(viewsets.ModelViewSet):
     def officer_review(self, request, pk=None):
         """Officer review logic (Section 4.2.1 & 4.2.4)"""
         case = self.get_object()
-        
-        # Implement Superior Officer Logic (Section 4.2.4)
-        ROLE_SENIORITY = {
-            'trainee': 1,
-            'police_officer': 2,
-            'sergeant': 3,
-            'detective': 4,
-            'captain': 5,
-            'police_chief': 6,
-        }
-        
-        def get_max_seniority(user):
-            if user.is_superuser: return 100
-            user_roles = user.roles.values_list('code', flat=True)
-            return max([ROLE_SENIORITY.get(r, 0) for r in user_roles] + [0])
+        # Strict chain-of-command approval:
+        # officer -> sergeant
+        # sergeant/detective -> captain
+        # captain -> police_chief
+        # chief can always review
+        creator_roles = set(case.creator.roles.values_list('code', flat=True)) if case.creator else set()
+        reviewer_roles = set(request.user.roles.values_list('code', flat=True))
 
-        reviewer_seniority = get_max_seniority(request.user)
-        creator_seniority = get_max_seniority(case.creator) if case.creator else 0
-        
-        # Chief bypasses seniority check, others must be strictly higher than creator
-        is_chief = request.user.roles.filter(code='police_chief').exists()
-        if not is_chief and reviewer_seniority <= creator_seniority:
+        if case.creator_id and case.creator_id == request.user.id:
             return Response(
-                {'error': 'فقط افسر با رده بالاتر از ثبت‌کننده پرونده می‌تواند این عمل را انجام دهد.'}, 
+                {'error': 'ثبت‌کننده پرونده نمی‌تواند پرونده خودش را تایید/رد کند.'},
                 status=status.HTTP_403_FORBIDDEN
             )
+
+        if request.user.is_superuser or 'police_chief' in reviewer_roles:
+            pass
+        else:
+            creator_primary = None
+            if 'captain' in creator_roles:
+                creator_primary = 'captain'
+            elif 'detective' in creator_roles:
+                creator_primary = 'detective'
+            elif 'sergeant' in creator_roles:
+                creator_primary = 'sergeant'
+            elif 'police_officer' in creator_roles:
+                creator_primary = 'police_officer'
+
+            required_reviewer_roles = {
+                'police_officer': {'sergeant'},
+                'sergeant': {'captain'},
+                'detective': {'captain'},
+                'captain': {'police_chief'},
+            }
+
+            allowed = required_reviewer_roles.get(creator_primary, {'sergeant', 'captain', 'police_chief'})
+            if reviewer_roles.isdisjoint(allowed):
+                return Response(
+                    {'error': 'این پرونده باید توسط رده بعدی زنجیره فرماندهی بررسی شود.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
 
         approved = request.data.get('approved', False)
         if approved:
