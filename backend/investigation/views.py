@@ -42,7 +42,10 @@ def _is_case_open(case):
 
 
 def _pursuit_days(suspect):
+    # اگر دستگیر شده باشد، روزهای تعقیب (و مژدگانی) متوقف می‌شود
     if not suspect or not suspect.case_id or not _is_case_open(suspect.case):
+        return 0
+    if suspect.is_arrested or suspect.status == Suspect.Status.ARRESTED:
         return 0
     if not suspect.created_at:
         return 0
@@ -99,6 +102,14 @@ def _generate_tracking_code():
     while True:
         code = ''.join(random.choices(string.digits, k=10))
         if not RewardReport.objects.filter(tracking_code=code).exists():
+            return code
+
+
+def _generate_reward_code():
+    """کد یکتای ۶ رقمی برای سیستم پاداش"""
+    while True:
+        code = ''.join(random.choices(string.digits, k=6))
+        if not RewardReport.objects.filter(reward_code=code).exists():
             return code
 
 
@@ -242,6 +253,7 @@ class SuspectViewSet(viewsets.ModelViewSet):
                     "full_name": full_name,
                     "suspect_ids": [],
                     "case_ids": set(),
+                    "image": s.image.url if s.image else None,
                     "max_pursuit_days_open": 0,
                     "max_crime_level": 0,  # امتیاز ۱..۴
                 }
@@ -249,6 +261,10 @@ class SuspectViewSet(viewsets.ModelViewSet):
             g["suspect_ids"].append(s.id)
             if s.case_id:
                 g["case_ids"].add(s.case_id)
+            
+            # ثبت تصویر از مظنونینی که عکس دارند
+            if s.image and not g["image"]:
+                g["image"] = s.image.url
 
             # max(Di) از همه پرونده‌ها
             if s.case_id:
@@ -276,6 +292,7 @@ class SuspectViewSet(viewsets.ModelViewSet):
                 "full_name": g["full_name"],
                 "suspect_ids": g["suspect_ids"],
                 "case_ids": sorted(list(g["case_ids"])),
+                "image": g["image"],
                 "max_pursuit_days": g["max_pursuit_days_open"],
                 "max_crime_level": g["max_crime_level"],
                 "score": score,
@@ -497,8 +514,16 @@ class RewardReportViewSet(viewsets.ModelViewSet):
         status_filter = self.request.query_params.get('status')
         if status_filter:
             qs = qs.filter(status=status_filter)
+        
+        # New: Filter by suspect national code
+        suspect_nc = self.request.query_params.get('suspect_national_code')
+        if suspect_nc:
+            qs = qs.filter(suspect_national_code=suspect_nc)
 
         user = self.request.user
+        if user.is_anonymous:
+            return qs.none()
+            
         roles = [r.code for r in user.roles.all()]
         elevated = user.is_superuser or any(r in roles for r in ['police_officer', 'captain', 'police_chief', 'detective', 'sergeant'])
         if elevated:
@@ -556,12 +581,56 @@ class RewardReportViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'Suspect not found for reward calculation.'}, status=status.HTTP_400_BAD_REQUEST)
             report.reward_amount = _reward_amount_for_suspect(suspect)
             report.tracking_code = _generate_tracking_code()
+            report.reward_code = _generate_reward_code()
             report.status = RewardReport.Status.APPROVED
         else:
             report.status = RewardReport.Status.REJECTED
 
         report.save()
-        return Response({'status': report.status, 'reward_amount': report.reward_amount, 'tracking_code': report.tracking_code})
+        return Response({
+            'status': report.status, 
+            'reward_amount': report.reward_amount, 
+            'tracking_code': report.tracking_code,
+            'reward_code': report.reward_code
+        })
+
+    @extend_schema(summary="استعلام پاداش کد ملی + کد پاداش")
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def verify_payout(self, request):
+        # بررسی اینکه کاربر حتماً یکی از رده‌های پلیسی/قضایی باشد
+        user_roles = [r.code for r in request.user.roles.all()]
+        police_roles = ['trainee', 'police_officer', 'sergeant', 'detective', 'captain', 'police_chief', 'forensic_doctor', 'judge', 'qazi']
+        if not any(r in police_roles for r in user_roles) and not request.user.is_superuser:
+            return Response({'error': 'فقط کادر پلیس مجاز به استعلام هستند.'}, status=403)
+            
+        national_code = request.data.get('national_code', '').strip()
+        reward_code = request.data.get('reward_code', '').strip()
+
+        if not national_code or not reward_code:
+            return Response({'error': 'لطفاً کد ملی و کد پاداش را وارد کنید.'}, status=400)
+
+        report = RewardReport.objects.filter(
+            reporter__profile__national_code=national_code,
+            reward_code=reward_code,
+            status=RewardReport.Status.APPROVED
+        ).first()
+
+        if not report:
+            return Response({'error': 'گزارشی با این مشخصات یافت نشد یا هنوز تایید نهایی نشده است.'}, status=404)
+
+        return Response({
+            'reporter_name': f"{report.reporter.first_name} {report.reporter.last_name}",
+            'reporter_username': report.reporter.username,
+            'reporter_national_code': national_code,
+            'reporter_phone': getattr(report.reporter.profile, 'phone', 'نامشخص') if hasattr(report.reporter, 'profile') else 'نامشخص',
+            'reward_amount': report.reward_amount,
+            'is_paid': report.is_paid,
+            'suspect_info': f"{report.suspect.first_name} {report.suspect.last_name}" if report.suspect else report.suspect_full_name,
+            'report_date': report.created_at.strftime('%Y/%m/%d'),
+            'description': report.description,
+            'officer_notes': report.officer_notes,
+            'detective_notes': report.detective_notes,
+        })
 
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def request_payment(self, request, pk=None):
