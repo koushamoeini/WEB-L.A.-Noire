@@ -14,13 +14,19 @@ const Cases = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  console.log('📋 Cases component mounted, user:', user?.username);
+
   useEffect(() => {
     const fetchCases = async () => {
       try {
+        console.log('📋 Fetching cases...');
         const data = await caseAPI.listCases();
+        console.log('📋 Cases fetched successfully:', data.length, 'cases');
         setCases(data);
       } catch (err: any) {
-        setError('خطا در بارگذاری پرونده‌ها');
+        console.error('📋 Error fetching cases:', err);
+        const errorMsg = err.response?.data?.detail || err.message || 'خطا در بارگذاری پرونده‌ها';
+        setError(errorMsg);
       } finally {
         setLoading(false);
       }
@@ -45,6 +51,30 @@ const Cases = () => {
   const userRoles = user?.roles?.map(r => r.code) || [];
   const isPolice = userRoles.some(r => ['police_officer', 'sergeant', 'detective', 'captain', 'police_chief'].includes(r));
   const isCitizen = userRoles.length === 0;
+
+  console.log('📋 Rendering Cases page - loading:', loading, 'error:', error, 'cases:', cases.length);
+
+  if (error) {
+    return (
+      <div className="layout-with-sidebar">
+        <Sidebar />
+        <div className="main-content">
+          <div className="cases-container">
+            <div className="error-message" style={{
+              padding: '20px',
+              margin: '20px',
+              backgroundColor: '#ff4444',
+              color: 'white',
+              borderRadius: '8px',
+              fontSize: '18px'
+            }}>
+              {error}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="layout-with-sidebar">
@@ -79,8 +109,6 @@ const Cases = () => {
               )}
             </div>
           </div>
-
-          {error && <div className="error-message">{error}</div>}
 
           {cases.length === 0 ? (
             <div className="empty-state">
