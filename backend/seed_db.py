@@ -1,22 +1,45 @@
 import os
 import django
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from django.contrib.auth import get_user_model
-from accounts.models import Role
-from cases.models import Case
-from evidence.models import BiologicalEvidence, WitnessTestimony
-from investigation.models import Suspect, Interrogation, Board
+from accounts.models import Role, UserProfile
+from cases.models import Case, CaseComplainant, CrimeScene, SceneWitness
+from evidence.models import Evidence, BiologicalEvidence, WitnessTestimony, DigitalEvidence, PhysicalEvidence
+from investigation.models import (
+    Suspect, Interrogation, InterrogationFeedback, 
+    Board, BoardConnection, Verdict, Warrant, RewardReport
+)
 
 User = get_user_model()
 
+def clear_db():
+    print("Clearing database...")
+    Verdict.objects.all().delete()
+    InterrogationFeedback.objects.all().delete()
+    Interrogation.objects.all().delete()
+    Warrant.objects.all().delete()
+    RewardReport.objects.all().delete()
+    BoardConnection.objects.all().delete()
+    Board.objects.all().delete()
+    Suspect.objects.all().delete()
+    Evidence.objects.all().delete()
+    CrimeScene.objects.all().delete()
+    CaseComplainant.objects.all().delete()
+    Case.objects.all().delete()
+    UserProfile.objects.all().delete()
+    User.objects.all().delete()
+    Role.objects.all().delete()
+    print("Database cleared.")
+
 def seed_data():
+    clear_db()
     print("Seeding database...")
 
-    # 1. Create Roles
     roles_data = [
         ('system_admin', 'مدیر کل سامانه'),
         ('police_chief', 'رییس پلیس'),
@@ -36,159 +59,165 @@ def seed_data():
         role, _ = Role.objects.get_or_create(code=code, defaults={'name': name})
         role_objs[code] = role
 
-    # 2. Create Users for each role
-    passwords = "password123"
-    
-    users_to_create = [
-        ('admin', 'system_admin', '1111111111', '09111111111'),
-        ('chief', 'police_chief', '2222222222', '09222222222'),
-        ('captain', 'captain', '3333333333', '09333333333'),
-        ('sergeant', 'sergeant', '4444444444', '09444444444'),
-        ('detective', 'detective', '5555555555', '09555555555'),
-        ('officer', 'police_officer', '1010101010', '09101010101'),
-        ('trainee_user', 'trainee', '1212121212', '09121212121'),
-        ('doctor', 'forensic_doctor', '6666666666', '09666666666'),
-        ('judge_user', 'judge', '7777777777', '09777777777'),
-        ('citizen', 'complainant', '8888888888', '09888888888'),
-        ('base', 'base_user', '1313131313', '09131313131'),
+    password = "password123"
+    users_data = [
+        ('admin', 'system_admin', '1111111111'),
+        ('chief', 'police_chief', '2222222222'),
+        ('captain', 'captain', '3333333333'),
+        ('sergeant', 'sergeant', '4444444444'),
+        ('detective', 'detective', '5555555555'),
+        ('officer', 'police_officer', '1010101010'),
+        ('trainee_user', 'trainee', '1212121212'),
+        ('doctor', 'forensic_doctor', '6666666666'),
+        ('judge_user', 'judge', '7777777777'),
+        ('citizen', 'complainant', '8888888888'),
+        ('citizen2', 'complainant', '9999999999'),
     ]
     
-    user_objs = {}
-    for username, rcode, ncode, phone in users_to_create:
-        user, created = User.objects.get_or_create(
+    u = {}
+    for username, rcode, ncode in users_data:
+        user = User.objects.create(
             username=username,
-            defaults={
-                'email': f'{username}@police.ir',
-                'is_staff': (username == 'admin'),
-                'is_superuser': (username == 'admin'),
-            }
+            email=f"{username}@example.com",
+            is_staff=(rcode == 'system_admin'),
+            is_superuser=(rcode == 'system_admin')
         )
-        if created:
-            user.set_password(passwords)
-            user.save()
-        
-        # Profile fields
-        from accounts.models import UserProfile
-        UserProfile.objects.update_or_create(
-            user=user,
-            defaults={'national_code': ncode, 'phone': phone}
-        )
-        
+        user.set_password(password)
+        user.save()
+        UserProfile.objects.create(user=user, national_code=ncode, phone=f"09{ncode[:9]}")
         user.roles.add(role_objs[rcode])
-        user_objs[username] = user
-        print(f"User '{username}' ready with role '{rcode}'")
+        u[username] = user
+        print(f"Created user: {username} with role: {rcode}")
 
-    # 3. Create Sample Cases
-    chief = user_objs['chief']
-    detective = user_objs['detective']
-    citizen = user_objs['citizen']
+    # --- PT: Pending Trainee (Created by Citizen) ---
+    c1 = Case.objects.create(
+        title="سرقت از منزل مسکونی",
+        description="طلا و جواهرات به ارزش ۵ میلیارد ریال از گاوصندوق سرقت شده است.",
+        crime_level=Case.CrimeLevel.LEVEL_2,
+        status=Case.Status.PENDING_TRAINEE,
+        creator=u['citizen']
+    )
+    CaseComplainant.objects.create(case=c1, user=u['citizen'], is_confirmed=True)
 
-    # Case 1: Active
-    case1, _ = Case.objects.get_or_create(
-        title="سرقت از بانک ملت",
-        defaults={
-            'description': "سرقت مسلحانه از شعبه مرکزی در ساعت ۱۰ شب.",
-            'creator': chief,
-            'status': 'AC', # Active
-            'crime_level': 2 # Critical
-        }
+    # --- PO: Pending Officer (Checked by Trainee) ---
+    c2 = Case.objects.create(
+        title="کلاهبرداری ملکی",
+        description="فروش یک واحد آپارتمان به چندین نفر به صورت همزمان.",
+        crime_level=Case.CrimeLevel.LEVEL_1,
+        status=Case.Status.PENDING_OFFICER,
+        creator=u['citizen2'],
+        review_notes="تایید شاکیان توسط کارآموز انجام شد."
     )
 
-    # Case 2: Pending (Citizen Complaint)
-    case2, _ = Case.objects.get_or_create(
-        title="شکایت کلاهبرداری تلفنی",
-        defaults={
-            'description': "فردی با تماس تلفنی اقدام به تخلیه حساب بانکی کرده است.",
-            'creator': citizen,
-            'status': 'PT', # Pending Trainee
-            'crime_level': 1 # Normal
-        }
+    # --- AC: Active (Detective is investigating) ---
+    c3 = Case.objects.create(
+        title="قتل مشکوک در هتل",
+        description="جسد فردی در اتاق ۳۰۲ هتل پارسیان پیدا شده است. آثار ضرب و شتم مشهود است.",
+        crime_level=Case.CrimeLevel.CRITICAL,
+        status=Case.Status.ACTIVE,
+        creator=u['officer']
+    )
+    BiologicalEvidence.objects.create(
+        case=c3, title="نمونه خون", description="نمونه خون یافت شده روی فرش", 
+        recorder=u['doctor'], DNA_sequence="ATCG..."
+    )
+    WitnessTestimony.objects.create(
+        case=c3, title="شهادت پذیرش هتل", description="مشاهده خروج فردی با هودی مشکی", 
+        recorder=u['detective'], transcript="او حدود ساعت ۲ شب با عجله خارج شد."
+    )
+    s3 = Suspect.objects.create(
+        case=c3, first_name="رضا", last_name="نامعلوم", 
+        details="فردی که در دوربین‌های مداربسته دیده شده است.", 
+        is_main_suspect=True, status=Suspect.Status.IDENTIFIED
+    )
+    Board.objects.create(case=c3)
+
+    # --- IP: In Pursuit (Warrant issued) ---
+    c4 = Case.objects.create(
+        title="اختلاس در بانک مرکزی",
+        description="برداشت غیرقانونی مبالغ کلان از حساب‌های راکد.",
+        crime_level=Case.CrimeLevel.LEVEL_1,
+        status=Case.Status.IN_PURSUIT,
+        creator=u['detective']
+    )
+    s4 = Suspect.objects.create(
+        case=c4, first_name="سعید", last_name="خاوری", 
+        details="مدیر سابق بخش حسابداری.", 
+        is_main_suspect=True, status=Suspect.Status.UNDER_ARREST,
+        created_at=timezone.now() - timedelta(days=35)
+    )
+    Warrant.objects.create(
+        case=c4, suspect=s4, requester=u['detective'], approver=u['sergeant'],
+        type='ARREST', status='APPROVED', description="دستور جلب فوری"
     )
 
-    # Case 3: Solved
-    case3, _ = Case.objects.get_or_create(
-        title="نزاع خیابانی در پارک",
-        defaults={
-            'description': "درگیری فیزیکی گزارش شده در تاریخ ۱۴۰۴/۰۱/۱۰.",
-            'creator': chief,
-            'status': 'SL', # Solved
-            'crime_level': 1 # Normal
-        }
+    # --- PS: Pending Sergeant (Interrogation done) ---
+    c5 = Case.objects.create(
+        title="آتش‌سوزی عمدی در انبار",
+        description="حریق در انبار تجهیزات پزشکی.",
+        crime_level=Case.CrimeLevel.LEVEL_2,
+        status=Case.Status.PENDING_SERGEANT,
+        creator=u['detective']
+    )
+    s5 = Suspect.objects.create(
+        case=c5, first_name="بهمن", last_name="آتش‌افروز", 
+        status=Suspect.Status.ARRESTED, is_arrested=True
+    )
+    Interrogation.objects.create(
+        suspect=s5, interrogator=u['detective'], transcript="من فقط می‌خواستم گرم شوم...",
+        interrogator_score=8, is_interrogator_confirmed=True
     )
 
-    # 4. Add Evidence to Case 1
-    BiologicalEvidence.objects.get_or_create(
-        case=case1,
-        defaults={
-            'title': "اثر انگشت روی گاوصندوق",
-            'description': "اثر انگشت در گوشه سمت چپ گاوصندوق پیدا شد.",
-            'is_verified': False,
-            'recorder': detective
-        }
+    # --- PC: Pending Chief (Captain & Sergeant confirmed guilty) ---
+    c6 = Case.objects.create(
+        title="قاچاق گسترده مواد مخدر",
+        description="کشف محموله ۱ تنی هروئین در مرز.",
+        crime_level=Case.CrimeLevel.CRITICAL,
+        status=Case.Status.PENDING_CHIEF,
+        creator=u['detective']
+    )
+    s6 = Suspect.objects.create(
+        case=c6, first_name="اکبر", last_name="کارتل", 
+        status=Suspect.Status.ARRESTED, is_arrested=True, is_main_suspect=True
+    )
+    inter6 = Interrogation.objects.create(
+        suspect=s6, interrogator=u['detective'], supervisor=u['sergeant'],
+        transcript="من فقط یک راننده هستم و از محموله خبر نداشتم.",
+        interrogator_score=9, supervisor_score=9, 
+        is_interrogator_confirmed=True, is_supervisor_confirmed=True
+    )
+    InterrogationFeedback.objects.create(
+        interrogation=inter6, captain=u['captain'], decision='GUILTY', 
+        is_confirmed=True, notes="مدارک علیه ایشان قطعی است."
     )
 
-    WitnessTestimony.objects.get_or_create(
-        case=case1,
-        defaults={
-            'title': "شهادت نگهبان بانک",
-            'description': "نگهبان که در اتاق مانیتورینگ بود.",
-            'transcript': "سارقان سه نفر بودند و با دستکش وارد شدند.",
-            'recorder': detective
-        }
+    # --- SO: Solved (Judge issued trial result) ---
+    c7 = Case.objects.create(
+        title="زورگیری در بزرگراه",
+        description="سرقت گوشی تلفن همراه با تهدید چاقو.",
+        crime_level=Case.CrimeLevel.LEVEL_3,
+        status=Case.Status.SOLVED,
+        creator=u['detective']
+    )
+    s7 = Suspect.objects.create(
+        case=c7, first_name="محسن", last_name="تیزی", 
+        status=Suspect.Status.ARRESTED, is_arrested=True
+    )
+    Verdict.objects.create(
+        case=c7, suspect=s7, judge=u['judge_user'], title="حکم حبس تعزیری",
+        result='GUILTY', punishment="۲ سال حبس و رد مال", description="اعتراف صریح متهم"
     )
 
-    # 5. Add Suspects
-    s1, _ = Suspect.objects.get_or_create(
-        case=case1,
-        national_code="1234567890",
-        defaults={
-            'first_name': "آرمان",
-            'last_name': "کلاهبردار",
-            'details': "سابقه دار در سرقت مسلحانه",
-            'is_main_suspect': True,
-            'is_on_board': True
-        }
-    )
-    
-    s2, _ = Suspect.objects.get_or_create(
-        case=case3,
-        national_code="0987654321",
-        defaults={
-            'first_name': "کامران",
-            'last_name': "شرور",
-            'details': "متهم ردیف اول نزاع خیابانی",
-            'is_main_suspect': True
-        }
-    )
+    # Make sure all cases have a board
+    for case in Case.objects.all():
+        Board.objects.get_or_create(case=case)
 
-    # 6. Add Interrogation
-    Interrogation.objects.get_or_create(
-        suspect=s1,
-        defaults={
-            'interrogator': detective,
-            'transcript': "من آن شب در خانه بودم و داشتم فوتبال می‌دیدم.",
-            'score': 4
-        }
-    )
-    
-    # 7. Add Verdict for Case 3
-    from investigation.models import Verdict
-    Verdict.objects.get_or_create(
-        case=case3,
-        suspect=s2,
-        defaults={
-            'judge': user_objs['judge_user'],
-            'description': "مجرم شناخته شد بر اساس شواهد موجود.",
-            'result': 'GUILTY'
-        }
-    )
-
-    # Ensure Boards exist
-    Board.objects.get_or_create(case=case1)
-    Board.objects.get_or_create(case=case2)
-    Board.objects.get_or_create(case=case3)
-
-    print("Seeding completed successfully!")
+    print("\n-------------------------------------------")
+    print("Database seeding completed successfully!")
+    print(f"Total Users: {User.objects.count()}")
+    print(f"Total Cases: {Case.objects.count()}")
+    print(f"Total Suspects: {Suspect.objects.count()}")
+    print("-------------------------------------------")
 
 if __name__ == "__main__":
     seed_data()
