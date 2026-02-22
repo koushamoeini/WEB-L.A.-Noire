@@ -8,21 +8,33 @@ import './Cases.css';
 import { useAuth } from '../../../context/AuthContext';
 
 const Cases = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  console.log('📋 Cases component mounted, user:', user?.username);
+  console.log('📋 Cases component mounted, user:', user?.username, 'authLoading:', authLoading);
 
   useEffect(() => {
+    if (authLoading) {
+      console.log('📋 Waiting for auth to finish loading...');
+      return;
+    }
+    
+    if (!user) {
+      console.log('📋 No user, should redirect to login');
+      setLoading(false);
+      return;
+    }
+
     const fetchCases = async () => {
       try {
         console.log('📋 Fetching cases...');
         const data = await caseAPI.listCases();
         console.log('📋 Cases fetched successfully:', data.length, 'cases');
         setCases(data);
+        setError('');
       } catch (err: any) {
         console.error('📋 Error fetching cases:', err);
         const errorMsg = err.response?.data?.detail || err.message || 'خطا در بارگذاری پرونده‌ها';
@@ -33,14 +45,25 @@ const Cases = () => {
     };
 
     fetchCases();
-  }, []);
+  }, [authLoading, user]);
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="layout-with-sidebar">
         <Sidebar />
         <div className="main-content">
           <div className="cases-container">
+            <div style={{
+              padding: '40px',
+              textAlign: 'center',
+              fontSize: '24px',
+              color: 'white',
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              borderRadius: '12px',
+              marginTop: '40px'
+            }}>
+              در حال بارگذاری پرونده‌ها...
+            </div>
             <SkeletonCard count={5} />
           </div>
         </div>

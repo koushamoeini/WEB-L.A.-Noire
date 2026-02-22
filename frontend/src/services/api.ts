@@ -16,17 +16,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 errors by clearing tokens and redirecting to login
+// Handle 401 errors by clearing tokens
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - clear storage and reload to login
+      // Token expired or invalid - clear storage
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-        window.location.href = '/login';
-      }
+      // Let ProtectedRoute handle the redirect naturally
     }
     return Promise.reject(error);
   }
