@@ -120,6 +120,10 @@
 
 .status-dot.AC { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
 .status-dot.PT { background: #facc15; box-shadow: 0 0 10px #facc15; }
+.status-dot.PO { background: #fb923c; box-shadow: 0 0 10px #fb923c; }
+.status-dot.IP { background: #f472b6; box-shadow: 0 0 10px #f472b6; }
+.status-dot.PS { background: #bd93f9; box-shadow: 0 0 10px #bd93f9; }
+.status-dot.PC { background: #67e8f9; box-shadow: 0 0 10px #67e8f9; }
 .status-dot.RE { background: #f87171; box-shadow: 0 0 10px #f87171; }
 .status-dot.SO { background: #60a5fa; box-shadow: 0 0 10px #60a5fa; }
 
