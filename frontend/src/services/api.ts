@@ -37,8 +37,8 @@ export const authAPI = {
     return response.data;
   },
 
-  getUserStats: async (): Promise<{ total_users: number }> => {
-    const response = await api.get<{ total_users: number }>('/users/stats/');
+  getSystemStats: async (): Promise<{ total_cases: number; solved_cases: number; active_cases: number; total_users: number }> => {
+    const response = await api.get('/system-stats/');
     return response.data;
   },
 

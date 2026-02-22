@@ -147,4 +147,31 @@ export const investigationAPI = {
     });
     return response.data;
   },
+
+  // Bail and Fine Payments
+  getVerdict: async (id: number): Promise<Verdict> => {
+    const response = await api.get(`/investigation/verdicts/${id}/`);
+    return response.data;
+  },
+
+  setBailFine: async (verdictId: number, bailAmount: number, fineAmount: number): Promise<any> => {
+    const response = await api.post(`/investigation/verdicts/${verdictId}/set_bail_fine/`, {
+      bail_amount: bailAmount,
+      fine_amount: fineAmount
+    });
+    return response.data;
+  },
+
+  requestBailPayment: (verdictId: number): string => {
+    return `${api.defaults.baseURL}/investigation/verdicts/${verdictId}/request_bail_payment/`;
+  },
+
+  requestFinePayment: (verdictId: number): string => {
+    return `${api.defaults.baseURL}/investigation/verdicts/${verdictId}/request_fine_payment/`;
+  },
+
+  getPendingPayments: async (): Promise<Verdict[]> => {
+    const response = await api.get('/investigation/verdicts/pending_payments/');
+    return response.data;
+  },
 };
