@@ -450,7 +450,7 @@ export default function CaseDetail() {
                   <div key={s.id} className="mini-list-item" style={{ justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span>👤 {s.first_name} {s.last_name}</span>
-                      {s.status === 'UNDER_ARREST' && <span style={{ background: '#f59e0b', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>در تعقیب</span>}
+                      {!isArrested(s) && s.status === 'UNDER_ARREST' && <span style={{ background: '#f59e0b', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>در تعقیب</span>}
                       {isArrested(s) && <span style={{ background: '#10b981', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>دستگیر شده</span>}
                     </div>
                     <small>{s.is_main_suspect ? 'متهم اصلی' : 'مظنون'}</small>

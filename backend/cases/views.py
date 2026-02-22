@@ -291,7 +291,10 @@ class CaseViewSet(viewsets.ModelViewSet):
             case.save()
             # Put all main suspects into the pursuit list
             from investigation.models import Suspect
-            updated = case.suspects.filter(is_main_suspect=True).update(status=Suspect.Status.UNDER_ARREST)
+            updated = case.suspects.filter(is_main_suspect=True).update(
+                status=Suspect.Status.UNDER_ARREST,
+                is_arrested=False
+            )
             return Response({
                 'status': 'in_pursuit',
                 'new_status': case.status,
