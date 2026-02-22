@@ -314,7 +314,10 @@ export default function InvestigationBoard() {
                   className="lux-card case-select-card"
                   onClick={() => navigate(`/investigation?case=${c.id}`)}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span className={`status-badge status-${c.status}`} style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+                      {c.status_label}
+                    </span>
                     <span className="red-badge">#{c.id}</span>
                   </div>
                   <h3 className="gold-text case-select-title">{c.title}</h3>
