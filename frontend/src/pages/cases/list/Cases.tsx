@@ -74,7 +74,10 @@ const Cases = () => {
 
   const userRoles = user?.roles?.map(r => r.code) || [];
   const isPolice = userRoles.some(r => ['police_officer', 'sergeant', 'detective', 'captain', 'police_chief'].includes(r));
-  const isCitizen = userRoles.length === 0;
+  const canCreateComplaint =
+    user?.is_superuser ||
+    userRoles.length === 0 ||
+    userRoles.some(r => ['complainant', 'base_user'].includes(r));
 
   console.log('📋 Rendering Cases page - loading:', loading, 'error:', error, 'cases:', cases.length);
 
@@ -115,7 +118,7 @@ const Cases = () => {
 
           <div className="cases-actions-bar">
             <div className="actions-left">
-              {(isCitizen || user?.is_superuser) && (
+              {canCreateComplaint && (
                 <button 
                   onClick={() => navigate('/cases/create-complaint')}
                   className="btn-gold-solid"
