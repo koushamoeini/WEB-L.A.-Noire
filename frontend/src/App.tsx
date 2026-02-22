@@ -19,6 +19,9 @@ import Evidence from './pages/evidence/list/Evidence';
 import CreateEvidence from './pages/evidence/create/CreateEvidence';
 import WitnessTestimonyForm from './pages/evidence/forms/WitnessTestimonyForm';
 import IdentificationDocumentForm from './pages/evidence/forms/IdentificationDocumentForm';
+import BiologicalEvidenceForm from './pages/evidence/forms/BiologicalEvidenceForm';
+import VehicleEvidenceForm from './pages/evidence/forms/VehicleEvidenceForm';
+import OtherEvidenceForm from './pages/evidence/forms/OtherEvidenceForm';
 // Investigation
 import InvestigationBoard from './pages/investigation/board/InvestigationBoard';
 import Suspects from './pages/investigation/suspects/Suspects';
@@ -124,6 +127,54 @@ function App() {
             element={
               <ProtectedRoute>
                 <WitnessTestimonyForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/create/biological"
+            element={
+              <ProtectedRoute>
+                <BiologicalEvidenceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/edit/biological/:id"
+            element={
+              <ProtectedRoute>
+                <BiologicalEvidenceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/create/vehicle"
+            element={
+              <ProtectedRoute>
+                <VehicleEvidenceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/edit/vehicle/:id"
+            element={
+              <ProtectedRoute>
+                <VehicleEvidenceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/create/other"
+            element={
+              <ProtectedRoute>
+                <OtherEvidenceForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/evidence/edit/other/:id"
+            element={
+              <ProtectedRoute>
+                <OtherEvidenceForm />
               </ProtectedRoute>
             }
           />
