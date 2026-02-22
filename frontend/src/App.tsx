@@ -22,6 +22,7 @@ import Stats from './pages/Stats';
 import Suspects from './pages/Suspects';
 import Interrogations from './pages/Interrogations';
 import Notifications from './pages/Notifications';
+import Trial from './pages/Trial';
 import './App.css';
 
 function App() {
@@ -213,6 +214,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Interrogations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cases/:id/trial/:suspectId"
+            element={
+              <ProtectedRoute>
+                <Trial />
               </ProtectedRoute>
             }
           />
