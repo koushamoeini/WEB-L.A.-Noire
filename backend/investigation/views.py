@@ -340,6 +340,20 @@ class SuspectViewSet(viewsets.ModelViewSet):
                 'detail': 'Internal Server Error during suspect creation'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def perform_create(self, serializer):
+        data = serializer.validated_data
+        if data.get('is_arrested') is True or data.get('status') == Suspect.Status.ARRESTED:
+            data['is_arrested'] = True
+            data['status'] = Suspect.Status.ARRESTED
+        serializer.save()
+
+    def perform_update(self, serializer):
+        data = serializer.validated_data
+        if data.get('is_arrested') is True or data.get('status') == Suspect.Status.ARRESTED:
+            data['is_arrested'] = True
+            data['status'] = Suspect.Status.ARRESTED
+        serializer.save()
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsSergeant | IsPoliceChief])
     def mark_as_arrested(self, request, pk=None):
         suspect = self.get_object()
@@ -379,7 +393,7 @@ class InterrogationViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         suspect = serializer.validated_data.get('suspect')
-        if suspect and suspect.status != Suspect.Status.ARRESTED:
+        if suspect and not (suspect.status == Suspect.Status.ARRESTED or suspect.is_arrested):
             raise PermissionDenied("تا زمانی که متهم رسماً دستگیر نشده است، امکان ثبت بازجویی وجود ندارد.")
 
         user = self.request.user
