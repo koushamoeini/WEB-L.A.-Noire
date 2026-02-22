@@ -35,6 +35,77 @@
   font-size: 3rem;
 }
 
+/* Toast Notification Styles */
+.case-select-item:hover {
+  background: rgba(189, 147, 249, 0.05) !important;
+  border-color: rgba(189, 147, 249, 0.3) !important;
+}
+
+.case-select-item.active {
+  background: rgba(189, 147, 249, 0.15) !important;
+  border-color: #bd93f9 !important;
+  box-shadow: 0 0 15px rgba(189, 147, 249, 0.1);
+}
+
+.professional-report header h2 {
+  text-shadow: 0 0 10px rgba(189, 147, 249, 0.3);
+}
+
+.professional-report section {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.professional-report section:hover {
+  transform: translateY(-3px);
+  background: rgba(189, 147, 249, 0.03) !important;
+}
+
+.lux-toast {
+  position: fixed;
+  top: 30px;
+  right: 30px;
+  padding: 16px 24px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10000;
+  animation: slideInToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 300px;
+}
+
+.lux-toast.success {
+  background: rgba(74, 222, 128, 0.9);
+  color: #064e3b;
+  border-color: #4ade80;
+}
+
+.lux-toast.error {
+  background: rgba(248, 113, 113, 0.9);
+  color: #7f1d1d;
+  border-color: #f87171;
+}
+
+.toast-icon {
+  font-size: 1.2rem;
+}
+
+@keyframes slideInToast {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .ranking-board {
   width: 100%;
   min-height: 600px;
@@ -193,4 +264,41 @@
 .export-btn:hover {
   background: var(--accent-bright);
   box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+}
+
+.lux-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.lux-modal-content {
+  background: #111;
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+  padding: 30px;
+  width: 90%;
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.15);
+}
+
+.lux-textarea {
+  background: #0a0a0a;
+  border: 1px solid var(--border-dim);
+  color: #fff;
+  border-radius: 8px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.lux-textarea:focus {
+  border-color: var(--primary);
+  outline: none;
 }
