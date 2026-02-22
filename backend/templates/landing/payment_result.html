@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نتیجه پرداخت</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Vazir', 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        .header.failed {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .result-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+        .info-value {
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+        }
+        .amount {
+            font-size: 18px !important;
+            color: #667eea;
+        }
+        .gateway-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #666;
+            font-size: 12px;
+        }
+        .message-box {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .message-box.success {
+            background: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .message-box.failed {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header {% if success %}success{% else %}failed{% endif %}">
+            <div class="icon">{% if success %}✓{% else %}✗{% endif %}</div>
+            <h1>{% if success %}پرداخت موفق{% else %}پرداخت ناموفق{% endif %}</h1>
+            <p>نتیجه پرداخت {{ payment_type }}</p>
+        </div>
+        
+        <div class="content">
+            <div class="message-box {% if success %}success{% else %}failed{% endif %}">
+                {{ message }}
+            </div>
+
+            <div class="result-info">
+                <div class="info-row">
+                    <span class="info-label">وضعیت:</span>
+                    <span class="info-value">
+                        {% if success %}
+                            <span style="color: #10b981;">✓ پرداخت موفق</span>
+                        {% else %}
+                            <span style="color: #ef4444;">✗ پرداخت ناموفق</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">نوع پرداخت:</span>
+                    <span class="info-value">{{ payment_type }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">کد رهگیری:</span>
+                    <span class="info-value">{{ tracking_code }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">مبلغ:</span>
+                    <span class="info-value amount">{{ amount|floatformat:0 }} تومان</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">درگاه پرداخت:</span>
+                    <span class="info-value">
+                        <span class="gateway-badge">{{ gateway }}</span>
+                    </span>
+                </div>
+            </div>
+
+            <button class="btn" onclick="window.close()">
+                بستن پنجره
+            </button>
+        </div>
+
+        <div class="footer">
+            این صفحه نتیجه پرداخت آزمایشی است.<br>
+            در محیط تولید، اطلاعات کامل‌تری نمایش داده می‌شود.
+        </div>
+    </div>
+
+    <script>
+        // Auto close after 10 seconds if successful
+        var isSuccess = {{ success|yesno:"true,false" }};
+        if (isSuccess) {
+            setTimeout(function() {
+                window.close();
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

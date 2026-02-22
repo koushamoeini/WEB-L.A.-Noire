@@ -9,7 +9,7 @@ django.setup()
 from django.contrib.auth import get_user_model
 from accounts.models import Role, UserProfile
 from cases.models import Case, CaseComplainant, CrimeScene, SceneWitness
-from evidence.models import Evidence, BiologicalEvidence, WitnessTestimony, DigitalEvidence, PhysicalEvidence
+from evidence.models import Evidence, BiologicalEvidence, WitnessTestimony
 from investigation.models import (
     Suspect, Interrogation, InterrogationFeedback, 
     Board, BoardConnection, Verdict, Warrant, RewardReport
@@ -119,7 +119,8 @@ def seed_data():
     )
     BiologicalEvidence.objects.create(
         case=c3, title="نمونه خون", description="نمونه خون یافت شده روی فرش", 
-        recorder=u['doctor'], DNA_sequence="ATCG..."
+        recorder=u['doctor'], database_follow_up="تطابق با نمونه ثبت شده",
+        is_verified=True
     )
     WitnessTestimony.objects.create(
         case=c3, title="شهادت پذیرش هتل", description="مشاهده خروج فردی با هودی مشکی", 
@@ -191,7 +192,7 @@ def seed_data():
         is_confirmed=True, notes="مدارک علیه ایشان قطعی است."
     )
 
-    # --- SO: Solved (Judge issued trial result) ---
+    # --- SO: Solved (Judge issued trial result with bail/fine) ---
     c7 = Case.objects.create(
         title="زورگیری در بزرگراه",
         description="سرقت گوشی تلفن همراه با تهدید چاقو.",
@@ -200,12 +201,37 @@ def seed_data():
         creator=u['detective']
     )
     s7 = Suspect.objects.create(
-        case=c7, first_name="محسن", last_name="تیزی", 
+        case=c7, first_name="محسن", last_name="تیزی", national_code="1234567890",
         status=Suspect.Status.ARRESTED, is_arrested=True
     )
-    Verdict.objects.create(
+    v7 = Verdict.objects.create(
         case=c7, suspect=s7, judge=u['judge_user'], title="حکم حبس تعزیری",
-        result='GUILTY', punishment="۲ سال حبس و رد مال", description="اعتراف صریح متهم"
+        result='GUILTY', punishment="۲ سال حبس و رد مال", description="اعتراف صریح متهم",
+        bail_amount=50000000, fine_amount=10000000,
+        bail_tracking_code="B123456789", fine_tracking_code="F987654321"
+    )
+    
+    # --- Another case ready for judge to issue verdict ---
+    c8 = Case.objects.create(
+        title="کلاهبرداری اینترنتی",
+        description="فروش کالای تقلبی در شبکه‌های اجتماعی.",
+        crime_level=Case.CrimeLevel.LEVEL_2,
+        status=Case.Status.PENDING_CHIEF,
+        creator=u['detective']
+    )
+    s8 = Suspect.objects.create(
+        case=c8, first_name="علی", last_name="فریبکار", national_code="9876543210",
+        status=Suspect.Status.ARRESTED, is_arrested=True, is_main_suspect=True
+    )
+    inter8 = Interrogation.objects.create(
+        suspect=s8, interrogator=u['detective'], supervisor=u['sergeant'],
+        transcript="من فقط واسطه بودم و از جعلی بودن کالا خبر نداشتم.",
+        interrogator_score=7, supervisor_score=8,
+        is_interrogator_confirmed=True, is_supervisor_confirmed=True
+    )
+    InterrogationFeedback.objects.create(
+        interrogation=inter8, captain=u['captain'], decision='GUILTY',
+        is_confirmed=True, notes="مدارک کافی برای محکومیت وجود دارد."
     )
 
     # Make sure all cases have a board
