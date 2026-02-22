@@ -15,7 +15,9 @@ export const investigationAPI = {
   listSuspects: async (caseId?: number): Promise<Suspect[]> => {
     const url = caseId ? `/investigation/suspects/?case=${caseId}` : '/investigation/suspects/';
     const response = await api.get(url);
-    return response.data;
+    // Handle both paginated and non-paginated responses
+    if (Array.isArray(response.data)) return response.data;
+    return response.data?.results || [];
   },
 
   createSuspect: async (data: CreateSuspectRequest): Promise<Suspect> => {

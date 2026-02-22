@@ -17,6 +17,7 @@ export default function Suspects() {
   const [suspects, setSuspects] = useState<Suspect[]>([]);
   const [cases, setCases] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({
@@ -30,6 +31,8 @@ export default function Suspects() {
     image: null as File | null,
   });
 
+  console.log('🔍 Suspects component mounted, caseId:', caseId);
+
   useEffect(() => {
     fetchData();
   }, [caseId]);
@@ -37,14 +40,20 @@ export default function Suspects() {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setError('');
+      console.log('🔍 Fetching suspects and cases...');
       const [suspectsData, casesData] = await Promise.all([
         investigationAPI.listSuspects(caseId ? parseInt(caseId) : undefined),
         caseAPI.listCases(),
       ]);
-      setSuspects(suspectsData);
-      setCases(casesData);
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
+      console.log('🔍 Data fetched - suspects:', suspectsData?.length || 0, 'cases:', casesData?.length || 0);
+      // Ensure arrays
+      setSuspects(Array.isArray(suspectsData) ? suspectsData : []);
+      setCases(Array.isArray(casesData) ? casesData : []);
+    } catch (error: any) {
+      console.error('🔍 Failed to fetch data:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'خطا در بارگذاری اطلاعات';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -130,6 +139,20 @@ export default function Suspects() {
               {showForm ? 'لغو' : 'افزودن متهم جدید'}
             </button>
           </div>
+
+          {error && (
+            <div className="error-message" style={{ 
+              background: '#fee2e2', 
+              border: '1px solid #ef4444', 
+              color: '#991b1b', 
+              padding: '12px 20px', 
+              borderRadius: '8px', 
+              marginBottom: '20px',
+              textAlign: 'center'
+            }}>
+              {error}
+            </div>
+          )}
 
           {showForm && (
             <div className="evidence-form-container" style={{ padding: 0, marginBottom: '40px', maxWidth: '800px', margin: '0 auto 40px' }}>
