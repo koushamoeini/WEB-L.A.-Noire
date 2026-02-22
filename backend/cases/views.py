@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from django.db.models import Q, Count
 from .models import Case, CrimeScene, SceneWitness
 from .serializers import CaseSerializer, WitnessSerializer
+from drf_spectacular.utils import extend_schema
 
 
 from .permissions import IsTrainee, IsOfficerOrHigher, IsSergeant, IsChief, IsDetective
