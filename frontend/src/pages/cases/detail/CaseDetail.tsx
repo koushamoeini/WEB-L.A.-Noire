@@ -297,6 +297,8 @@ export default function CaseDetail() {
 
   const isOfficerOrHigher = userRoles.some(r => ['police_officer', 'sergeant', 'detective', 'captain', 'police_chief'].includes(r));
   const isSergeantOrHigher = userRoles.some(r => ['sergeant', 'captain', 'police_chief'].includes(r));
+  const isSergeant = userRoles.includes('sergeant');
+  const isCaptain = userRoles.includes('captain');
   const isChief = userRoles.includes('police_chief');
 
   const canInvestigate = isOfficerOrHigher && ['AC', 'IP', 'PS'].includes(caseData.status);
@@ -306,6 +308,7 @@ export default function CaseDetail() {
   const canSergeantReview = isSergeantOrHigher && caseData.status === 'PS';
   const canArrestSuspects = (isSergeantOrHigher || userRoles.includes('detective')) && caseData.status === 'IP';
   const canChiefReview = isChief && caseData.status === 'PC';
+  const firstArrestedSuspect = suspects.find(s => isArrested(s));
 
   const isJudge = userRoles.includes('judge') || userRoles.includes('qazi');
   const canJudgeVerdict = isJudge && (caseData.status === 'SO' || caseData.status === 'IP' || caseData.status === 'PC');
@@ -538,6 +541,28 @@ export default function CaseDetail() {
                   <p style={{ color: 'var(--text-dim)' }}>مظنونی در لیست تعقیب یافت نشد.</p>
                 )}
               </div>
+            </div>
+          )}
+
+          {caseData.status === 'IP' && (isSergeant || isCaptain || isChief) && (
+            <div className="review-section">
+              <h3 className="gold-text">مسیر ارسال پرونده</h3>
+              <p style={{ color: 'var(--text-dim)', marginBottom: '12px' }}>
+                {isSergeant && 'گروهبان: بعد از دستگیری، وارد جلسات بازجویی شوید و امتیاز/تایید گروهبان را ثبت کنید.'}
+                {isCaptain && 'کاپیتان: وارد جلسات بازجویی شوید و «نظر نهایی کاپیتان» را ثبت کنید تا پرونده برای رئیس پلیس ارسال شود.'}
+                {isChief && 'رئیس پلیس: پس از ثبت نظر کاپیتان، پرونده به وضعیت «در انتظار تایید نهایی رئیس پلیس» منتقل می‌شود.'}
+              </p>
+              {firstArrestedSuspect ? (
+                <button
+                  className="btn-gold-solid"
+                  onClick={() => navigate(`/cases/${caseData.id}/interrogations?suspectId=${firstArrestedSuspect.id}`)}
+                  style={{ padding: '12px 18px' }}
+                >
+                  {isCaptain ? 'ثبت نظر کاپیتان و ارسال به رئیس پلیس' : 'ورود به جلسات بازجویی'}
+                </button>
+              ) : (
+                <p style={{ color: '#f59e0b' }}>ابتدا باید حداقل یک متهم دستگیر شود.</p>
+              )}
             </div>
           )}
 
