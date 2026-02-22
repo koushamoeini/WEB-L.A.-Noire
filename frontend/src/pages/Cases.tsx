@@ -95,11 +95,11 @@ const Cases = () => {
                   onClick={() => navigate(`/cases/${caseItem.id}`)}
                 >
                   <div className="card-top">
+                    <span className="case-id">#{caseItem.id}</span>
                     <div className="status-indicator">
                       <span className={`status-dot ${caseItem.status}`}></span>
-                      <span className="status-label">{CASE_STATUS[caseItem.status as keyof typeof CASE_STATUS]}</span>
+                      <span className="status-label">{caseItem.status_label}</span>
                     </div>
-                    <span className="case-id">#{caseItem.id}</span>
                   </div>
 
                   <h3 className="gold-text case-title">{caseItem.title}</h3>

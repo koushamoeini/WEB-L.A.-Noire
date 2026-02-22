@@ -34,6 +34,21 @@ export default function CaseDetail() {
   // Helper to check if a suspect is arrested
   const isArrested = (s: Suspect) => s.status === 'ARRESTED' || s.is_arrested === true;
 
+  const isGuiltyByPolice = (s: Suspect) => {
+    if (!s.interrogations || s.interrogations.length === 0) return false;
+    const latestInterrogation = s.interrogations[s.interrogations.length - 1];
+    const feedback = latestInterrogation.feedback;
+    if (!feedback) return false;
+    
+    // Level 0 (Critical) needs Chief confirmation
+    if (caseData?.crime_level === 0) {
+      return feedback.is_chief_confirmed === true && feedback.decision === 'GUILTY';
+    }
+    
+    // Others need Captain confirmation
+    return feedback.is_confirmed === true && feedback.decision === 'GUILTY';
+  };
+
   // Verdict Form State
   const [verdictForm, setVerdictForm] = useState({
     suspect: '',
@@ -290,7 +305,8 @@ export default function CaseDetail() {
   const canArrestSuspects = (isSergeantOrHigher || userRoles.includes('detective')) && caseData.status === 'IP';
   const canChiefReview = isChief && caseData.status === 'PC';
 
-  const canJudgeVerdict = (userRoles.includes('judge') || userRoles.includes('qazi')) && caseData.status === 'SO';
+  const isJudge = userRoles.includes('judge') || userRoles.includes('qazi');
+  const canJudgeVerdict = isJudge && (caseData.status === 'SO' || caseData.status === 'IP' || caseData.status === 'PC');
   const canResubmit = caseData.creator === user?.id && caseData.status === 'RE';
 
   return (
@@ -634,85 +650,40 @@ export default function CaseDetail() {
                       {v.result === 'GUILTY' ? 'گناهکار' : 'بی‌گناه'}
                     </span>
                   </div>
-                  <p><strong>متهم:</strong> {suspects.find(s => s.id === v.suspect)?.name || 'نامعلوم'}</p>
+                  <p><strong>متهم:</strong> {suspects.find(s => s.id === v.suspect)?.first_name} {suspects.find(s => s.id === v.suspect)?.last_name}</p>
                   <p><strong>قاضی:</strong> {v.judge_username}</p>
                   <p><strong>توضیحات:</strong> {v.description}</p>
                   {v.punishment && <p><strong>مجازات:</strong> {v.punishment}</p>}
                 </div>
               ))}
 
-              {canJudgeVerdict && suspects.some(s => !verdicts.some(v => v.suspect === s.id)) ? (
-                <form onSubmit={handleCreateVerdict} className="verdict-form">
-                  <div className="form-group">
-                    <label>متهم</label>
-                    <select 
-                      value={verdictForm.suspect}
-                      onChange={(e) => setVerdictForm({ ...verdictForm, suspect: e.target.value })}
-                      required
-                    >
-                      <option value="">انتخاب متهم (فقط بدون حکم)...</option>
-                      {suspects
-                        .filter(s => !verdicts.some(v => v.suspect === s.id))
+              {canJudgeVerdict && (
+                <div className="mini-list">
+                  <h4 className="gold-text" style={{ fontSize: '0.9rem', marginBottom: '10px' }}>لیست متهمین واجد شرایط محاکمه:</h4>
+                  {suspects
+                    .filter(s => isGuiltyByPolice(s) && !verdicts.some(v => v.suspect === s.id))
+                    .length > 0 ? (
+                      suspects
+                        .filter(s => isGuiltyByPolice(s) && !verdicts.some(v => v.suspect === s.id))
                         .map(s => (
-                          <option key={s.id} value={s.id}>{s.first_name} {s.last_name} {s.is_main_suspect ? '(متهم اصلی)' : ''}</option>
+                          <div key={s.id} className="mini-list-item" style={{ justifyContent: 'space-between', background: 'rgba(212,175,55,0.05)', border: '1px solid rgba(212,175,55,0.1)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span>⚖️ {s.first_name} {s.last_name}</span>
+                              <span style={{ background: '#92400e', color: '#fde68a', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px' }}>آماده محاکمه</span>
+                            </div>
+                            <button 
+                              className="btn-gold-solid" 
+                              style={{ padding: '4px 12px', fontSize: '0.8rem' }}
+                              onClick={() => navigate(`/cases/${caseData.id}/trial/${s.id}`)}
+                            >
+                              محاکمه
+                            </button>
+                          </div>
                         ))
-                      }
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>عنوان حکم</label>
-                    <input 
-                      type="text"
-                      value={verdictForm.title}
-                      onChange={(e) => setVerdictForm({ ...verdictForm, title: e.target.value })}
-                      placeholder="مثلاً: حکم نهایی سرقت مسلحانه"
-                      required
-                    />
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '20px', marginBottom: '15px' }}>
-                    <div style={{ flex: 1 }}>
-                      <label>رای نهایی</label>
-                      <select 
-                        value={verdictForm.result}
-                        onChange={(e) => setVerdictForm({ ...verdictForm, result: e.target.value as any })}
-                      >
-                        <option value="GUILTY">گناهکار</option>
-                        <option value="INNOCENT">بی‌گناه</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>توضیحات قاضی</label>
-                    <textarea 
-                      value={verdictForm.description}
-                      onChange={(e) => setVerdictForm({ ...verdictForm, description: e.target.value })}
-                      rows={3}
-                      required
-                    />
-                  </div>
-
-                  {verdictForm.result === 'GUILTY' && (
-                    <div className="form-group">
-                      <label>مجازات (در صورت گناهکار بودن)</label>
-                      <textarea 
-                        value={verdictForm.punishment}
-                        onChange={(e) => setVerdictForm({ ...verdictForm, punishment: e.target.value })}
-                        rows={2}
-                        placeholder="میزان حبس، جریمه و ..."
-                      />
-                    </div>
-                  )}
-
-                  <button type="submit" className="btn-gold-solid" style={{ width: '100%', padding: '16px' }} disabled={processing}>
-                    {processing ? 'در حال ثبت...' : 'ثبت حکم نهایی'}
-                  </button>
-                </form>
-              ) : canJudgeVerdict && (
-                <div className="info-card" style={{ marginTop: '20px', textAlign: 'center', borderColor: 'var(--primary)' }}>
-                  <p className="gold-text">تمامی متهمین این پرونده دارای حکم نهایی هستند.</p>
+                    ) : (
+                      <p className="no-data">متهمی با تشخیص گناهکار توسط پلیس یافت نشد یا همگی محاکمه شده‌اند.</p>
+                    )
+                  }
                 </div>
               )}
             </div>
