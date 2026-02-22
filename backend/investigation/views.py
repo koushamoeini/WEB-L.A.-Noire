@@ -426,7 +426,18 @@ class InterrogationViewSet(viewsets.ModelViewSet):
             serializer = InterrogationFeedbackSerializer(data=request.data)
             
         serializer.is_valid(raise_exception=True)
-        serializer.save(interrogation=interrogation, captain=request.user)
+        feedback_obj = serializer.save(interrogation=interrogation, captain=request.user)
+
+        case = interrogation.suspect.case
+        if feedback_obj.is_confirmed and feedback_obj.decision == InterrogationFeedback.Decision.GUILTY:
+            # Captain confirms guilt -> send case to chief final review.
+            case.status = Case.Status.PENDING_CHIEF
+            case.save(update_fields=['status'])
+        elif feedback_obj.is_confirmed and feedback_obj.decision == InterrogationFeedback.Decision.INNOCENT:
+            # Captain marks innocent -> return to active investigation.
+            case.status = Case.Status.ACTIVE
+            case.save(update_fields=['status'])
+
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, IsPoliceChief])
@@ -440,6 +451,14 @@ class InterrogationViewSet(viewsets.ModelViewSet):
         feedback.chief_notes = request.data.get('notes', '')
         feedback.chief = request.user
         feedback.save()
+
+        case = interrogation.suspect.case
+        if feedback.is_chief_confirmed:
+            case.status = Case.Status.SOLVED
+        else:
+            case.status = Case.Status.ACTIVE
+        case.save(update_fields=['status'])
+
         return Response({'status': 'confirmed by chief'})
 
 class BoardConnectionViewSet(viewsets.ModelViewSet):
