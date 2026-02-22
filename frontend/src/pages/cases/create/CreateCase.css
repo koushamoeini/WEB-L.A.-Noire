@@ -1,0 +1,289 @@
+.create-case-container {
+  padding: 40px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  direction: rtl;
+}
+
+.luxury-form-container {
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.page-header-lux {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.subtitle-lux {
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.create-case-card {
+  width: 100%;
+  max-width: 860px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: 24px;
+  padding: 44px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.create-case-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+}
+
+.create-case-title {
+  margin: 0;
+  color: var(--primary);
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  text-align: center;
+}
+
+.create-case-subtitle {
+  margin: 10px 0 30px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.error-message {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.create-case-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.create-case-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.create-case-form .form-group label {
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.create-case-form .form-group input,
+.create-case-form .form-group textarea,
+.create-case-form .form-group select {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.create-case-form .form-group input:focus,
+.create-case-form .form-group textarea:focus,
+.create-case-form .form-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+}
+
+.create-case-form .form-group textarea {
+  line-height: 1.7;
+  resize: vertical;
+}
+
+.create-case-form .form-group select option {
+  background: #191919;
+  color: #f1f1f1;
+}
+
+.persian-date-selectors {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.date-selector-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-selector-group label {
+  font-size: 0.86rem;
+  color: var(--primary-light);
+}
+
+.selected-date-display {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(212, 175, 55, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  color: var(--primary-light);
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.time-input-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.time-input-group label {
+  font-size: 0.86rem;
+  color: var(--primary-light);
+}
+
+.time-input-group input {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.time-separator {
+  font-size: 1.8rem;
+  color: var(--primary);
+  margin-top: 26px;
+  font-weight: 700;
+}
+
+.witnesses-section {
+  margin-top: 8px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.witnesses-section h3 {
+  margin: 0 0 16px;
+  color: var(--primary);
+}
+
+.witness-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.witness-form .form-group {
+  margin: 0;
+}
+
+.witnesses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.witness-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.btn-remove {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-remove:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.form-actions-lux {
+  margin-top: 18px;
+}
+
+.form-actions button {
+  flex: 1;
+  min-height: 48px;
+}
+
+@media (max-width: 992px) {
+  .create-case-container {
+    padding: 36px;
+  }
+
+  .create-case-card {
+    padding: 30px;
+  }
+
+  .create-case-title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .create-case-container {
+    padding: 20px;
+  }
+
+  .witness-form,
+  .persian-date-selectors,
+  .time-inputs,
+  .form-actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .time-separator {
+    display: none;
+  }
+
+  .btn-submit,
+  .btn-cancel,
+  .btn-add-witness {
+    width: 100%;
+  }
+}
