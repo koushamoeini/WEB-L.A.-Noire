@@ -16,12 +16,27 @@ export default function Sidebar() {
 
   const closeSidebar = () => setIsOpen(false);
 
+  // Debug logging for admin access
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Sidebar - User data:', {
+      username: user?.username,
+      is_superuser: user?.is_superuser,
+      roles: user?.roles?.map(r => r.code)
+    });
+  }
+
   const isDetective = user?.roles?.some(role => role.code === 'detective');
   const canSeeStats =
     user?.is_superuser ||
     user?.roles?.some((role) =>
       ['judge', 'qazi', 'captain', 'police_chief'].includes(role.code)
     );
+
+  const isAdmin = user?.is_superuser || user?.roles?.some(role => role.code === 'police_chief');
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Sidebar - isAdmin:', isAdmin);
+  }
 
   const canSeeEvidence =
     user?.is_superuser ||
@@ -72,6 +87,12 @@ export default function Sidebar() {
       label: 'گزارش‌گیری کلی',
       path: '/stats',
       hidden: !canSeeStats,
+    },
+    {
+      icon: '⚙️',
+      label: 'پنل مدیریت',
+      path: '/admin',
+      hidden: !isAdmin,
     },
     {
       icon: '🔔',

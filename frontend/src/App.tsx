@@ -1,28 +1,37 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Cases from './pages/Cases';
-import CaseDetail from './pages/CaseDetail';
-import CreateCaseComplaint from './pages/CreateCaseComplaint';
-import CreateCaseScene from './pages/CreateCaseScene';
-import Evidence from './pages/Evidence';
-import CreateEvidence from './pages/CreateEvidence';
-import WitnessTestimonyForm from './pages/WitnessTestimonyForm';
-import BiologicalEvidenceForm from './pages/BiologicalEvidenceForm';
-import VehicleEvidenceForm from './pages/VehicleEvidenceForm';
-import IdentificationDocumentForm from './pages/IdentificationDocumentForm';
-import OtherEvidenceForm from './pages/OtherEvidenceForm';
-import InvestigationBoard from './pages/InvestigationBoard';
-import Ranking from './pages/Ranking';
-import Stats from './pages/Stats';
-import Suspects from './pages/Suspects';
-import Interrogations from './pages/Interrogations';
-import Notifications from './pages/Notifications';
-import Trial from './pages/Trial';
+// Dashboard
+import Home from './pages/dashboard/Home';
+import Dashboard from './pages/dashboard/Dashboard';
+import Stats from './pages/dashboard/Stats';
+import Notifications from './pages/dashboard/Notifications';
+// Auth
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+// Cases
+import Cases from './pages/cases/list/Cases';
+import CaseDetail from './pages/cases/detail/CaseDetail';
+import CreateCaseComplaint from './pages/cases/create/CreateCaseComplaint';
+import CreateCaseScene from './pages/cases/create/CreateCaseScene';
+// Evidence
+import Evidence from './pages/evidence/list/Evidence';
+import CreateEvidence from './pages/evidence/create/CreateEvidence';
+import WitnessTestimonyForm from './pages/evidence/forms/WitnessTestimonyForm';
+import BiologicalEvidenceForm from './pages/evidence/forms/BiologicalEvidenceForm';
+import VehicleEvidenceForm from './pages/evidence/forms/VehicleEvidenceForm';
+import IdentificationDocumentForm from './pages/evidence/forms/IdentificationDocumentForm';
+import OtherEvidenceForm from './pages/evidence/forms/OtherEvidenceForm';
+// Investigation
+import InvestigationBoard from './pages/investigation/board/InvestigationBoard';
+import Suspects from './pages/investigation/suspects/Suspects';
+import Interrogations from './pages/investigation/interrogations/Interrogations';
+import Trial from './pages/investigation/trial/Trial';
+import BailPayment from './pages/investigation/payment/BailPayment';
+// Ranking
+import Ranking from './pages/ranking/Ranking';
+// Admin
+import AdminPanel from './pages/admin/AdminPanel';
 import './App.css';
 
 function App() {
@@ -186,6 +195,14 @@ function App() {
             }
           />
           <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminPanel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/stats"
             element={
               <ProtectedRoute>
@@ -222,6 +239,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Trial />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bail-payment/:verdictId"
+            element={
+              <ProtectedRoute>
+                <BailPayment />
               </ProtectedRoute>
             }
           />
