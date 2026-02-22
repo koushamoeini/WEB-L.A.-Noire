@@ -488,7 +488,7 @@ class InterrogationViewSet(viewsets.ModelViewSet):
 
         case = interrogation.suspect.case
         if feedback.is_chief_confirmed:
-            case.status = Case.Status.SOLVED
+            case.status = Case.Status.PENDING_CHIEF
         else:
             case.status = Case.Status.ACTIVE
         case.save(update_fields=['status'])
@@ -531,7 +531,11 @@ class VerdictViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(judge=self.request.user)
+        verdict = serializer.save(judge=self.request.user)
+        case = verdict.case
+        if case and case.status != Case.Status.SOLVED:
+            case.status = Case.Status.SOLVED
+            case.save(update_fields=['status'])
 
     def get_queryset(self):
         case_id = self.request.query_params.get('case')

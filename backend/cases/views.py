@@ -344,12 +344,12 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsChief])
     def chief_review(self, request, pk=None):
-        """Chief reviews critical cases (Section 5.4)"""
+        """Chief reviews case and forwards to judge stage (PC)."""
         case = self.get_object()
         approved = request.data.get('approved', False)
         
         if approved:
-            case.status = Case.Status.SOLVED
+            case.status = Case.Status.PENDING_CHIEF
         else:
             case.status = Case.Status.ACTIVE
             
