@@ -32,15 +32,16 @@ class CaseViewSet(viewsets.ModelViewSet):
             conditions |= Q(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.SOLVED])
 
         if 'sergeant' in roles:
-            conditions |= Q(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
+            conditions |= Q(status__in=[Case.Status.PENDING_OFFICER, Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.PENDING_JUDGE, Case.Status.SOLVED])
 
         if 'detective' in roles:
-            conditions |= Q(status__in=[Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.SOLVED])
+            conditions |= Q(status__in=[Case.Status.ACTIVE, Case.Status.IN_PURSUIT, Case.Status.PENDING_SERGEANT, Case.Status.PENDING_CHIEF, Case.Status.PENDING_JUDGE, Case.Status.SOLVED])
 
         if 'forensic_doctor' in roles:
             conditions |= Q(status__in=[Case.Status.ACTIVE, Case.Status.SOLVED])
 
         if 'judge' in roles or 'qazi' in roles:
+            conditions |= Q(status=Case.Status.PENDING_JUDGE)
             # Match guilty suspects' cases
             # We use distinct() on the final query because of these joins
             conditions |= Q(
@@ -345,12 +346,12 @@ class CaseViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], permission_classes=[IsChief])
     def chief_review(self, request, pk=None):
-        """Chief reviews case and forwards to judge stage (PC)."""
+        """Chief final review: approved cases move to judge stage."""
         case = self.get_object()
         approved = request.data.get('approved', False)
         
         if approved:
-            case.status = Case.Status.PENDING_CHIEF
+            case.status = Case.Status.PENDING_JUDGE
         else:
             case.status = Case.Status.ACTIVE
             

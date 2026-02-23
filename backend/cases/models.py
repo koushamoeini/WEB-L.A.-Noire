@@ -15,6 +15,7 @@ class Case(models.Model):
         IN_PURSUIT = 'IP', 'در حال دستگیری متهم'
         PENDING_SERGEANT = 'PS', 'در انتظار تایید گروهبان (حل پرونده)'
         PENDING_CHIEF = 'PC', 'در انتظار تایید نهایی رئیس پلیس'
+        PENDING_JUDGE = 'PJ', 'در انتظار قضاوت نهایی'
         REJECTED = 'RE', 'نیازمند اصلاح توسط شاکی'
         CANCELLED = 'CA', 'باطل شده'
         SOLVED = 'SO', 'مختومه'

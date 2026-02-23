@@ -194,7 +194,7 @@ export default function CaseDetail() {
         approved,
         notes: reviewNotes,
       });
-      alert(approved ? 'پرونده مختومه شد' : 'پرونده به کارآگاه بازگردانده شد');
+      alert(approved ? 'پرونده برای قاضی ارسال شد' : 'پرونده به کارآگاه بازگردانده شد');
       navigate('/cases');
     } catch (err: any) {
       setError(err.response?.data?.error || 'خطا در بررسی پرونده');
@@ -311,7 +311,7 @@ export default function CaseDetail() {
   const firstArrestedSuspect = suspects.find(s => isArrested(s));
 
   const isJudge = userRoles.includes('judge') || userRoles.includes('qazi');
-  const canJudgeVerdict = isJudge && (caseData.status === 'SO' || caseData.status === 'PC');
+  const canJudgeVerdict = isJudge && (caseData.status === 'SO' || caseData.status === 'PJ');
   const canResubmit = caseData.creator === user?.id && caseData.status === 'RE';
 
   return (

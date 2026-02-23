@@ -117,6 +117,7 @@ class SuspectStatusSerializer(serializers.ModelSerializer):
             Case.Status.ACTIVE,
             Case.Status.PENDING_SERGEANT,
             Case.Status.PENDING_CHIEF,
+            Case.Status.PENDING_JUDGE,
         }
 
     def _pursuit_days_value(self, obj):

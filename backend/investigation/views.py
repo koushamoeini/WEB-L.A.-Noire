@@ -33,6 +33,7 @@ OPEN_CASE_STATUSES = {
     Case.Status.IN_PURSUIT,
     Case.Status.PENDING_SERGEANT,
     Case.Status.PENDING_CHIEF,
+    Case.Status.PENDING_JUDGE,
 }
 
 
@@ -488,7 +489,8 @@ class InterrogationViewSet(viewsets.ModelViewSet):
 
         case = interrogation.suspect.case
         if feedback.is_chief_confirmed:
-            case.status = Case.Status.PENDING_CHIEF
+            # Keep workflow consistent with case chief_review endpoint.
+            case.status = Case.Status.PENDING_JUDGE
         else:
             case.status = Case.Status.ACTIVE
         case.save(update_fields=['status'])
