@@ -215,7 +215,7 @@ class CaseViewSet(viewsets.ModelViewSet):
         if request.user.is_superuser or 'police_chief' in reviewer_roles:
             pass
         else:
-            creator_primary = None
+            creator_primary = 'civilian'
             if 'captain' in creator_roles:
                 creator_primary = 'captain'
             elif 'detective' in creator_roles:
@@ -226,13 +226,14 @@ class CaseViewSet(viewsets.ModelViewSet):
                 creator_primary = 'police_officer'
 
             required_reviewer_roles = {
+                'civilian': {'police_officer', 'sergeant', 'captain', 'police_chief'},
                 'police_officer': {'sergeant'},
                 'sergeant': {'captain'},
                 'detective': {'captain'},
                 'captain': {'police_chief'},
             }
 
-            allowed = required_reviewer_roles.get(creator_primary, {'sergeant', 'captain', 'police_chief'})
+            allowed = required_reviewer_roles.get(creator_primary, {'police_officer', 'sergeant', 'captain', 'police_chief'})
             if reviewer_roles.isdisjoint(allowed):
                 return Response(
                     {'error': 'این پرونده باید توسط رده بعدی زنجیره فرماندهی بررسی شود.'},
