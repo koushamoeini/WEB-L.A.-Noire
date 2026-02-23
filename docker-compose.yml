@@ -8,7 +8,8 @@ services:
       - "8000:8000"
     volumes:
       - ./backend:/app
-      - backend_db:/app/db.sqlite3
+      # Persist SQLite DB on your host (create the file once: backend/db.sqlite3)
+      - ./backend/db.sqlite3:/app/db.sqlite3
     environment:
       - DJANGO_DEBUG=1
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
@@ -22,12 +23,14 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      - frontend_node_modules:/app/node_modules
     environment:
-      - VITE_API_BASE_URL=http://localhost:8000
+      # IMPORTANT: inside Docker, use the service name, not localhost
+      - VITE_API_BASE_URL=http://localhost:8000/api
+
     depends_on:
       - backend
     command: npm run dev -- --host 0.0.0.0 --port 5173
 
 volumes:
-  backend_db:
+  frontend_node_modules:
