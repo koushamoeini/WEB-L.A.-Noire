@@ -2,9 +2,28 @@ import { useEffect, useMemo, useState } from 'react';
 import Sidebar from '../../components/Sidebar';
 import { caseAPI } from '../../services/caseApi';
 import type { Case } from '../../types/case';
-import type { TrialHistoryReport } from '../../types/report';
+import type { ReportOfficer, ReportSuspect, TrialHistoryReport } from '../../types/report';
 import { useAuth } from '../../context/AuthContext';
 import { SkeletonList, SkeletonCard } from '../../components/Skeleton';
+
+const suspectDisplayName = (suspect: ReportSuspect) => {
+  if (suspect.first_name || suspect.last_name) {
+    return `${suspect.first_name ?? ''} ${suspect.last_name ?? ''}`.trim();
+  }
+  return suspect.name || `مظنون #${suspect.id}`;
+};
+
+const officerDisplayName = (officer: string | ReportOfficer) => {
+  if (typeof officer === 'string') return officer;
+  const base = officer.full_name || officer.username || 'کاربر';
+  const roles = officer.roles?.length ? ` (${officer.roles.join('، ')})` : '';
+  return `${base}${roles}`;
+};
+
+const officerKey = (officer: string | ReportOfficer, index: number) => {
+  if (typeof officer === 'string') return officer;
+  return `${officer.username || officer.full_name || 'user'}-${index}`;
+};
 
 const Stats = () => {
   const { user } = useAuth();
@@ -14,6 +33,7 @@ const Stats = () => {
     user?.is_superuser ||
     roles.includes('judge') ||
     roles.includes('qazi') ||
+    roles.includes('sergeant') ||
     roles.includes('captain') ||
     roles.includes('police_chief');
 
@@ -81,13 +101,13 @@ const Stats = () => {
       <Sidebar />
       <div className="main-content" style={{ padding: '24px' }}>
         <h1 className="gold-text" style={{ fontSize: '2.2rem', marginBottom: 16 }}>
-          گزارش‌گیری کلی (۵.۷)
+          گزارش‌گیری کلی 
         </h1>
 
         {!allowed && (
           <div className="lux-card" style={{ padding: 16, color: '#fff' }}>
             <p style={{ color: '#ccc', lineHeight: 1.8, margin: 0 }}>
-              این صفحه برای نقش‌های <b>قاضی</b>، <b>کاپیتان</b> و <b>رئیس پلیس</b> طراحی شده است.
+              این صفحه برای نقش‌های <b>قاضی</b>، <b>سرجوخه</b>، <b>کاپیتان</b> و <b>رئیس پلیس</b> طراحی شده است.
               <br />
               اگر فکر می‌کنید باید دسترسی داشته باشید، از مدیر سامانه بخواهید نقش مناسب را به حساب شما اضافه کند.
             </p>
@@ -265,7 +285,7 @@ const Stats = () => {
                         {report.suspects.map((s) => (
                           <div key={s.id} style={{ padding: 10, borderRadius: 12, background: 'rgba(0,0,0,0.18)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                              <div style={{ fontWeight: 700, color: '#fff' }}>{s.first_name} {s.last_name}</div>
+                              <div style={{ fontWeight: 700, color: '#fff' }}>{suspectDisplayName(s)}</div>
                               <div style={{ color: '#aaa', fontSize: 12 }}>{s.is_main_suspect ? 'مظنون اصلی' : 'مظنون'}</div>
                             </div>
                             <div style={{ color: '#ccc', marginTop: 6, lineHeight: 1.7 }}>{s.details}</div>
@@ -332,8 +352,8 @@ const Stats = () => {
                     </h4>
                     {report.officers_involved?.length ? (
                       <ul style={{ margin: 0, paddingInlineStart: 18, color: '#ddd', lineHeight: 1.9 }}>
-                        {report.officers_involved.map((o) => (
-                          <li key={o}>{o}</li>
+                        {report.officers_involved.map((o, idx) => (
+                          <li key={officerKey(o, idx)}>{officerDisplayName(o)}</li>
                         ))}
                       </ul>
                     ) : (

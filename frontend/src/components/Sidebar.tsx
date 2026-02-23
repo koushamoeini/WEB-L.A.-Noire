@@ -29,7 +29,7 @@ export default function Sidebar() {
   const canSeeStats =
     user?.is_superuser ||
     user?.roles?.some((role) =>
-      ['judge', 'qazi', 'captain', 'police_chief'].includes(role.code)
+      ['judge', 'qazi', 'sergeant', 'captain', 'police_chief'].includes(role.code)
     );
 
   const isAdmin = user?.is_superuser || user?.roles?.some(role => role.code === 'police_chief');
