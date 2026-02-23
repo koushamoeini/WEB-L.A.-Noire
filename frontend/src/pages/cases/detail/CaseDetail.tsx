@@ -302,6 +302,8 @@ export default function CaseDetail() {
   const isChief = userRoles.includes('police_chief');
 
   const canInvestigate = isOfficerOrHigher && ['AC', 'IP', 'PS'].includes(caseData.status);
+  const canManageListsAfterChiefApproval = (isCaptain || isChief) && caseData.status === 'PJ';
+  const canManageEvidenceAndSuspects = canInvestigate || canManageListsAfterChiefApproval;
   const canTraineeReview = userRoles.includes('trainee') && caseData.status === 'PT';
   const canOfficerReview = isOfficerOrHigher && caseData.status === 'PO';
   const canDetectiveSubmit = userRoles.includes('detective') && caseData.status === 'AC';
@@ -421,7 +423,7 @@ export default function CaseDetail() {
             <div className="info-section">
               <div className="section-header-row">
                 <h3>لیست شواهد</h3>
-                {canInvestigate && (
+                {canManageEvidenceAndSuspects && (
                   <button className="btn-gold-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => navigate(`/evidence/create?case=${caseData.id}`)}>ثبت جدید</button>
                 )}
               </div>
@@ -444,7 +446,7 @@ export default function CaseDetail() {
             <div className="info-section">
               <div className="section-header-row">
                 <h3>لیست مظنونین</h3>
-                {canInvestigate && (
+                {canManageEvidenceAndSuspects && (
                   <button className="btn-gold-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => navigate(`/suspects?case=${caseData.id}`)}>مدیریت</button>
                 )}
               </div>
