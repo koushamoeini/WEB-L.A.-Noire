@@ -2,9 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies first for better caching
+# Using npm install instead of npm ci for better resilience in network-restricted environments
 COPY package*.json ./
-RUN npm ci
+RUN npm install --no-audit --no-fund
 
 # Copy the rest of the frontend
 COPY . .
