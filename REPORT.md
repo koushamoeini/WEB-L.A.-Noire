@@ -1,60 +1,345 @@
-## Contributions
-
-kousha:
-- Project scaffold and environment setup
-- Implemented `Role` model and admin restrictions; added DRF endpoints for role management and assignment
-- Seeded default roles and added `User` role for default assignment
-- Implemented registration and token-based login; new users receive `User` role on register
-- Added Docker placeholders and documentation; created `REPORT.md`
-- Removed tests from the repository (per request)
-- Added a server-served landing page that calls the `/api/` endpoints for registration, login, and roles so the demo content stays with the backend.
+# گزارش پروژه درس وب
+## سامانه مدیریت پرونده‌های جنایی — WEB L.A. Noire
+**اعضای تیم:** آرمان آریان‌پور، کوشا معینی، بهراد مظاهری
 
 ---
 
-## Responsibilities & Work Done (so far)
+# بخش اول: آرمان آریان‌پور آریان‌پور (بخش‌های ۱، ۲ و ۳)
 
-kousha:
-- Project scaffold and environment setup
-- Role model and admin-restricted role management API
-- Default role seeding and registration/token login
+## ۱. مسئولیت‌ها و کارهای انجام شده
 
-## Development Conventions
+### فاز بک‌اِند
+آرمان کل زیرساخت احراز هویت و پرونده‌سازی را طراحی و اجرا کرد:
 
-- Python virtual environment located in `backend/venv`.
-- Use `requirements.txt` to pin server dependencies; `Django` and `djangorestframework` are primary packages.
-- Keep migrations checked into source control and use data migrations to seed required domain data (e.g. default roles).
-- Minimal, focused commits per logical change; documentation updates alongside implementation changes.
+**بخش ۱ — ثبت‌نام و ورود:**
+سیستم ثبت‌نام با فیلدهای نام کاربری، رمز عبور، ایمیل، شماره تماس، نام، نام خانوادگی و کد ملی (همه یکتا) پیاده‌سازی شد.
+در ورود، کاربر می‌تواند از هر یک از این چهار فیلد به عنوان شناسه استفاده کند:
+نام کاربری، کد ملی، شماره تماس یا ایمیل.
+نقش‌ها داینامیک هستند و مدیر سیستم می‌تواند آن‌ها را به کاربران تخصیص دهد.
+ورود و ثبت‌نام با SimpleJWT ایمن شد و Refresh Token خودکار مدیریت می‌شود.
+
+**بخش ۲ — تشکیل پرونده:**
+دو نوع پرونده پیاده‌سازی شد: از طریق ثبت شکایت توسط شاکی و از طریق مشاهده صحنه جرم توسط پلیس.
+در مسیر شکایت، جریان تایید زنجیره‌ای کارآموز > افسر پلیس پیاده‌سازی گردید.
+قانون ابطال پس از ۳ بار اطلاعات ناقص از شاکی پیاده شد.
+پیام‌های خطای کارآموز برای شاکی در تاریخچه پرونده نگهداری می‌شود.
+
+**بخش ۳ — ثبت شواهد:**
+چهار نوع شاهد پیاده‌سازی شد:
+استشهاد شاهدان (متن، تصویر، ویدیو، صوت)،
+شواهد زیستی (لکه خون، اثر انگشت، تار مو با فیلد نتیجه پزشکی قانونی)،
+وسایل نقلیه (پلاک یا شماره سریال — منع‌الجمع با constraint در دیتابیس)،
+مدارک شناسایی (ساختار کلید-مقدار برای انعطاف‌پذیری).
+
+### فاز فرانت‌اِند
+**صفحه اصلی (Home):**
+معرفی اداره پلیس به همراه سه آمار زنده: تعداد پرونده‌های حل شده، تعداد کارمندان سازمان و تعداد پرونده‌های فعال.
+
+**صفحه ورود و ثبت‌نام:**
+فرم چندمرحله‌ای با اعتبارسنجی کامل سمت کلاینت. امکان ورود با هر یک از چهار فیلد شناسه.
+
+**داشبورد ماژولار:**
+داشبوردی که بر اساس نقش کاربر، ماژول‌های مربوطه را نمایش می‌دهد.
+برای مثال کارآگاه «تخته کارآگاه» را می‌بیند اما پزشک قانونی نمی‌بیند.
+
+## ۲. قراردادهای توسعه
+- **نام‌گذاری مدل‌ها:** PascalCase در جنگو (`CaseHistory`, `EvidenceVehicle`)
+- **نام‌گذاری APIها:** snake_case برای فیلدهای JSON (`national_id`, `created_at`)
+- **نام‌گذاری کامپوننت‌ها:** PascalCase در React (`LoginForm`, `HomeStats`)
+- **قالب کامیت‌ها:**
+  - `feat(auth): add JWT refresh token rotation`
+  - `feat(case): implement 3-strike cancellation logic`
+  - `feat(evidence): add vehicle plate/serial mutual exclusion`
+
+## ۳. نحوه مدیریت پروژه
+وظایف آرمان به عنوان پیش‌نیاز بقیه بخش‌ها تعریف شد.
+او ابتدا مدل‌های User, Case, Evidence را فاینال کرد تا کوشا و بهراد بتوانند کارشان را شروع کنند.
+جلسات هفتگی برای هماهنگی API contracts برگزار می‌شد.
+
+## ۴. موجودیت‌های کلیدی سامانه
+| موجودیت | دلیل وجود |
+|---|---|
+| **CustomUser** | نیاز به شناسه‌های چندگانه (کد ملی، ایمیل و ...) که مدل پیش‌فرض جنگو ندارد |
+| **Role** | نقش‌ها داینامیک هستند و مدیر باید بتواند در زمان اجرا نقش‌ها را اضافه/حذف کند |
+| **Case** | واحد اصلی فعالیت سامانه؛ هر پرونده چرخه مستقل خودش را دارد |
+| **CaseRevision** | برای نگهداری پیام‌های خطای کارآموز و تاریخچه تغییرات |
+| **Evidence (انواع)** | هر نوع شاهد فیلدهای متفاوتی دارد، پس مدل‌سازی جداگانه برای هر نوع لازم بود |
+| **EvidenceKeyValue** | مدارک شناسایی تعداد فیلد مشخصی ندارند، ساختار کلید-مقدار این انعطاف را می‌دهد |
 
 
-## Key System Entities and Rationale
+## ۶. نمونه کد تولید شده توسط هوش مصنوعی
 
-- `Role`: central model representing a named role within the system. Fields: `name` (unique), `description` (free text), `users` (Many-to-Many to the user model). Rationale: simple role-based assignment lets admins tag users with roles without coupling permissions logic to the role object itself.
- - `Role`: central model representing a named role within the system. Fields: `code` (English slug, unique), `name` (Persian display label, unique), `description` (free text), `users` (Many-to-Many to the user model). Rationale: the `code` is used internally and in scripts while `name` is the Persian label shown in the UI; admins can add/remove roles via `/admin/` or the API.
-- `User` (Django auth): application users. On registration, users are assigned a default `User` role so the system has a clear baseline for identity-related behavior.
+**Validator منع‌الجمع بودن پلاک و شماره سریال (جنگو):**
+```python
+def clean(self):
+    if self.plate_number and self.serial_number:
+        raise ValidationError(
+            "وسیله نقلیه نمی‌تواند همزمان پلاک و شماره سریال داشته باشد."
+        )
+    if not self.plate_number and not self.serial_number:
+        raise ValidationError("یکی از پلاک یا شماره سریال الزامی است.")
+```
 
-## Top Packages Used
+**نمونه Serializer با فیلد داینامیک:**
+```python
+class EvidenceIDDocSerializer(serializers.ModelSerializer):
+    fields_data = serializers.DictField(child=serializers.CharField())
+    class Meta:
+        model = EvidenceIDDoc
+        fields = ['id', 'title', 'description', 'fields_data', 'registered_at']
+```
 
-- `Django` — proven, batteries-included web framework.
-- `djangorestframework` — for the REST API endpoints.
-- `djangorestframework-authtoken` — token-based authentication for simple mobile/API clients.
+## ۷. ضعف‌ها و قوت‌های هوش مصنوعی در فرانت‌اِند
+**قوت‌ها:**
+- تولید سریع فرم‌های react-hook-form با تمام قوانین اعتبارسنجی
+- طراحی لایوت صفحه اصلی با Tailwind در چند ثانیه
+- پیشنهاد الگوهای Conditional Rendering برای داشبورد ماژولار
 
-## Representative Code Samples
+**ضعف‌ها:**
+- در پیاده‌سازی Token Refresh interceptor اشتباه می‌کرد و نیاز به اصلاح داشت
+- اعتبارسنجی فرم ورود با ۴ شناسه مختلف را اشتباه مدیریت می‌کرد
 
-_To be added later._
+## ۸. ضعف‌ها و قوت‌های هوش مصنوعی در بک‌اِند
+**قوت‌ها:**
+- تولید سریع Serializer و ViewSet برای CRUD ساده
+- پیشنهاد استفاده از JSONField برای مدارک کلید-مقدار
+- نوشتن signal‌های جنگو برای بروزرسانی خودکار وضعیت پرونده
 
-## Strengths & Weaknesses
-
-_To be added later._
-
-## Summary of Work
-
-Implemented key backend and frontend pieces to support a small demo authentication and role-management system. High-level areas completed:
-
-- Project scaffold, environment, and developer tooling (venv, requirements)
-- Authentication: registration and token-based login
-- Role model + admin/API for role management (Persian display names with English codes)
-- Default role seeding and a `reset_data` management command to flush and reseed roles
-- Simple landing pages (register/login/dashboard) that call the backend APIs
-- Documentation updates and basic operational run instructions
+**ضعف‌ها:**
+- در پیاده‌سازی Object-Level Permissions (که کاربر فقط پرونده‌های خودش را ببیند) اشتباه می‌کرد
+- منطق زنجیر تایید کارآموز > افسر را به صورت ساده می‌نوشت و نیاز به بازنویسی داشت
 
 
+# بخش دوم: کوشا معینی معینی (بخش‌های ۴، ۵ و ۶)
+
+## ۱. مسئولیت‌ها و کارهای انجام شده
+
+### فاز بک‌اِند
+**بخش ۴ — حل پرونده:**
+پیاده‌سازی موجودیت `BoardItem` برای ذخیره مختصات مدارک روی تخته کارآگاه در دیتابیس.
+پیاده‌سازی `BoardLink` برای نگهداری روابط قرمز بین مدارک.
+مکانیزم اعلان (Notification) به کارآگاه در هنگام ثبت مدرک جدید روی پرونده باز.
+جریان تایید مظنون توسط کارآگاه > گروهبان و مدیریت پیام رد/قبول.
+
+**بخش ۵ — بازجویی:**
+سیستم ثبت امتیاز گناهکاری از ۱ تا ۱۰ توسط گروهبان و کارآگاه به صورت مستقل.
+ارسال خلاصه امتیازات و اظهارات به کاپیتان برای نظر نهایی.
+در جرایم بحرانی، تایید اضافی رئیس پلیس هم لازم است.
+
+**بخش ۶ — محاکمه:**
+مدل `Trial` که تمام اطلاعات پرونده (شواهد، مظنونین، پلیس‌های دخیل و اظهاراتشان) را به قاضی نشان می‌دهد.
+ثبت رای نهایی (بی‌گناه یا گناهکار) و مجازات با عنوان و توضیحات توسط قاضی.
+
+### فاز فرانت‌اِند
+**تخته کارآگاه (Detective Board — صفحه ۵.۴):**
+پیچیده‌ترین بخش پروژه. مدارک پرونده به صورت کارت‌هایی روی تخته نمایش داده می‌شوند.
+کاربر می‌تواند آن‌ها را Drag-and-Drop کند و مختصات جدید در بک‌اِند ذخیره می‌شود.
+با کلیک روی دو کارت، یک خط قرمز میان آن‌ها رسم می‌شود (قابل حذف).
+دکمه Export تخته را به فایل PNG تبدیل می‌کند تا ضمیمه گزارش قاضی شود.
+
+**تحت پیگیری شدید (Most Wanted — صفحه ۵.۵):**
+لیست مظنونینی که بیش از یک ماه تحت تعقیب هستند، مرتب‌شده بر اساس فرمول رتبه‌بندی.
+عکس، مشخصات کامل و مبلغ پاداش هر شخص نمایش داده می‌شود.
+
+**وضعیت پرونده‌ها و شکایات (صفحه ۵.۶):**
+هر کاربر بر اساس نقشش پرونده‌های مربوطه را می‌بیند.
+امکان تایید، رد، ارسال پیام خطا و تغییر وضعیت پرونده فراهم است.
+
+## ۲. قراردادهای توسعه
+- **نام‌گذاری کامپوننت‌ها:** PascalCase (`DetectiveBoard`, `SuspectCard`)
+- **نام‌گذاری متغیرها و توابع:** camelCase (`handleDragEnd`, `exportBoardImage`)
+- **نام‌گذاری State‌ها در Zustand:** camelCase با پیشوند فعل (`useBoard`, `useCases`)
+- **قالب کامیت‌ها:**
+  - `feat(board): add drag-and-drop card positioning`
+  - `feat(board): implement red line connections`
+  - `fix(trial): fix judge verdict submission`
+
+## ۳. نحوه مدیریت پروژه
+هر بخش به یک برنچ جداگانه (`feature/detective-board`, `feature/trial`) تقسیم شد.
+کامپوننت‌های پیچیده (مثل تخته) ابتدا با داده‌های mock ساخته شدند و بعد به API وصل شدند.
+برای همگام‌سازی API contracts، فایل مشترک `api.ts` داشتیم که schema درخواست‌ها در آن بود.
+
+## ۴. موجودیت‌های کلیدی سامانه
+| موجودیت | دلیل وجود |
+|---|---|
+| **BoardItem** | ذخیره مختصات x,y مدارک روی تخته برای session مختلف کارآگاه |
+| **BoardLink** | نگهداری جفت‌های مدارک متصل برای بازسازی تخته در بار بعدی |
+| **InterrogationScore** | نظرات گروهبان و کارآگاه مستقل از هم هستند، یک مدل واحد نمی‌توان داشت |
+| **Trial** | نگهداری snapshot کامل پرونده در لحظه محاکمه (ممکن است مدارک بعداً تغییر کنند) |
+| **Notification** | کارآگاه باید بلافاصله از مدارک جدید مطلع شود |
+| **Verdict** | جدا از Trial برای نگهداری تاریخچه احکام در صورت تجدیدنظر |
+
+
+## ۶. نمونه کد تولید شده توسط هوش مصنوعی
+
+**ذخیره مختصات کارت پس از drag:**
+```javascript
+const handleDragStop = (id, data) => {
+  setBoardItems(prev =>
+    prev.map(item =>
+      item.id === id ? { ...item, x: data.x, y: data.y } : item
+    )
+  );
+  api.patch(`/board-items/${id}/`, { x: data.x, y: data.y });
+};
+```
+
+**خروجی تصویری از تخته:**
+```javascript
+const exportBoard = () => {
+  htmlToImage.toPng(boardRef.current, { quality: 0.95 })
+    .then(dataUrl => {
+      const link = document.createElement('a');
+      link.download = `case-board-${caseId}.png`;
+      link.href = dataUrl;
+      link.click();
+    });
+};
+```
+
+## ۷. ضعف‌ها و قوت‌های هوش مصنوعی در فرانت‌اِند
+**قوت‌ها:**
+- پیشنهاد هوشمندانه `xarrows` به عنوان پکیج رسم خطوط که خودم نمی‌شناختم
+- تولید منطق drag-and-drop با react-draggable در چند دقیقه
+- طراحی کارت‌های مدرک با Tailwind با ظاهر زیبا
+
+**ضعف‌ها:**
+- در مدیریت تداخل z-index خطوط و کارت‌ها اشتباه می‌کرد
+- کد export تصویری را با پکیج‌های منسوخ می‌نوشت
+- در پیاده‌سازی real-time notification با WebSocket اشتباهات زیادی داشت
+
+## ۸. ضعف‌ها و قوت‌های هوش مصنوعی در بک‌اِند
+**قوت‌ها:**
+- طراحی مدل Trial با تمام relation‌های لازم به پلیس‌های دخیل
+- نوشتن سریع Django Signal برای ارسال اعلان به کارآگاه
+- تولید django-channels config برای WebSocket
+
+**ضعف‌ها:**
+- در پیاده‌سازی منطق رتبه‌بندی بازجویی (میانگین گروهبان و کارآگاه) اشتباه داشت
+- snapshot کامل پرونده برای قاضی را به ساده‌ترین شکل ممکن می‌نوشت که عمق کافی نداشت
+
+
+# بخش سوم: بهراد مظاهری مظاهری (بخش‌های ۷ و ۸)
+
+## ۱. مسئولیت‌ها و کارهای انجام شده
+
+### فاز بک‌اِند
+**بخش ۷ — وضعیت مظنونین (Most Wanted):**
+پیاده‌سازی فرمول رتبه‌بندی مظنونین: max(Lj) * max(Di)
+که Lj بیشترین روزهای تحت تعقیب در یک پرونده باز و Di بالاترین درجه جرم ارتکابی است.
+فرمول پاداش: max(Lj) * max(Di) * 20,000,000 ریال.
+Cron job روزانه برای بروزرسانی رتبه‌بندی و شناسایی مظنونین جدید Most Wanted.
+
+**بخش ۸ — پاداش:**
+سیستم دریافت گزارش مردمی، بررسی اولیه توسط افسر پلیس و ارسال به کارآگاه.
+تولید شناسه یکتا (UUID) پس از تایید کارآگاه برای دریافت پاداش.
+API برای پلیس‌ها جهت استعلام پاداش با کد ملی + شناسه یکتا.
+استقرار کامل پروژه با Docker Compose با سرویس‌های backend, frontend, db, nginx.
+
+### فاز فرانت‌اِند
+**گزارش‌گیری کلی (صفحه ۵.۷):**
+صفحه‌ای برای قاضی، کاپیتان و رئیس پلیس جهت مشاهده گزارش جامع پرونده‌ها.
+شامل: تاریخ تشکیل، شواهد، استشهادها، مظنونین، مجرمین، شاکیان و نام/درجه همه افراد دخیل.
+
+**ثبت و بررسی مدارک (صفحه ۵.۸):**
+فرم جامع ثبت مدرک با انتخاب نوع (زیستی، خودرو، مدرک شناسایی، سایر).
+فیلدهای فرم به صورت داینامیک بر اساس نوع انتخابی تغییر می‌کنند.
+بررسی مدارک موجود با فیلتر بر اساس نوع، تاریخ و پرونده.
+
+## ۲. قراردادهای توسعه
+- **نام‌گذاری سرویس‌های Docker:** `wp-backend`, `wp-frontend`, `wp-db`
+- **نام‌گذاری image‌ها:** lowercase kebab-case (`la-noire-backend:latest`)
+- **قالب کامیت‌ها:**
+  - `feat(reward): add unique ID generation for witness reward`
+  - `feat(wanted): implement ranking formula`
+  - `chore(docker): add nginx reverse proxy config`
+
+## ۳. نحوه مدیریت پروژه
+با توجه که وظایف بهراد در انتهای چرخه تجاری قرار دارند (بعد از اینکه پرونده‌ها و مظنونین ثبت شوند)،
+بهراد با داده‌های seed شده توسط بقیه اعضا تست می‌کرد.
+Dockerfile هر سرویس توسط عضو مربوطه نوشته شد و بهراد آن‌ها را در docker-compose.yml ادغام کرد.
+
+## ۴. موجودیت‌های کلیدی سامانه
+| موجودیت | دلیل وجود |
+|---|---|
+| **WantedScore** | نگهداری cache امتیاز رتبه‌بندی برای جلوگیری از محاسبات سنگین در هر request |
+| **CitizenReport** | از گزارش مردمی تا تایید پلیس چند مرحله وجود دارد؛ نیاز به موجودیت مستقل |
+| **RewardToken** | شناسه یکتایی که به شهروند داده می‌شود تا با آن پاداش بگیرد |
+| **RewardClaim** | نگهداری تاریخچه پرداخت‌ها برای شفافیت مالی |
+
+
+## ۶. نمونه کد تولید شده توسط هوش مصنوعی
+
+**فرمول محاسبه پاداش در جنگو:**
+```python
+from django.db.models import Max
+
+def calculate_reward(suspect):
+    open_cases = suspect.cases.filter(status='OPEN')
+    max_days = open_cases.annotate(
+        days=ExpressionWrapper(Now() - F('opened_at'), output_field=DurationField())
+    ).aggregate(max_d=Max('days'))['max_d']
+    
+    max_severity = suspect.cases.aggregate(
+        max_s=Max('crime_level')
+    )['max_s'] or 1
+    
+    days_int = max_days.days if max_days else 0
+    return days_int * max_severity * 20_000_000
+```
+
+**فرم داینامیک ثبت مدرک در React:**
+```javascript
+const EvidenceForm = ({ caseId }) => {
+  const { register, watch } = useForm();
+  const evidenceType = watch('type');
+  
+  return (
+    <form>
+      <select {...register('type')}>
+        <option value="biological">زیستی</option>
+        <option value="vehicle">وسیله نقلیه</option>
+      </select>
+      {evidenceType === 'vehicle' && <VehicleFields register={register} />}
+      {evidenceType === 'biological' && <BioFields register={register} />}
+    </form>
+  );
+};
+```
+
+## ۷. ضعف‌ها و قوت‌های هوش مصنوعی در فرانت‌اِند
+**قوت‌ها:**
+- تولید سریع جداول گزارش با فیلترهای داینامیک
+- پیشنهاد الگوی Conditional Field Rendering در فرم مدارک
+- طراحی کارت‌های Most Wanted با تم Noir
+
+**ضعف‌ها:**
+- در محاسبه مبلغ پاداش سمت فرانت (برای نمایش) اشتباهات عددی (precision) داشت
+- در مدیریت Protected Routes پیشنهادهای قدیمی React Router v5 می‌داد
+
+## ۸. ضعف‌ها و قوت‌های هوش مصنوعی در بک‌اِند
+**قوت‌ها:**
+- طراحی Cron Job با celery-beat برای محاسبه روزانه رتبه‌بندی
+- نوشتن کوئری‌های بهینه برای فرمول رتبه‌بندی با ORM جنگو
+- پیکربندی Docker Compose با شبکه داخلی ایزوله
+
+**ضعف‌ها:**
+- پیکربندی nginx برای proxy pass به Django در Docker وقت زیادی گرفت
+- در محدودیت‌های شبکه ایران (Docker registry) راه‌حل پیشنهادی نداشت
+
+
+
+# بخش مشترک تیم
+
+## پکیج‌های NPM استفاده شده
+| پکیج | کارکرد | توجیه |
+|---|---|---|
+| react-hook-form | مدیریت فرم‌ها | کمترین رندر بیهوده |
+| axios | HTTP | Interceptor برای توکن |
+| zustand | State | سادگی در اشتراک دیتا |
+| react-draggable | Drag-and-Drop | جابه‌جایی کارت‌ها |
+| xarrows | رسم خط | اتصال مدارک |
+| tailwindcss | استایل | توسعه سریع |
+
+## نیازسنجی ابتدایی و نهایی
+... (مشابه فایل TeX) ...
