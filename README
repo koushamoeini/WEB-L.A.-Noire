@@ -1,7 +1,0 @@
-WP-Project
-
-Django backend with a built-in landing page that exercises the authentication and role APIs. See `backend/README.md` for run instructions.
-
-Full project documentation is in `REPORT.md`.
-
-

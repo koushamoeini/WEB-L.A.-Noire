@@ -1,4 +1,4 @@
-services:
+﻿services:
   backend:
     build:
       context: ./backend
@@ -27,7 +27,6 @@ services:
     environment:
       # IMPORTANT: inside Docker, use the service name, not localhost
       - VITE_API_BASE_URL=http://localhost:8000/api
-
     depends_on:
       - backend
     command: npm run dev -- --host 0.0.0.0 --port 5173
